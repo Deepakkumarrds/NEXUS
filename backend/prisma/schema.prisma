@@ -1,0 +1,311 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String             @id @default(auto()) @map("_id") @db.ObjectId
+  name             String
+  email            String             @unique
+  password_hash    String
+  role_id          String             @db.ObjectId
+  department       String?
+  designation      String?
+  status           String             @default("Active") // Active, Inactive
+  created_at       DateTime           @default(now())
+  
+  role             Role               @relation(fields: [role_id], references: [id])
+  
+  login_logs       LoginLog[]
+  client_spocs     ClientSpoc[]
+  tasks_assigned   Task[]             @relation("TaskAssignee")
+  tasks_created    Task[]             @relation("TaskCreator")
+  task_comments    TaskComment[]
+  communications   CommunicationLog[] @relation("CommunicationCreator")
+  meetings_created Meeting[]          @relation("MeetingCreator")
+  action_items     MeetingActionItem[]
+  reports_uploaded Report[]
+  notifications    Notification[]
+  activity_logs    ActivityLog[]
+}
+
+model Role {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  role_name   String   @unique
+  description String?
+  
+  users       User[]
+  permissions RolePermission[]
+}
+
+model Permission {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  permission_name String   @unique
+  module_name     String
+  
+  role_permissions RolePermission[]
+}
+
+model RolePermission {
+  id            String @id @default(auto()) @map("_id") @db.ObjectId
+  role_id       String @db.ObjectId
+  permission_id String @db.ObjectId
+  
+  role          Role       @relation(fields: [role_id], references: [id])
+  permission    Permission @relation(fields: [permission_id], references: [id])
+}
+
+model LoginLog {
+  id         String    @id @default(auto()) @map("_id") @db.ObjectId
+  user_id    String    @db.ObjectId
+  login_time DateTime  @default(now())
+  logout_time DateTime?
+  ip_address String?
+  device_info String?
+  
+  user       User      @relation(fields: [user_id], references: [id])
+}
+
+model Client {
+  id                 String   @id @default(auto()) @map("_id") @db.ObjectId
+  company_name       String
+  brand_name         String?
+  industry           String?
+  website            String?
+  email              String?
+  phone              String?
+  address            String?
+  country            String?
+  timezone           String?
+  client_status      String   @default("Active") // Active, Hold, Lost
+  onboarding_date    DateTime?
+  renewal_date       DateTime?
+  retainer_value     Float?
+  service_type       String?
+  account_manager_id String?  @db.ObjectId
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  contacts           ClientContact[]
+  spocs              ClientSpoc[]
+  tasks              Task[]
+  communications     CommunicationLog[]
+  meetings           Meeting[]
+  sows               Sow[]
+  reports            Report[]
+  escalations        Escalation[]
+  health_scores      ClientHealthScore[]
+  
+  client_users       ClientUser[]
+}
+
+model ClientUser {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  client_id        String   @db.ObjectId
+  name             String
+  email            String   @unique
+  password_hash    String
+  status           String   @default("Active")
+  created_at       DateTime @default(now())
+  
+  client           Client   @relation(fields: [client_id], references: [id])
+}
+
+model ClientContact {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  client_id   String   @db.ObjectId
+  name        String
+  designation String?
+  department  String?
+  email       String?
+  phone       String?
+  is_primary  Boolean  @default(false)
+  created_at  DateTime @default(now())
+  
+  client      Client   @relation(fields: [client_id], references: [id])
+}
+
+model ClientSpoc {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  client_id     String   @db.ObjectId
+  role_type     String
+  user_id       String   @db.ObjectId
+  assigned_date DateTime @default(now())
+  
+  client        Client   @relation(fields: [client_id], references: [id])
+  user          User     @relation(fields: [user_id], references: [id])
+}
+
+model Task {
+  id                    String   @id @default(auto()) @map("_id") @db.ObjectId
+  client_id             String   @db.ObjectId
+  title                 String
+  description           String?
+  assigned_to           String?  @db.ObjectId
+  assigned_by           String   @db.ObjectId
+  priority              String   @default("Medium") // Low, Medium, High
+  status                String   @default("Pending") // Pending, In Progress, Review, Completed
+  due_date              DateTime?
+  completion_percentage Int      @default(0)
+  created_at            DateTime @default(now())
+  updated_at            DateTime @updatedAt
+  
+  client                Client   @relation(fields: [client_id], references: [id])
+  assignee              User?    @relation("TaskAssignee", fields: [assigned_to], references: [id])
+  creator               User     @relation("TaskCreator", fields: [assigned_by], references: [id])
+  
+  comments              TaskComment[]
+}
+
+model TaskComment {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  task_id    String   @db.ObjectId
+  user_id    String   @db.ObjectId
+  comment    String
+  created_at DateTime @default(now())
+  
+  task       Task     @relation(fields: [task_id], references: [id])
+  user       User     @relation(fields: [user_id], references: [id])
+}
+
+model CommunicationLog {
+  id                 String   @id @default(auto()) @map("_id") @db.ObjectId
+  client_id          String   @db.ObjectId
+  communication_type String // Call, Email, WhatsApp, Meeting
+  subject            String
+  summary            String?
+  next_action        String?
+  follow_up_date     DateTime?
+  owner_id           String?  @db.ObjectId
+  created_by         String   @db.ObjectId
+  created_at         DateTime @default(now())
+  
+  client             Client   @relation(fields: [client_id], references: [id])
+  creator            User     @relation("CommunicationCreator", fields: [created_by], references: [id])
+}
+
+model Meeting {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  client_id         String   @db.ObjectId
+  meeting_title     String
+  meeting_date      DateTime
+  attendees         String?
+  agenda            String?
+  discussion_points String?
+  created_by        String   @db.ObjectId
+  created_at        DateTime @default(now())
+  
+  client            Client   @relation(fields: [client_id], references: [id])
+  creator           User     @relation("MeetingCreator", fields: [created_by], references: [id])
+  
+  action_items      MeetingActionItem[]
+}
+
+model MeetingActionItem {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  meeting_id  String   @db.ObjectId
+  action_item String
+  assigned_to String?  @db.ObjectId
+  deadline    DateTime?
+  status      String   @default("Pending") // Pending, Completed
+  
+  meeting     Meeting  @relation(fields: [meeting_id], references: [id])
+  assignee    User?    @relation(fields: [assigned_to], references: [id])
+}
+
+model Sow {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  client_id   String   @db.ObjectId
+  sow_name    String
+  start_date  DateTime?
+  end_date    DateTime?
+  total_value Float?
+  status      String   @default("Active") // Active, Completed
+  created_at  DateTime @default(now())
+  
+  client      Client   @relation(fields: [client_id], references: [id])
+  items       SowItem[]
+}
+
+model SowItem {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  sow_id           String   @db.ObjectId
+  deliverable_name String
+  frequency        String?  // Weekly, Monthly
+  owner_id         String?  @db.ObjectId
+  due_date         DateTime?
+  status           String   @default("Pending") // Pending, In Progress, Completed
+  remarks          String?
+  
+  sow              Sow      @relation(fields: [sow_id], references: [id])
+}
+
+model Report {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  client_id    String   @db.ObjectId
+  report_name  String
+  report_type  String // SEO, Ads, Social
+  file_path    String
+  uploaded_by  String   @db.ObjectId
+  report_month String?
+  created_at   DateTime @default(now())
+  
+  client       Client   @relation(fields: [client_id], references: [id])
+  uploader     User     @relation(fields: [uploaded_by], references: [id])
+}
+
+model Escalation {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  client_id        String   @db.ObjectId
+  title            String
+  issue_description String?
+  severity         String   @default("Medium") // Low, Medium, High, Critical
+  assigned_to      String?  @db.ObjectId
+  status           String   @default("Open") // Open, In Progress, Resolved
+  resolution_notes String?
+  created_at       DateTime @default(now())
+  resolved_at      DateTime?
+  
+  client           Client   @relation(fields: [client_id], references: [id])
+}
+
+model ClientHealthScore {
+  id                      String   @id @default(auto()) @map("_id") @db.ObjectId
+  client_id               String   @db.ObjectId
+  communication_score     Int      @default(0)
+  task_completion_score   Int      @default(0)
+  escalation_score        Int      @default(0)
+  report_timeliness_score Int      @default(0)
+  overall_score           Int      @default(0)
+  risk_level              String   @default("Stable") // Excellent, Stable, Risk, Critical
+  calculated_at           DateTime @default(now())
+  
+  client                  Client   @relation(fields: [client_id], references: [id])
+}
+
+model Notification {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  user_id    String   @db.ObjectId
+  title      String
+  message    String?
+  is_read    Boolean  @default(false)
+  created_at DateTime @default(now())
+  
+  user       User     @relation(fields: [user_id], references: [id])
+}
+
+model ActivityLog {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  user_id      String   @db.ObjectId
+  module_name  String
+  action_type  String // Create, Update, Delete
+  reference_id String?  @db.ObjectId
+  description  String?
+  created_at   DateTime @default(now())
+  
+  user         User     @relation(fields: [user_id], references: [id])
+}

@@ -1,0 +1,1143 @@
+﻿Internal Client Management Dashboard Project
+Internal Client Management Dashboard Project 
+1. Project Objective
+The objective of this project is to build a centralized internal dashboard for managing all client-related operations within the agency.
+The system will help streamline:
+* Client management
+* Team accountability
+* Communication tracking
+* Task management
+* Minutes of Meeting (MOM)
+* Statement of Work (SOW) tracking
+* Client reporting
+* Escalation handling
+* Client health monitoring
+* Management visibility
+The platform will act as a single source of truth for all client operations and internal coordination.
+________________
+
+
+2. Business Goals
+The proposed dashboard aims to solve the following operational challenges:
+1. Scattered client information across tools and spreadsheets
+2. Lack of centralized communication history
+3. Missed deadlines and follow-ups
+4. Poor visibility into task ownership
+5. Difficulty tracking deliverables against SOW
+6. Delayed reporting and approvals
+7. Escalation handling gaps
+8. Limited visibility into client risk or health
+9. Management dependency on manual updates
+10. Lack of structured client lifecycle tracking
+________________
+
+
+3. Proposed System Overview
+The dashboard will function as an internal CRM and operations platform specifically designed for digital marketing agency workflows.
+The system will provide:
+Centralized Client Management
+A complete client repository with all associated information in one place.
+Team Collaboration
+Clear task ownership, communication tracking, and accountability.
+Performance Monitoring
+Visibility into deadlines, escalation risks, and client satisfaction.
+Operational Transparency
+Management-level visibility into client delivery and team execution.
+Scalable Internal Operations
+A foundation that can later support automation and AI-assisted workflows.
+________________
+
+
+4. User Roles & Access Management
+The system will include role-based access control to ensure security and structured ownership.
+1. Admin
+Access Level: Full System Access
+Responsibilities:
+* User management
+* Role permissions
+* Client creation and assignment
+* SOW approval
+* Escalation oversight
+* Reports access
+* Dashboard analytics
+* System configuration
+________________
+
+
+2. Account Manager
+Access Level: Assigned Clients
+Responsibilities:
+* Manage assigned clients
+* Maintain communication logs
+* Create and assign tasks
+* Update SOW progress
+* Conduct meetings and MOM
+* Upload reports
+* Raise escalations
+* Monitor client health
+________________
+
+
+3. Team Member
+Access Level: Task-Based Access
+Responsibilities:
+* View assigned tasks
+* Update progress
+* Submit work updates
+* Add implementation notes
+* Access assigned client details
+________________
+
+
+4. Management
+Access Level: Monitoring & Reporting
+Responsibilities:
+* View all clients
+* Monitor team performance
+* Review escalations
+* Track client health
+* Access business-level reporting
+* Monitor delivery status
+________________
+
+
+5. Core Modules
+The platform will include the following major modules.
+Module 1: Authentication & User Management
+Features:
+* Secure login
+* Role-based access
+* Password management
+* Session handling
+* User creation/editing
+* Access control
+________________
+
+
+Module 2: Client Master Dashboard
+A centralized overview of all clients.
+Features:
+* Total active clients
+* Client segmentation
+* Health indicators
+* Escalation alerts
+* Pending reports
+* Pending tasks
+* Performance metrics
+Filters:
+* Client
+* SPOC
+* Status
+* Priority
+* Due date
+* Health score
+________________
+
+
+Module 3: Client Profile
+Each client will have a dedicated profile page containing all relevant information.
+Sections Included
+Client Details
+* Company information
+* Website
+* Industry
+* Services availed
+* Contract duration
+* Retainer details
+* Renewal information
+Internal SPOC Mapping
+* Account Manager
+* SEO Lead
+* Ads Specialist
+* Designer
+* Developer
+* Content Team
+Client Contacts
+* Contact name
+* Designation
+* Email
+* Phone number
+* Department
+* Primary contact tagging
+SOW Summary
+* Deliverables
+* Timeline
+* Completion progress
+* Pending deliverables
+Active Tasks
+* Current activities
+* Assigned owner
+* Status
+* Priority
+* Due date
+Communication Logs
+* Calls
+* Emails
+* WhatsApp updates
+* Follow-ups
+* Client feedback
+Minutes of Meeting (MOM)
+* Meeting records
+* Discussion summary
+* Action items
+* Deadlines
+Reports
+* Monthly reports
+* SEO reports
+* Ads performance
+* Social media reports
+* Custom uploads
+Escalations
+* Issue tracking
+* Severity level
+* Ownership
+* Resolution tracking
+Client Health Score
+Automated health monitoring based on engagement and delivery metrics.
+________________
+
+
+Module 4: Communication Logs
+Purpose:
+Maintain a complete history of client communication.
+Features:
+* Add communication entries
+* Categorize by type
+* Add next actions
+* Follow-up tracking
+* Ownership tracking
+Communication Types:
+* Call
+* Email
+* WhatsApp
+* Meeting
+* Internal discussion
+________________
+
+
+Module 5: Task Management
+Purpose:
+Track execution and accountability.
+Features:
+* Task creation
+* Assignment
+* Priority levels
+* Due dates
+* Status tracking
+* Progress updates
+* Comments
+Task Status:
+* Pending
+* In Progress
+* Review
+* Completed
+* Delayed
+________________
+
+
+Module 6: Minutes of Meeting (MOM)
+Purpose:
+Maintain structured meeting documentation.
+Features:
+* Meeting records
+* Participants
+* Discussion points
+* Action items
+* Deadlines
+* Follow-up tracking
+________________
+
+
+Module 7: SOW Tracker
+Purpose:
+Track delivery against contractual commitments.
+Features:
+* SOW creation
+* Deliverable tracking
+* Completion percentage
+* SLA monitoring
+* Pending deliverables
+________________
+
+
+Module 8: Client Reports
+Purpose:
+Centralized report repository.
+Features:
+* Upload reports
+* Categorize report type
+* Version management
+* Download history
+* Report reminders
+________________
+
+
+Module 9: Escalation Management
+Purpose:
+Monitor and resolve client issues.
+Features:
+* Escalation logging
+* Severity levels
+* Ownership assignment
+* Resolution tracking
+* Escalation aging
+Severity Types:
+* Low
+* Medium
+* High
+* Critical
+________________
+
+
+Module 10: Client Health Score
+Purpose:
+Predict client risk and retention.
+Scoring Factors:
+* Communication frequency
+* Task completion rate
+* Escalation count
+* Reporting delays
+* Client feedback
+* Renewal timeline
+* Pending deliverables
+Health Categories:
+* 90–100 → Excellent
+* 70–89 → Stable
+* 50–69 → Risk
+* Below 50 → Critical
+________________
+
+
+Module 11: AI Assistant (Future Scope)
+Planned capabilities:
+* MOM summarization
+* Task suggestions
+* Follow-up reminders
+* Communication summary
+* Escalation prediction
+* Client health recommendations
+________________
+
+
+6. Database Structure
+The system will utilize the existing SQL database infrastructure.
+Proposed major tables:
+* users
+* roles
+* clients
+* client_contacts
+* client_spocs
+* tasks
+* communication_logs
+* meetings
+* meeting_action_items
+* sow
+* sow_items
+* reports
+* escalations
+* health_scores
+* notifications
+* activity_logs
+________________
+
+
+7. Development Approach
+The project will follow a phased implementation strategy to reduce complexity and ensure stable delivery.
+Phase 1: Foundation Setup
+Timeline: Week 1
+Scope:
+* Project setup
+* Database architecture
+* Authentication system
+* Role permissions
+* Sidebar/navigation
+* Layout system
+________________
+
+
+Phase 2: Client Management
+Timeline: Week 2
+Scope:
+* Client CRUD
+* Client profiles
+* Contact management
+* SPOC mapping
+________________
+
+
+Phase 3: Task Management
+Timeline: Week 3
+Scope:
+* Task creation
+* Assignment system
+* Priority & status management
+* Deadline tracking
+________________
+
+
+Phase 4: Communication Management
+Timeline: Week 4
+Scope:
+* Communication logs
+* Follow-up system
+* Communication categorization
+________________
+
+
+Phase 5: MOM Management
+Timeline: Week 5
+Scope:
+* Meeting records
+* MOM tracking
+* Action items
+________________
+
+
+Phase 6: SOW Tracking
+Timeline: Week 6
+Scope:
+* Deliverable management
+* Progress tracking
+* SLA monitoring
+________________
+
+
+Phase 7: Reports Module
+Timeline: Week 7
+Scope:
+* Report uploads
+* Repository management
+* Reporting workflow
+________________
+
+
+Phase 8: Escalation & Health Score
+Timeline: Week 8
+Scope:
+* Escalation management
+* Health score engine
+* Risk identification
+________________
+
+
+Phase 9: Finalization & Optimization
+Timeline: Week 9
+Scope:
+* Filters
+* Search
+* Notifications
+* Security hardening
+* Performance optimization
+* Testing
+________________
+
+
+8. Filters & Search Requirements
+The system will support advanced filtering across modules.
+Filters include:
+* Client
+* Internal SPOC
+* Task status
+* Priority
+* Due date
+* Health score
+* Escalation severity
+* Report type
+* Team member
+________________
+
+
+9. Proposed Technology Stack
+Frontend
+* Next.js
+* React
+* Tailwind CSS
+* Responsive UI Framework
+Backend
+* Node.js
+* Express APIs
+Database
+* Existing SQL Database
+Authentication
+* JWT Authentication
+* Role-Based Access Control
+Hosting
+* Existing Company Hosting Infrastructure
+________________
+
+
+10. Expected Outcomes
+Upon implementation, the dashboard is expected to deliver:
+1. Centralized client management
+2. Better accountability across teams
+3. Reduced operational delays
+4. Better task tracking
+5. Improved communication visibility
+6. Faster issue resolution
+7. Better management reporting
+8. Early identification of at-risk clients
+9. Improved client retention
+10. Operational scalability
+________________
+
+
+
+
+
+
+tables
+Database Table Structure
+Table Name
+	Purpose
+	Key Fields
+	users
+	Stores internal users
+	id, name, email, password_hash, role_id, department, designation, status, created_at
+	roles
+	Stores system roles
+	id, role_name, description
+	permissions
+	Stores permission types
+	id, permission_name, module_name
+	role_permissions
+	Role-based access mapping
+	id, role_id, permission_id
+	login_logs
+	Tracks login activity
+	id, user_id, login_time, logout_time, ip_address, device_info
+	________________
+
+
+1. Clients Table
+Column Name
+	Type
+	Description
+	id
+	INT
+	Primary Key
+	company_name
+	VARCHAR
+	Client company name
+	brand_name
+	VARCHAR
+	Brand name
+	industry
+	VARCHAR
+	Industry type
+	website
+	VARCHAR
+	Website URL
+	email
+	VARCHAR
+	Company email
+	phone
+	VARCHAR
+	Contact number
+	address
+	TEXT
+	Address
+	country
+	VARCHAR
+	Country
+	timezone
+	VARCHAR
+	Timezone
+	client_status
+	ENUM
+	Active / Hold / Lost
+	onboarding_date
+	DATE
+	Client start date
+	renewal_date
+	DATE
+	Contract renewal
+	retainer_value
+	DECIMAL
+	Monthly retainer
+	service_type
+	VARCHAR
+	SEO / Ads / Social etc
+	account_manager_id
+	INT
+	Assigned manager
+	created_at
+	TIMESTAMP
+	Created date
+	updated_at
+	TIMESTAMP
+	Updated date
+	________________
+
+
+2. Client Contacts Table
+Column Name
+	Type
+	Description
+	id
+	INT
+	Primary Key
+	client_id
+	INT
+	Client reference
+	name
+	VARCHAR
+	Contact name
+	designation
+	VARCHAR
+	Designation
+	department
+	VARCHAR
+	Department
+	email
+	VARCHAR
+	Email
+	phone
+	VARCHAR
+	Mobile number
+	is_primary
+	BOOLEAN
+	Primary contact
+	created_at
+	TIMESTAMP
+	Created date
+	________________
+
+
+3. Client SPOC Table
+Column Name
+	Type
+	Description
+	id
+	INT
+	Primary Key
+	client_id
+	INT
+	Client reference
+	role_type
+	VARCHAR
+	SEO Lead / Designer etc
+	user_id
+	INT
+	Internal user
+	assigned_date
+	DATE
+	Assignment date
+	________________
+
+
+4. Tasks Table
+Column Name
+	Type
+	Description
+	id
+	INT
+	Primary Key
+	client_id
+	INT
+	Client reference
+	title
+	VARCHAR
+	Task title
+	description
+	TEXT
+	Task details
+	assigned_to
+	INT
+	Team member
+	assigned_by
+	INT
+	Task creator
+	priority
+	ENUM
+	Low / Medium / High
+	status
+	ENUM
+	Pending / In Progress / Review / Completed
+	due_date
+	DATE
+	Deadline
+	completion_percentage
+	INT
+	Progress
+	created_at
+	TIMESTAMP
+	Created
+	updated_at
+	TIMESTAMP
+	Updated
+	________________
+
+
+5. Task Comments Table
+Column Name
+	Type
+	Description
+	id
+	INT
+	Primary Key
+	task_id
+	INT
+	Task reference
+	user_id
+	INT
+	Commented user
+	comment
+	TEXT
+	Comment
+	created_at
+	TIMESTAMP
+	Created
+	________________
+
+
+6. Communication Logs Table
+Column Name
+	Type
+	Description
+	id
+	INT
+	Primary Key
+	client_id
+	INT
+	Client reference
+	communication_type
+	ENUM
+	Call / Email / WhatsApp / Meeting
+	subject
+	VARCHAR
+	Communication title
+	summary
+	TEXT
+	Summary
+	next_action
+	TEXT
+	Next step
+	follow_up_date
+	DATE
+	Follow-up
+	owner_id
+	INT
+	Responsible person
+	created_by
+	INT
+	User ID
+	created_at
+	TIMESTAMP
+	Created
+	________________
+
+
+7. Meetings (MOM) Table
+Column Name
+	Type
+	Description
+	id
+	INT
+	Primary Key
+	client_id
+	INT
+	Client reference
+	meeting_title
+	VARCHAR
+	Meeting title
+	meeting_date
+	DATETIME
+	Meeting date
+	attendees
+	TEXT
+	Participants
+	agenda
+	TEXT
+	Agenda
+	discussion_points
+	LONGTEXT
+	Discussion
+	created_by
+	INT
+	User ID
+	created_at
+	TIMESTAMP
+	Created
+	________________
+
+
+8. Meeting Action Items Table
+Column Name
+	Type
+	Description
+	id
+	INT
+	Primary Key
+	meeting_id
+	INT
+	Meeting reference
+	action_item
+	TEXT
+	Task/action
+	assigned_to
+	INT
+	Assigned person
+	deadline
+	DATE
+	Due date
+	status
+	ENUM
+	Pending / Completed
+	________________
+
+
+9. SOW Table
+Column Name
+	Type
+	Description
+	id
+	INT
+	Primary Key
+	client_id
+	INT
+	Client reference
+	sow_name
+	VARCHAR
+	SOW title
+	start_date
+	DATE
+	Start date
+	end_date
+	DATE
+	End date
+	total_value
+	DECIMAL
+	Contract amount
+	status
+	ENUM
+	Active / Completed
+	created_at
+	TIMESTAMP
+	Created
+	________________
+
+
+10. SOW Items Table
+Column Name
+	Type
+	Description
+	id
+	INT
+	Primary Key
+	sow_id
+	INT
+	SOW reference
+	deliverable_name
+	VARCHAR
+	Deliverable
+	frequency
+	VARCHAR
+	Weekly / Monthly
+	owner_id
+	INT
+	Assigned owner
+	due_date
+	DATE
+	Deadline
+	status
+	ENUM
+	Pending / In Progress / Completed
+	remarks
+	TEXT
+	Notes
+	________________
+
+
+11. Reports Table
+Column Name
+	Type
+	Description
+	id
+	INT
+	Primary Key
+	client_id
+	INT
+	Client reference
+	report_name
+	VARCHAR
+	Report title
+	report_type
+	ENUM
+	SEO / Ads / Social
+	file_path
+	TEXT
+	Uploaded file
+	uploaded_by
+	INT
+	User ID
+	report_month
+	VARCHAR
+	Month
+	created_at
+	TIMESTAMP
+	Created
+	________________
+
+
+12. Escalations Table
+Column Name
+	Type
+	Description
+	id
+	INT
+	Primary Key
+	client_id
+	INT
+	Client reference
+	title
+	VARCHAR
+	Escalation title
+	issue_description
+	LONGTEXT
+	Issue details
+	severity
+	ENUM
+	Low / Medium / High / Critical
+	assigned_to
+	INT
+	Owner
+	status
+	ENUM
+	Open / In Progress / Resolved
+	resolution_notes
+	LONGTEXT
+	Fix notes
+	created_at
+	TIMESTAMP
+	Created
+	resolved_at
+	TIMESTAMP
+	Resolved
+	________________
+
+
+13. Client Health Score Table
+Column Name
+	Type
+	Description
+	id
+	INT
+	Primary Key
+	client_id
+	INT
+	Client reference
+	communication_score
+	INT
+	Score
+	task_completion_score
+	INT
+	Score
+	escalation_score
+	INT
+	Score
+	report_timeliness_score
+	INT
+	Score
+	overall_score
+	INT
+	Final score
+	risk_level
+	ENUM
+	Excellent / Stable / Risk / Critical
+	calculated_at
+	TIMESTAMP
+	Date
+	________________
+
+
+14. Notifications Table
+Column Name
+	Type
+	Description
+	id
+	INT
+	Primary Key
+	user_id
+	INT
+	User
+	title
+	VARCHAR
+	Notification
+	message
+	TEXT
+	Message
+	is_read
+	BOOLEAN
+	Status
+	created_at
+	TIMESTAMP
+	Created
+	________________
+
+
+15. Activity Logs Table
+Column Name
+	Type
+	Description
+	id
+	INT
+	Primary Key
+	user_id
+	INT
+	User
+	module_name
+	VARCHAR
+	Module
+	action_type
+	VARCHAR
+	Create / Update / Delete
+	reference_id
+	INT
+	Related ID
+	description
+	TEXT
+	Activity
+	created_at
+	TIMESTAMP
+	Created
+	________________
+
+
+Table Relationship Flow
+Users
+↓
+Clients
+├── Client Contacts
+├── Client SPOC
+├── Tasks
+│ └── Task Comments
+├── Communication Logs
+├── Meetings
+│ └── Meeting Action Items
+├── SOW
+│ └── SOW Items
+├── Reports
+├── Escalations
+└── Health Score
+
+
+Images
+LOGIN PAGE 
+  
+
+MAIN DASHBOARD PAGE 
+  
+
+
+
+
+
+
+
+
+
+CLIENT MASTER DASHBOARD PAGE 
+  
+
+CLIENT PROFILE PAGE 
+  
+
+TASK MANAGEMENT PAGE 
+  
+
+COMMUNICATION LOG PAGE 
+  
+
+
+
+
+
+MOM PAGE 
+  
+
+REPORTS PAGE 
+
+
+  
+
+
+
+ESCALATION PAGE 
+  
+
+
+
+SETTINGS / USER MANAGEMENT PAGE 
+  
+
+Timeline
+
+
+Week
+	Module
+	Tasks
+	Output
+	Week 1
+	Project Setup + Core
+	DB schema, project setup, authentication, role management, sidebar, navbar, dashboard layout
+	Base system ready
+	Week 1
+	Client Module
+	Client CRUD, client contacts, SPOC assignment, filters
+	Client management ready
+	Week 2
+	Client Profile
+	Client details, communication tab, tasks tab, MOM tab, SOW summary
+	Full client profile working
+	Week 2
+	Task Module
+	Task CRUD, assignment, priority, due dates, status tracking
+	Task system ready
+	Week 3
+	Communication + MOM
+	Communication logs, meeting records, action items, follow-up tracking
+	Communication system ready
+	Week 3
+	SOW + Reports
+	SOW tracker, deliverables, report uploads, report listing
+	Delivery tracking ready
+	Week 4
+	Escalation + Health Score
+	Escalation module, health score logic, risk indicators
+	Client monitoring ready
+	Week 4
+	Final Testing
+	Filters, bug fixing, responsive UI, permission testing, deployment
+	MVP completed
+	
+
+
+
+Days
+	Work
+	Day 1–3
+	DB schema + project setup
+	Day 4–5
+	Auth + roles
+	Day 6–8
+	Dashboard UI
+	Day 9–12
+	Client CRUD
+	Day 13–15
+	Client profile
+	Day 16–18
+	Tasks module
+	Day 19–21
+	Communication logs
+	Day 22–23
+	MOM
+	Day 24–25
+	SOW tracker
+	Day 26
+	Reports
+	Day 27
+	Escalations
+	Day 28
+	Health score
+	Day 29–30
+	Testing + fixes

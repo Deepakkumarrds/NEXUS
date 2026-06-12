@@ -15,6 +15,7 @@ const meetingRoutes = require('./routes/meetingRoutes');
 const sowRoutes = require('./routes/sowRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const escalationRoutes = require('./routes/escalationRoutes');
+const authRoutes = require('./routes/authRoutes');
 
 // Middlewares
 app.use(cors());
@@ -34,6 +35,7 @@ app.use('/api/meetings', meetingRoutes);
 app.use('/api/sows', sowRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/escalations', escalationRoutes);
+app.use('/api/auth', authRoutes);
 
 // Start the server
 app.listen(PORT, () => {

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-export default function AddCommunicationPage() {
+export default function NewCommunicationPage() {
   const [clients, setClients] = useState<{id: string, company_name: string}[]>([]);
   const [formData, setFormData] = useState({
     client_id: '',
@@ -15,13 +15,7 @@ export default function AddCommunicationPage() {
   });
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/clients')
-      .then(res => res.json())
-      .then(data => { 
-        if (data && data.data) {
-          setClients(data.data); 
-        }
-      });
+    fetch('http://localhost:5000/api/clients').then(res => res.json()).then(data => { if(data && data.data) setClients(data.data); });
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -50,25 +44,24 @@ export default function AddCommunicationPage() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <div className="mb-8">
-        <Link href="/communications" className="text-indigo-600 hover:underline text-sm font-medium">
-          &larr; Back to Communications
+      <div className="mb-6">
+        <Link href="/communications" className="text-indigo-600 hover:text-indigo-800 font-medium text-sm flex items-center transition-colors">
+          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+          Back to Communications
         </Link>
-        <h1 className="text-3xl font-bold text-gray-800 mt-2">Log Communication</h1>
-        <p className="text-gray-500 mt-1">Record a client interaction and set follow-ups.</p>
+        <h1 className="text-2xl font-semibold text-slate-900 mt-4 tracking-tight">Log Interaction</h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
-        <div className="space-y-6">
+      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-sm border border-slate-200">
+        <div className="space-y-5 text-sm">
           
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 gap-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Client</label>
+              <label className="block font-medium text-slate-700 mb-1.5">Client</label>
               <select 
-                name="client_id"
-                required
-                className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition bg-white"
-                value={formData.client_id}
+                name="client_id" 
+                required 
+                className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow bg-white"
                 onChange={handleChange}
               >
                 <option value="">Select a client...</option>
@@ -77,16 +70,14 @@ export default function AddCommunicationPage() {
                 ))}
               </select>
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+              <label className="block font-medium text-slate-700 mb-1.5">Type</label>
               <select 
-                name="communication_type"
-                className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition bg-white"
-                value={formData.communication_type}
+                name="communication_type" 
+                className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow bg-white"
                 onChange={handleChange}
               >
-                <option value="Call">Call</option>
+                <option value="Call">Phone Call</option>
                 <option value="Email">Email</option>
                 <option value="WhatsApp">WhatsApp</option>
                 <option value="Meeting">Meeting</option>
@@ -95,51 +86,45 @@ export default function AddCommunicationPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+            <label className="block font-medium text-slate-700 mb-1.5">Subject</label>
             <input 
               type="text" 
-              name="subject"
-              required
-              className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-              placeholder="e.g. Discussed September deliverables"
-              value={formData.subject}
+              name="subject" 
+              required 
+              placeholder="e.g. Discussed Q3 Deliverables"
+              className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow"
               onChange={handleChange}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Summary / Notes</label>
+            <label className="block font-medium text-slate-700 mb-1.5">Summary</label>
             <textarea 
-              name="summary"
+              name="summary" 
               rows={4}
-              required
-              className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-              placeholder="What was discussed?"
-              value={formData.summary}
+              placeholder="Key discussion points..."
+              className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow"
               onChange={handleChange}
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 gap-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Next Action (Optional)</label>
+              <label className="block font-medium text-slate-700 mb-1.5">Next Action</label>
               <input 
                 type="text" 
-                name="next_action"
-                className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                name="next_action" 
                 placeholder="e.g. Send updated proposal"
-                value={formData.next_action}
+                className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow"
                 onChange={handleChange}
               />
             </div>
-            
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Follow-up Date</label>
+              <label className="block font-medium text-slate-700 mb-1.5">Follow Up Date</label>
               <input 
                 type="date" 
-                name="follow_up_date"
-                className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-                value={formData.follow_up_date}
+                name="follow_up_date" 
+                className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow"
                 onChange={handleChange}
               />
             </div>
@@ -147,17 +132,11 @@ export default function AddCommunicationPage() {
 
         </div>
 
-        <div className="mt-8 flex justify-end">
-          <Link 
-            href="/communications" 
-            className="px-6 py-2 text-gray-600 font-medium hover:bg-gray-50 rounded-lg mr-2 transition"
-          >
+        <div className="mt-8 pt-5 border-t border-slate-100 flex justify-end space-x-3">
+          <Link href="/communications" className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 border border-slate-200 rounded-md transition-colors">
             Cancel
           </Link>
-          <button 
-            type="submit" 
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-medium transition"
-          >
+          <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md shadow-sm transition-colors">
             Save Log
           </button>
         </div>

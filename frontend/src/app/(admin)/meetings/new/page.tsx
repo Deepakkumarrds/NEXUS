@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-export default function AddMeetingPage() {
+export default function NewMeetingPage() {
   const [clients, setClients] = useState<{id: string, company_name: string}[]>([]);
   const [formData, setFormData] = useState({
     client_id: '',
@@ -17,13 +17,7 @@ export default function AddMeetingPage() {
   const [actionItems, setActionItems] = useState([{ action_item: '', deadline: '' }]);
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/clients')
-      .then(res => res.json())
-      .then(data => { 
-        if (data && data.data) {
-          setClients(data.data); 
-        }
-      });
+    fetch('http://localhost:5000/api/clients').then(res => res.json()).then(data => { if(data && data.data) setClients(data.data); });
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -36,11 +30,11 @@ export default function AddMeetingPage() {
     setActionItems(newItems);
   };
 
-  const addActionItemRow = () => {
+  const addActionItem = () => {
     setActionItems([...actionItems, { action_item: '', deadline: '' }]);
   };
 
-  const removeActionItemRow = (index: number) => {
+  const removeActionItem = (index: number) => {
     setActionItems(actionItems.filter((_, i) => i !== index));
   };
 
@@ -49,7 +43,7 @@ export default function AddMeetingPage() {
     try {
       const payload = {
         ...formData,
-        action_items: actionItems.filter(item => item.action_item.trim() !== '')
+        actionItems: actionItems.filter(ai => ai.action_item.trim() !== '') // only send filled ones
       };
 
       const response = await fetch('http://localhost:5000/api/meetings', {
@@ -61,7 +55,7 @@ export default function AddMeetingPage() {
       if (response.ok) {
         window.location.href = '/meetings';
       } else {
-        alert('Failed to log meeting.');
+        alert('Failed to save meeting.');
       }
     } catch (error) {
       console.error('Error:', error);
@@ -70,41 +64,36 @@ export default function AddMeetingPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="mb-10">
-        <Link href="/meetings" className="text-indigo-600 hover:text-purple-600 font-semibold text-sm transition-colors flex items-center">
-          <span className="mr-2">←</span> Back to Meetings
+    <div className="max-w-3xl mx-auto">
+      <div className="mb-6">
+        <Link href="/meetings" className="text-indigo-600 hover:text-indigo-800 font-medium text-sm flex items-center transition-colors">
+          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+          Back to Meetings
         </Link>
-        <h1 className="text-4xl font-extrabold text-gray-800 mt-4 tracking-tight">Log New Meeting</h1>
-        <p className="text-gray-500 mt-2 text-lg">Record discussions and assign action items seamlessly.</p>
+        <h1 className="text-2xl font-semibold text-slate-900 mt-4 tracking-tight">Log Meeting Minutes</h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white/70 backdrop-blur-xl p-10 rounded-3xl shadow-xl shadow-gray-200/50 border border-white/50">
-        
-        {/* Basic Info Section */}
-        <div className="mb-8">
-          <h2 className="text-xl font-bold text-gray-800 mb-6 border-b pb-2">Meeting Details</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="md:col-span-2">
-              <label className="block text-sm font-bold text-gray-700 mb-2">Meeting Title</label>
+      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-sm border border-slate-200">
+        <div className="space-y-6 text-sm">
+          
+          <div className="grid grid-cols-2 gap-6">
+            <div>
+              <label className="block font-medium text-slate-700 mb-1.5">Meeting Title</label>
               <input 
                 type="text" 
                 name="meeting_title"
                 required
-                className="w-full bg-gray-50 border-0 ring-1 ring-gray-200 rounded-xl p-4 focus:ring-2 focus:ring-indigo-500 transition-all outline-none shadow-inner"
-                placeholder="e.g. Q3 Performance Review"
-                value={formData.meeting_title}
+                className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow"
+                placeholder="e.g. Q3 Strategic Planning"
                 onChange={handleChange}
               />
             </div>
-
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Client</label>
+              <label className="block font-medium text-slate-700 mb-1.5">Client</label>
               <select 
                 name="client_id"
                 required
-                className="w-full bg-gray-50 border-0 ring-1 ring-gray-200 rounded-xl p-4 focus:ring-2 focus:ring-indigo-500 transition-all outline-none appearance-none"
-                value={formData.client_id}
+                className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow bg-white"
                 onChange={handleChange}
               >
                 <option value="">Select a client...</option>
@@ -113,115 +102,108 @@ export default function AddMeetingPage() {
                 ))}
               </select>
             </div>
+          </div>
 
+          <div className="grid grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Meeting Date</label>
+              <label className="block font-medium text-slate-700 mb-1.5">Date & Time</label>
               <input 
                 type="datetime-local" 
                 name="meeting_date"
                 required
-                className="w-full bg-gray-50 border-0 ring-1 ring-gray-200 rounded-xl p-4 focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
-                value={formData.meeting_date}
+                className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow"
                 onChange={handleChange}
               />
             </div>
-
-            <div className="md:col-span-2">
-              <label className="block text-sm font-bold text-gray-700 mb-2">Attendees (Names / Roles)</label>
+            <div>
+              <label className="block font-medium text-slate-700 mb-1.5">Attendees</label>
               <input 
                 type="text" 
                 name="attendees"
-                className="w-full bg-gray-50 border-0 ring-1 ring-gray-200 rounded-xl p-4 focus:ring-2 focus:ring-indigo-500 transition-all outline-none shadow-inner"
-                placeholder="e.g. John Doe (CEO), Sarah Smith (Marketing Lead)"
-                value={formData.attendees}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="block text-sm font-bold text-gray-700 mb-2">Agenda</label>
-              <input 
-                type="text" 
-                name="agenda"
-                className="w-full bg-gray-50 border-0 ring-1 ring-gray-200 rounded-xl p-4 focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
-                placeholder="Core topics planned for discussion"
-                value={formData.agenda}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="block text-sm font-bold text-gray-700 mb-2">Detailed Discussion Points (MOM)</label>
-              <textarea 
-                name="discussion_points"
-                rows={5}
-                required
-                className="w-full bg-gray-50 border-0 ring-1 ring-gray-200 rounded-xl p-4 focus:ring-2 focus:ring-indigo-500 transition-all outline-none shadow-inner resize-y"
-                placeholder="Record the exact minutes and takeaways here..."
-                value={formData.discussion_points}
+                placeholder="e.g. John Doe, Jane Smith"
+                className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow"
                 onChange={handleChange}
               />
             </div>
           </div>
+
+          <div>
+            <label className="block font-medium text-slate-700 mb-1.5">Agenda</label>
+            <textarea 
+              name="agenda"
+              rows={3}
+              placeholder="What was the purpose of the meeting?"
+              className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow"
+              onChange={handleChange}
+            />
+          </div>
+
+          <div>
+            <label className="block font-medium text-slate-700 mb-1.5">Discussion Points</label>
+            <textarea 
+              name="discussion_points"
+              required
+              rows={5}
+              placeholder="Detailed notes and points discussed..."
+              className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow"
+              onChange={handleChange}
+            />
+          </div>
+
+          <div className="pt-6 border-t border-slate-100">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-semibold text-slate-900">Action Items</h3>
+              <button 
+                type="button" 
+                onClick={addActionItem}
+                className="text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-md transition-colors"
+              >
+                + Add Item
+              </button>
+            </div>
+            
+            <div className="space-y-3">
+              {actionItems.map((item, index) => (
+                <div key={index} className="flex gap-4 items-start bg-slate-50 p-3 rounded-md border border-slate-200">
+                  <div className="flex-1">
+                    <input 
+                      type="text" 
+                      placeholder="Describe the task..."
+                      className="w-full border border-slate-300 rounded-md p-2 text-sm focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                      value={item.action_item}
+                      onChange={(e) => handleActionItemChange(index, 'action_item', e.target.value)}
+                    />
+                  </div>
+                  <div className="w-48">
+                    <input 
+                      type="date" 
+                      className="w-full border border-slate-300 rounded-md p-2 text-sm focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                      value={item.deadline}
+                      onChange={(e) => handleActionItemChange(index, 'deadline', e.target.value)}
+                    />
+                  </div>
+                  {actionItems.length > 1 && (
+                    <button 
+                      type="button" 
+                      onClick={() => removeActionItem(index)}
+                      className="mt-2 text-slate-400 hover:text-red-600 transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
         </div>
 
-        {/* Action Items Section */}
-        <div className="mb-10 bg-indigo-50/50 rounded-2xl p-6 border border-indigo-100">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-indigo-900">Action Items</h2>
-            <button 
-              type="button" 
-              onClick={addActionItemRow}
-              className="text-sm font-bold text-indigo-600 bg-white px-3 py-1.5 rounded-lg border border-indigo-200 shadow-sm hover:bg-indigo-600 hover:text-white transition-colors"
-            >
-              + Add Item
-            </button>
-          </div>
-          
-          <div className="space-y-4">
-            {actionItems.map((item, index) => (
-              <div key={index} className="flex gap-4 items-center bg-white p-2 rounded-xl shadow-sm border border-gray-100 relative group">
-                <div className="flex-1">
-                  <input
-                    type="text"
-                    placeholder="Describe the task/action..."
-                    className="w-full bg-transparent border-0 p-2 focus:ring-0 outline-none text-gray-800"
-                    value={item.action_item}
-                    onChange={(e) => handleActionItemChange(index, 'action_item', e.target.value)}
-                  />
-                </div>
-                <div className="w-48 border-l pl-4">
-                  <input
-                    type="date"
-                    className="w-full bg-transparent border-0 text-sm text-gray-500 focus:ring-0 outline-none"
-                    value={item.deadline}
-                    onChange={(e) => handleActionItemChange(index, 'deadline', e.target.value)}
-                  />
-                </div>
-                <button 
-                  type="button" 
-                  onClick={() => removeActionItemRow(index)}
-                  className="w-8 h-8 rounded-full bg-red-50 text-red-500 flex items-center justify-center opacity-0 group-hover:opacity-100 transition hover:bg-red-500 hover:text-white absolute -right-3 -top-3 shadow-sm border border-red-100"
-                >
-                  ×
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="flex justify-end items-center pt-6 border-t border-gray-100">
-          <Link 
-            href="/meetings" 
-            className="px-8 py-3 text-gray-600 font-bold hover:bg-gray-100 rounded-xl mr-4 transition"
-          >
-            Discard
+        <div className="mt-8 pt-5 border-t border-slate-100 flex justify-end space-x-3">
+          <Link href="/meetings" className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 border border-slate-200 rounded-md transition-colors">
+            Cancel
           </Link>
-          <button 
-            type="submit" 
-            className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-10 py-3 rounded-xl font-bold shadow-xl shadow-indigo-200 transition transform hover:-translate-y-0.5"
-          >
-            Save Meeting Log
+          <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md shadow-sm transition-colors">
+            Save Meeting
           </button>
         </div>
       </form>

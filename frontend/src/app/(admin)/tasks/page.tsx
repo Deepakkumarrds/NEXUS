@@ -10,7 +10,7 @@ type Task = {
   status: string;
   due_date: string;
   client?: { company_name: string };
-  assigned_to?: { name: string };
+  assignee?: { name: string };
 };
 
 export default function TasksPage() {
@@ -32,92 +32,85 @@ export default function TasksPage() {
       });
   }, []);
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityBadge = (priority: string) => {
     switch(priority) {
-      case 'High': return 'text-red-700 bg-red-50 border-red-200';
-      case 'Medium': return 'text-orange-700 bg-orange-50 border-orange-200';
-      case 'Low': return 'text-green-700 bg-green-50 border-green-200';
-      default: return 'text-gray-700 bg-gray-50 border-gray-200';
+      case 'High': return 'bg-rose-50 text-rose-700 border-rose-200';
+      case 'Medium': return 'bg-amber-50 text-amber-700 border-amber-200';
+      default: return 'bg-slate-100 text-slate-700 border-slate-200';
     }
   };
 
-  const updateStatus = async (id: string, newStatus: string) => {
-    try {
-      const res = await fetch(`http://localhost:5000/api/tasks/${id}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ task_status: newStatus })
-      });
-      if (res.ok) {
-        setTasks(tasks.map(t => t.id === id ? { ...t, status: newStatus } : t));
-      }
-    } catch (err) {
-      console.error(err);
+  const getStatusBadge = (status: string) => {
+    switch(status) {
+      case 'Completed': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      case 'In Progress': return 'bg-indigo-50 text-indigo-700 border-indigo-200';
+      default: return 'bg-slate-50 text-slate-700 border-slate-200';
     }
   };
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">Tasks Board</h1>
-          <p className="text-gray-500 mt-1">Manage deliverables and deadlines across all clients.</p>
+          <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Task Management</h1>
+          <p className="text-sm text-slate-500 mt-1">Track internal operations and client deliverables.</p>
         </div>
         <Link 
           href="/tasks/new" 
-          className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition"
+          className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium transition shadow-sm flex items-center"
         >
-          + Add New Task
+          <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+          Create Task
         </Link>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center text-gray-500">Loading tasks...</div>
+          <div className="p-8 text-center text-slate-500 text-sm">Loading tasks...</div>
         ) : (
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-100 text-gray-600">
-                <th className="p-4 font-semibold">Task Title</th>
-                <th className="p-4 font-semibold">Client</th>
-                <th className="p-4 font-semibold">Priority</th>
-                <th className="p-4 font-semibold">Due Date</th>
-                <th className="p-4 font-semibold">Status</th>
-                <th className="p-4 font-semibold text-right">Actions</th>
+          <table className="min-w-full divide-y divide-slate-200 text-sm">
+            <thead className="bg-slate-50 border-b border-slate-200">
+              <tr>
+                <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700">Task Title</th>
+                <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700">Client</th>
+                <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700">Assignee</th>
+                <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700">Priority</th>
+                <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700">Status</th>
+                <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700">Due Date</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="bg-white divide-y divide-slate-100">
               {tasks.map(task => (
-                <tr key={task.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition">
-                  <td className="p-4 font-medium text-gray-800">{task.title}</td>
-                  <td className="p-4 text-gray-600">{task.client?.company_name || 'Unassigned'}</td>
-                  <td className="p-4">
-                    <span className={`px-3 py-1 rounded-full border text-xs font-semibold ${getPriorityColor(task.priority)}`}>
+                <tr key={task.id} className="hover:bg-slate-50 transition-colors">
+                  <td className="px-6 py-4 whitespace-nowrap font-medium text-slate-900">
+                    {task.title}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-slate-600">
+                    {task.client?.company_name || 'Internal'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-slate-600">
+                    {task.assignee?.name || 'Unassigned'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`px-2 py-1 text-xs font-medium rounded-md border ${getPriorityBadge(task.priority)}`}>
                       {task.priority}
                     </span>
                   </td>
-                  <td className="p-4 text-gray-600">
-                    {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No date'}
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`px-2 py-1 text-xs font-medium rounded-md border ${getStatusBadge(task.status)}`}>
+                      {task.status}
+                    </span>
                   </td>
-                  <td className="p-4">
-                    <select 
-                      value={task.status}
-                      onChange={(e) => updateStatus(task.id, e.target.value)}
-                      className="text-sm border-gray-300 rounded p-1"
-                    >
-                      <option value="Pending">Pending</option>
-                      <option value="In Progress">In Progress</option>
-                      <option value="Completed">Completed</option>
-                    </select>
-                  </td>
-                  <td className="p-4 text-right">
-                    <button className="text-gray-400 hover:text-red-600 font-medium text-sm">Delete</button>
+                  <td className="px-6 py-4 whitespace-nowrap text-slate-500">
+                    {task.due_date ? new Date(task.due_date).toLocaleDateString() : '-'}
                   </td>
                 </tr>
               ))}
               {tasks.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-gray-500">No tasks found. Click "Add New Task" to get started.</td>
+                  <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
+                    No tasks found. Click "Create Task" to get started.
+                  </td>
                 </tr>
               )}
             </tbody>

@@ -39,18 +39,18 @@ export default function EscalationsPage() {
 
   const getSeverityBadge = (severity: string) => {
     switch(severity) {
-      case 'Critical': return 'bg-red-100 text-red-700 border-red-200';
-      case 'High': return 'bg-orange-100 text-orange-700 border-orange-200';
-      case 'Medium': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-      default: return 'bg-gray-100 text-gray-700 border-gray-200';
+      case 'Critical': return 'bg-rose-50 text-rose-700 border-rose-200';
+      case 'High': return 'bg-orange-50 text-orange-700 border-orange-200';
+      case 'Medium': return 'bg-amber-50 text-amber-700 border-amber-200';
+      default: return 'bg-slate-50 text-slate-700 border-slate-200';
     }
   };
 
   const getStatusBadge = (status: string) => {
     switch(status) {
-      case 'Resolved': return 'bg-green-100 text-green-700';
-      case 'In Progress': return 'bg-blue-100 text-blue-700';
-      default: return 'bg-red-50 text-red-600 border border-red-200';
+      case 'Resolved': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      case 'In Progress': return 'bg-blue-50 text-blue-700 border-blue-200';
+      default: return 'bg-rose-50 text-rose-700 border-rose-200';
     }
   };
 
@@ -69,75 +69,78 @@ export default function EscalationsPage() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-10">
+      <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-orange-500">
-            Escalations
-          </h1>
-          <p className="text-gray-500 mt-2 font-medium">Track and resolve high-priority client issues.</p>
+          <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Escalations</h1>
+          <p className="text-sm text-slate-500 mt-1">Track and resolve high-priority client issues.</p>
         </div>
         <Link 
           href="/escalations/new" 
-          className="bg-gradient-to-r from-red-600 to-orange-500 hover:from-red-700 hover:to-orange-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-red-200 transition transform hover:-translate-y-1"
+          className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium transition shadow-sm flex items-center"
         >
-          + Raise Escalation
+          <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+          Raise Escalation
         </Link>
       </div>
 
-      {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {[1, 2].map(i => (
-            <div key={i} className="animate-pulse bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-48"></div>
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {escalations.map(esc => (
-            <div 
-              key={esc.id} 
-              className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 relative"
-            >
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex items-center space-x-2">
-                  <span className={`text-xs font-bold px-3 py-1 rounded-full border ${getSeverityBadge(esc.severity)}`}>
-                    {esc.severity}
-                  </span>
-                  <span className="text-xs font-semibold text-gray-500 bg-gray-50 px-3 py-1 rounded-full">
+      <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+        {loading ? (
+          <div className="p-8 text-center text-slate-500 text-sm">Loading escalations...</div>
+        ) : (
+          <table className="min-w-full divide-y divide-slate-200 text-sm">
+            <thead className="bg-slate-50 border-b border-slate-200">
+              <tr>
+                <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700">Issue Title</th>
+                <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700">Client</th>
+                <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700">Severity</th>
+                <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700">Status</th>
+                <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700">Date Raised</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-slate-100">
+              {escalations.map(esc => (
+                <tr key={esc.id} className="hover:bg-slate-50 transition-colors">
+                  <td className="px-6 py-4 font-medium text-slate-900">
+                    {esc.title}
+                    {esc.issue_description && (
+                      <p className="text-xs text-slate-500 mt-1 font-normal line-clamp-1">{esc.issue_description}</p>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-slate-600">
                     {esc.client?.company_name || 'General'}
-                  </span>
-                </div>
-                
-                <select 
-                  value={esc.status}
-                  onChange={(e) => handleStatusChange(esc.id, e.target.value)}
-                  className={`text-xs font-bold px-3 py-1.5 rounded-lg border-0 shadow-sm cursor-pointer outline-none appearance-none ${getStatusBadge(esc.status)}`}
-                >
-                  <option value="Open">Open</option>
-                  <option value="In Progress">In Progress</option>
-                  <option value="Resolved">Resolved</option>
-                </select>
-              </div>
-
-              <h3 className="font-bold text-gray-900 text-xl mb-2">{esc.title}</h3>
-              <p className="text-sm text-gray-600 mb-6 bg-red-50/50 p-3 rounded-lg border border-red-50/50">
-                {esc.issue_description}
-              </p>
-
-              <div className="text-xs text-gray-400 font-medium flex justify-between items-center border-t pt-4">
-                <span>Raised: {new Date(esc.created_at).toLocaleDateString()}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {!loading && escalations.length === 0 && (
-        <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-gray-200">
-          <div className="text-6xl mb-4">✅</div>
-          <h2 className="text-2xl font-bold text-gray-800">No Open Escalations</h2>
-          <p className="text-gray-500 mt-2">All client accounts are healthy and issue-free.</p>
-        </div>
-      )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`px-2 py-1 text-xs font-medium rounded-md border ${getSeverityBadge(esc.severity)}`}>
+                      {esc.severity}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <select 
+                      value={esc.status}
+                      onChange={(e) => handleStatusChange(esc.id, e.target.value)}
+                      className={`text-xs font-medium px-2 py-1 rounded-md border cursor-pointer outline-none transition-colors ${getStatusBadge(esc.status)}`}
+                    >
+                      <option value="Open">Open</option>
+                      <option value="In Progress">In Progress</option>
+                      <option value="Resolved">Resolved</option>
+                    </select>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-slate-500">
+                    {new Date(esc.created_at).toLocaleDateString()}
+                  </td>
+                </tr>
+              ))}
+              {escalations.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-6 py-8 text-center text-slate-500">
+                    No open escalations. All client accounts are healthy.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        )}
+      </div>
     </div>
   );
 }

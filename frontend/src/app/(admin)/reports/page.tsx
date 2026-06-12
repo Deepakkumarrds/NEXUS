@@ -32,80 +32,70 @@ export default function ReportsPage() {
       });
   }, []);
 
-  const getReportIcon = (type: string) => {
-    switch(type) {
-      case 'SEO': return '🔍';
-      case 'Ads': return '📈';
-      case 'Social': return '📱';
-      default: return '📊';
-    }
-  };
-
   return (
     <div>
-      <div className="flex justify-between items-center mb-10">
+      <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
-            Performance Reports
-          </h1>
-          <p className="text-gray-500 mt-2 font-medium">Repository of all monthly deliverables and data sent to clients.</p>
+          <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Performance Reports</h1>
+          <p className="text-sm text-slate-500 mt-1">Repository of all monthly deliverables and data sent to clients.</p>
         </div>
         <Link 
           href="/reports/new" 
-          className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-blue-200 transition transform hover:-translate-y-1"
+          className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium transition shadow-sm flex items-center"
         >
-          + Upload Report
+          <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+          Upload Report
         </Link>
       </div>
 
-      {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="animate-pulse bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-48"></div>
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {reports.map(report => (
-            <div 
-              key={report.id} 
-              className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col justify-between"
-            >
-              <div>
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="text-3xl">{getReportIcon(report.report_type)}</div>
-                    <div>
-                      <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-md uppercase">
-                        {report.report_type}
-                      </span>
-                    </div>
-                  </div>
-                  <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded">
+      <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+        {loading ? (
+          <div className="p-8 text-center text-slate-500 text-sm">Loading reports...</div>
+        ) : (
+          <table className="min-w-full divide-y divide-slate-200 text-sm">
+            <thead className="bg-slate-50 border-b border-slate-200">
+              <tr>
+                <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700">Report Name</th>
+                <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700">Client</th>
+                <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700">Type</th>
+                <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700">Month</th>
+                <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700">Uploader</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-slate-100">
+              {reports.map(report => (
+                <tr key={report.id} className="hover:bg-slate-50 transition-colors">
+                  <td className="px-6 py-4 whitespace-nowrap font-medium text-slate-900 flex items-center">
+                    <svg className="w-4 h-4 mr-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    {report.report_name}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-slate-600">
+                    {report.client?.company_name || 'General'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                      {report.report_type}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-slate-600">
                     {report.report_month}
-                  </span>
-                </div>
-
-                <h3 className="font-bold text-gray-900 text-lg mb-1 leading-tight">{report.report_name}</h3>
-                <p className="text-sm text-gray-500 font-medium">{report.client?.company_name || 'General'}</p>
-              </div>
-
-              <div className="mt-6 pt-4 border-t flex justify-between items-center text-xs text-gray-400 font-medium">
-                <span>By {report.uploader?.name || 'Unknown'}</span>
-                <span>{new Date(report.created_at).toLocaleDateString()}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-      
-      {!loading && reports.length === 0 && (
-        <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-gray-200">
-          <div className="text-6xl mb-4">📉</div>
-          <h2 className="text-2xl font-bold text-gray-800">No Reports Uploaded</h2>
-          <p className="text-gray-500 mt-2">Log and share performance data with clients.</p>
-        </div>
-      )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-slate-500">
+                    {report.uploader?.name || 'Unknown'}
+                  </td>
+                </tr>
+              ))}
+              {reports.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-6 py-8 text-center text-slate-500">
+                    No reports uploaded. Click "Upload Report" to add one.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        )}
+      </div>
     </div>
   );
 }

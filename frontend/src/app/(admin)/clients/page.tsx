@@ -6,9 +6,10 @@ import Link from 'next/link';
 type Client = {
   id: string;
   company_name: string;
-  email: string;
-  service_type: string;
+  industry: string;
   client_status: string;
+  account_manager_id: string;
+  created_at: string;
 };
 
 export default function ClientsPage() {
@@ -18,11 +19,11 @@ export default function ClientsPage() {
   useEffect(() => {
     fetch('http://localhost:5000/api/clients')
       .then(res => res.json())
-      .then(data => { 
+      .then(data => {
         if (data && data.data) {
-          setClients(data.data); 
+          setClients(data.data);
         }
-        setLoading(false); 
+        setLoading(false);
       })
       .catch(error => {
         console.error('Error fetching clients:', error);
@@ -30,59 +31,68 @@ export default function ClientsPage() {
       });
   }, []);
 
+  const getStatusBadge = (status: string) => {
+    switch(status) {
+      case 'Active': return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
+      case 'Hold': return 'bg-amber-50 text-amber-700 border border-amber-200';
+      case 'Lost': return 'bg-rose-50 text-rose-700 border border-rose-200';
+      default: return 'bg-slate-50 text-slate-700 border border-slate-200';
+    }
+  };
+
   return (
     <div>
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">Client Master Dashboard</h1>
-          <p className="text-gray-500 mt-1">Overview of all active and past clients.</p>
+          <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Clients Master</h1>
+          <p className="text-sm text-slate-500 mt-1">Manage and view all your agency clients.</p>
         </div>
         <Link 
           href="/clients/new" 
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition"
+          className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium transition shadow-sm flex items-center"
         >
-          + Add New Client
+          <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+          Add Client
         </Link>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center text-gray-500">Loading clients...</div>
+          <div className="p-8 text-center text-slate-500 text-sm">Loading data...</div>
         ) : (
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-100 text-gray-600">
-                <th className="p-4 font-semibold">Company Name</th>
-                <th className="p-4 font-semibold">Email</th>
-                <th className="p-4 font-semibold">Service Type</th>
-                <th className="p-4 font-semibold">Status</th>
-                <th className="p-4 font-semibold text-right">Actions</th>
+          <table className="min-w-full divide-y divide-slate-200 text-sm">
+            <thead className="bg-slate-50 border-b border-slate-200">
+              <tr>
+                <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700">Company Name</th>
+                <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700">Industry</th>
+                <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700">Status</th>
+                <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700">Onboarded</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="bg-white divide-y divide-slate-100">
               {clients.map(client => (
-                <tr key={client.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition">
-                  <td className="p-4 font-medium text-gray-800">{client.company_name}</td>
-                  <td className="p-4 text-gray-600">{client.email}</td>
-                  <td className="p-4">
-                    <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-medium">
-                      {client.service_type}
-                    </span>
+                <tr key={client.id} className="hover:bg-slate-50 transition-colors">
+                  <td className="px-6 py-4 whitespace-nowrap font-medium text-slate-900">
+                    {client.company_name}
                   </td>
-                  <td className="p-4">
-                    <span className="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-sm font-medium">
+                  <td className="px-6 py-4 whitespace-nowrap text-slate-600">
+                    {client.industry || '-'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${getStatusBadge(client.client_status)}`}>
                       {client.client_status}
                     </span>
                   </td>
-                  <td className="p-4 text-right">
-                    <button className="text-blue-600 hover:text-blue-800 font-medium text-sm mr-4">View Profile</button>
-                    <button className="text-gray-400 hover:text-red-600 font-medium text-sm">Delete</button>
+                  <td className="px-6 py-4 whitespace-nowrap text-slate-500">
+                    {new Date(client.created_at).toLocaleDateString()}
                   </td>
                 </tr>
               ))}
               {clients.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-gray-500">No clients found. Click "Add New Client" to get started.</td>
+                  <td colSpan={4} className="px-6 py-8 text-center text-slate-500">
+                    No clients found. Click "Add Client" to create your first client.
+                  </td>
                 </tr>
               )}
             </tbody>

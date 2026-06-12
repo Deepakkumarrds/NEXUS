@@ -3,24 +3,22 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-export default function AddTaskPage() {
+export default function NewTaskPage() {
   const [clients, setClients] = useState<{id: string, company_name: string}[]>([]);
+  const [users, setUsers] = useState<{id: string, name: string}[]>([]);
+  
   const [formData, setFormData] = useState({
+    client_id: '',
     title: '',
     description: '',
+    assigned_to: '',
     priority: 'Medium',
-    due_date: '',
-    client_id: ''
+    due_date: ''
   });
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/clients')
-      .then(res => res.json())
-      .then(data => { 
-        if (data && data.data) {
-          setClients(data.data); 
-        }
-      });
+    // Ideally we fetch clients and users from backend here
+    fetch('http://localhost:5000/api/clients').then(res => res.json()).then(data => { if(data && data.data) setClients(data.data); });
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -39,7 +37,7 @@ export default function AddTaskPage() {
       if (response.ok) {
         window.location.href = '/tasks';
       } else {
-        alert('Failed to create task.');
+        alert('Failed to save task.');
       }
     } catch (error) {
       console.error('Error:', error);
@@ -49,99 +47,85 @@ export default function AddTaskPage() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <div className="mb-8">
-        <Link href="/tasks" className="text-indigo-600 hover:underline text-sm font-medium">
-          &larr; Back to Tasks
+      <div className="mb-6">
+        <Link href="/tasks" className="text-indigo-600 hover:text-indigo-800 font-medium text-sm flex items-center transition-colors">
+          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+          Back to Tasks
         </Link>
-        <h1 className="text-3xl font-bold text-gray-800 mt-2">Add New Task</h1>
-        <p className="text-gray-500 mt-1">Create a deliverable and assign it to a client.</p>
+        <h1 className="text-2xl font-semibold text-slate-900 mt-4 tracking-tight">Create Task</h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
-        <div className="space-y-6">
+      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-sm border border-slate-200">
+        <div className="space-y-5 text-sm">
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Task Title</label>
+            <label className="block font-medium text-slate-700 mb-1.5">Task Title</label>
             <input 
               type="text" 
-              name="title"
-              required
-              className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-              placeholder="e.g. Write Blog Post for September"
-              value={formData.title}
+              name="title" 
+              required 
+              className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow"
               onChange={handleChange}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <label className="block font-medium text-slate-700 mb-1.5">Client</label>
+            <select 
+              name="client_id" 
+              required 
+              className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow bg-white"
+              onChange={handleChange}
+            >
+              <option value="">Select a client...</option>
+              {clients.map(c => (
+                <option key={c.id} value={c.id}>{c.company_name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block font-medium text-slate-700 mb-1.5">Description</label>
             <textarea 
-              name="description"
-              rows={3}
-              className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-              placeholder="Task details..."
-              value={formData.description}
+              name="description" 
+              rows={4}
+              className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow"
               onChange={handleChange}
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 gap-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Client</label>
+              <label className="block font-medium text-slate-700 mb-1.5">Priority</label>
               <select 
-                name="client_id"
-                required
-                className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition bg-white"
-                value={formData.client_id}
+                name="priority" 
+                className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow bg-white"
                 onChange={handleChange}
               >
-                <option value="">Select a client...</option>
-                {clients.map(c => (
-                  <option key={c.id} value={c.id}>{c.company_name}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
-              <select 
-                name="priority"
-                className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition bg-white"
-                value={formData.priority}
-                onChange={handleChange}
-              >
-                <option value="High">High</option>
-                <option value="Medium">Medium</option>
                 <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
               </select>
             </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
-            <input 
-              type="date" 
-              name="due_date"
-              className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-              value={formData.due_date}
-              onChange={handleChange}
-            />
+            <div>
+              <label className="block font-medium text-slate-700 mb-1.5">Due Date</label>
+              <input 
+                type="date" 
+                name="due_date" 
+                className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow"
+                onChange={handleChange}
+              />
+            </div>
           </div>
 
         </div>
 
-        <div className="mt-8 flex justify-end">
-          <Link 
-            href="/tasks" 
-            className="px-6 py-2 text-gray-600 font-medium hover:bg-gray-50 rounded-lg mr-2 transition"
-          >
+        <div className="mt-8 pt-5 border-t border-slate-100 flex justify-end space-x-3">
+          <Link href="/tasks" className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 border border-slate-200 rounded-md transition-colors">
             Cancel
           </Link>
-          <button 
-            type="submit" 
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-medium transition"
-          >
-            Create Task
+          <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md shadow-sm transition-colors">
+            Save Task
           </button>
         </div>
       </form>

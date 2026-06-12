@@ -3,43 +3,37 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-export default function AddSowPage() {
+export default function NewSowPage() {
   const [clients, setClients] = useState<{id: string, company_name: string}[]>([]);
   const [formData, setFormData] = useState({
     client_id: '',
-    title: '',
-    value: '',
+    sow_name: '',
     start_date: '',
-    end_date: ''
+    end_date: '',
+    total_value: ''
   });
   
-  const [sowItems, setSowItems] = useState([{ item_name: '', description: '' }]);
+  const [sowItems, setSowItems] = useState([{ deliverable_name: '' }]);
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/clients')
-      .then(res => res.json())
-      .then(data => { 
-        if (data && data.data) {
-          setClients(data.data); 
-        }
-      });
+    fetch('http://localhost:5000/api/clients').then(res => res.json()).then(data => { if(data && data.data) setClients(data.data); });
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleItemChange = (index: number, field: string, value: string) => {
+  const handleItemChange = (index: number, value: string) => {
     const newItems = [...sowItems];
-    newItems[index] = { ...newItems[index], [field]: value };
+    newItems[index].deliverable_name = value;
     setSowItems(newItems);
   };
 
-  const addItemRow = () => {
-    setSowItems([...sowItems, { item_name: '', description: '' }]);
+  const addItem = () => {
+    setSowItems([...sowItems, { deliverable_name: '' }]);
   };
 
-  const removeItemRow = (index: number) => {
+  const removeItem = (index: number) => {
     setSowItems(sowItems.filter((_, i) => i !== index));
   };
 
@@ -48,7 +42,8 @@ export default function AddSowPage() {
     try {
       const payload = {
         ...formData,
-        sow_items: sowItems.filter(item => item.item_name.trim() !== '')
+        total_value: formData.total_value ? parseFloat(formData.total_value) : null,
+        items: sowItems.filter(i => i.deliverable_name.trim() !== '')
       };
 
       const response = await fetch('http://localhost:5000/api/sows', {
@@ -60,7 +55,7 @@ export default function AddSowPage() {
       if (response.ok) {
         window.location.href = '/sows';
       } else {
-        alert('Failed to create SOW.');
+        alert('Failed to save SOW.');
       }
     } catch (error) {
       console.error('Error:', error);
@@ -69,45 +64,36 @@ export default function AddSowPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto pb-10">
-      <div className="mb-10">
-        <Link href="/sows" className="text-teal-600 hover:text-cyan-600 font-bold text-sm transition-colors flex items-center">
-          <span className="mr-2">←</span> Back to SOWs
+    <div className="max-w-3xl mx-auto">
+      <div className="mb-6">
+        <Link href="/sows" className="text-indigo-600 hover:text-indigo-800 font-medium text-sm flex items-center transition-colors">
+          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+          Back to SOWs
         </Link>
-        <h1 className="text-4xl font-black text-gray-900 mt-4 tracking-tight">Create Statement of Work</h1>
-        <p className="text-gray-500 mt-2 text-lg font-medium">Define scope, value, and trackable deliverables.</p>
+        <h1 className="text-2xl font-semibold text-slate-900 mt-4 tracking-tight">Draft New SOW</h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white p-10 rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100">
-        
-        {/* Core SOW Details */}
-        <div className="mb-10">
-          <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-            <span className="bg-teal-100 text-teal-600 w-8 h-8 rounded-lg flex items-center justify-center mr-3 text-sm">1</span> 
-            Contract Details
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-gray-50 p-8 rounded-2xl border border-gray-100">
-            
-            <div className="md:col-span-2">
-              <label className="block text-sm font-bold text-gray-700 mb-2">SOW Title</label>
+      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-sm border border-slate-200">
+        <div className="space-y-6 text-sm">
+          
+          <div className="grid grid-cols-2 gap-6">
+            <div>
+              <label className="block font-medium text-slate-700 mb-1.5">SOW Title</label>
               <input 
                 type="text" 
-                name="title"
+                name="sow_name"
                 required
-                className="w-full bg-white border-0 ring-1 ring-gray-200 rounded-xl p-4 focus:ring-2 focus:ring-teal-500 transition-all outline-none shadow-sm"
-                placeholder="e.g. Q4 Marketing Campaign Scope"
-                value={formData.title}
+                className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow"
+                placeholder="e.g. 2026 Marketing Retainer"
                 onChange={handleChange}
               />
             </div>
-
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Client</label>
+              <label className="block font-medium text-slate-700 mb-1.5">Client</label>
               <select 
                 name="client_id"
                 required
-                className="w-full bg-white border-0 ring-1 ring-gray-200 rounded-xl p-4 focus:ring-2 focus:ring-teal-500 transition-all outline-none appearance-none shadow-sm"
-                value={formData.client_id}
+                className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow bg-white"
                 onChange={handleChange}
               >
                 <option value="">Select a client...</option>
@@ -116,108 +102,91 @@ export default function AddSowPage() {
                 ))}
               </select>
             </div>
+          </div>
 
+          <div className="grid grid-cols-3 gap-6">
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Total Value (₹ INR)</label>
-              <input 
-                type="number" 
-                name="value"
-                required
-                className="w-full bg-white border-0 ring-1 ring-gray-200 rounded-xl p-4 focus:ring-2 focus:ring-teal-500 transition-all outline-none shadow-sm font-bold text-teal-700"
-                placeholder="e.g. 50000"
-                value={formData.value}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Start Date</label>
+              <label className="block font-medium text-slate-700 mb-1.5">Start Date</label>
               <input 
                 type="date" 
                 name="start_date"
                 required
-                className="w-full bg-white border-0 ring-1 ring-gray-200 rounded-xl p-4 focus:ring-2 focus:ring-teal-500 transition-all outline-none shadow-sm"
-                value={formData.start_date}
+                className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow"
                 onChange={handleChange}
               />
             </div>
-
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">End Date</label>
+              <label className="block font-medium text-slate-700 mb-1.5">End Date</label>
               <input 
                 type="date" 
                 name="end_date"
                 required
-                className="w-full bg-white border-0 ring-1 ring-gray-200 rounded-xl p-4 focus:ring-2 focus:ring-teal-500 transition-all outline-none shadow-sm"
-                value={formData.end_date}
+                className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow"
                 onChange={handleChange}
               />
             </div>
-
+            <div>
+              <label className="block font-medium text-slate-700 mb-1.5">Total Value (₹)</label>
+              <input 
+                type="number" 
+                name="total_value"
+                required
+                className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow"
+                placeholder="e.g. 500000"
+                onChange={handleChange}
+              />
+            </div>
           </div>
-        </div>
 
-        {/* SOW Deliverables */}
-        <div className="mb-10">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-gray-900 flex items-center">
-              <span className="bg-cyan-100 text-cyan-600 w-8 h-8 rounded-lg flex items-center justify-center mr-3 text-sm">2</span> 
-              Deliverables Tracker
-            </h2>
-            <button 
-              type="button" 
-              onClick={addItemRow}
-              className="text-sm font-bold text-teal-600 bg-teal-50 px-4 py-2 rounded-xl hover:bg-teal-600 hover:text-white transition-colors"
-            >
-              + Add Item
-            </button>
-          </div>
-          
-          <div className="space-y-4">
-            {sowItems.map((item, index) => (
-              <div key={index} className="flex flex-col md:flex-row gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-200 relative group">
-                <div className="flex-1">
-                  <input
-                    type="text"
-                    placeholder="Deliverable Name (e.g. Wireframes)"
-                    className="w-full bg-gray-50 border-0 rounded-lg p-3 focus:ring-2 focus:ring-teal-500 outline-none text-gray-900 font-bold mb-2 md:mb-0"
-                    value={item.item_name}
-                    onChange={(e) => handleItemChange(index, 'item_name', e.target.value)}
-                  />
-                </div>
-                <div className="flex-1">
-                  <input
-                    type="text"
-                    placeholder="Short description..."
-                    className="w-full bg-gray-50 border-0 rounded-lg p-3 focus:ring-2 focus:ring-teal-500 outline-none text-gray-600 text-sm"
-                    value={item.description}
-                    onChange={(e) => handleItemChange(index, 'description', e.target.value)}
-                  />
-                </div>
-                <button 
-                  type="button" 
-                  onClick={() => removeItemRow(index)}
-                  className="w-10 h-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center md:opacity-0 group-hover:opacity-100 transition hover:bg-red-500 hover:text-white absolute -right-3 -top-3 shadow-md border border-red-100"
-                >
-                  ×
-                </button>
+          <div className="pt-6 border-t border-slate-100">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h3 className="font-semibold text-slate-900">Project Deliverables</h3>
+                <p className="text-xs text-slate-500 mt-1">List the individual services or milestones tied to this SOW.</p>
               </div>
-            ))}
+              <button 
+                type="button" 
+                onClick={addItem}
+                className="text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-md transition-colors"
+              >
+                + Add Deliverable
+              </button>
+            </div>
+            
+            <div className="space-y-3">
+              {sowItems.map((item, index) => (
+                <div key={index} className="flex gap-4 items-center bg-slate-50 p-3 rounded-md border border-slate-200">
+                  <div className="flex-1">
+                    <input 
+                      type="text" 
+                      placeholder={`Deliverable ${index + 1}`}
+                      className="w-full border border-slate-300 rounded-md p-2 text-sm focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                      value={item.deliverable_name}
+                      onChange={(e) => handleItemChange(index, e.target.value)}
+                    />
+                  </div>
+                  {sowItems.length > 1 && (
+                    <button 
+                      type="button" 
+                      onClick={() => removeItem(index)}
+                      className="text-slate-400 hover:text-red-600 transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
+
         </div>
 
-        <div className="flex justify-end items-center pt-8 border-t border-gray-100">
-          <Link 
-            href="/sows" 
-            className="px-8 py-4 text-gray-500 font-bold hover:bg-gray-50 rounded-xl mr-4 transition"
-          >
+        <div className="mt-8 pt-5 border-t border-slate-100 flex justify-end space-x-3">
+          <Link href="/sows" className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 border border-slate-200 rounded-md transition-colors">
             Cancel
           </Link>
-          <button 
-            type="submit" 
-            className="bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 text-white px-12 py-4 rounded-xl font-black shadow-xl shadow-teal-200 transition transform hover:-translate-y-1"
-          >
-            Create SOW
+          <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md shadow-sm transition-colors">
+            Save Contract
           </button>
         </div>
       </form>

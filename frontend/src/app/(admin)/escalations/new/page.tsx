@@ -48,37 +48,37 @@ export default function RaiseEscalationPage() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <div className="mb-10">
-        <Link href="/escalations" className="text-red-600 hover:text-red-800 font-bold text-sm transition-colors flex items-center">
-          <span className="mr-2">←</span> Back to Escalations
+      <div className="mb-6">
+        <Link href="/escalations" className="text-indigo-600 hover:text-indigo-800 font-medium text-sm flex items-center transition-colors">
+          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+          Back to Escalations
         </Link>
-        <h1 className="text-4xl font-extrabold text-gray-900 mt-4 tracking-tight">Raise Escalation</h1>
-        <p className="text-gray-500 mt-2 text-lg">Flag a high-priority issue for immediate attention.</p>
+        <h1 className="text-2xl font-semibold text-slate-900 mt-4 tracking-tight">Raise Escalation</h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white p-10 rounded-3xl shadow-xl shadow-gray-200/50 border border-red-100">
-        <div className="space-y-6">
+      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-sm border border-slate-200">
+        <div className="space-y-5 text-sm">
           
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">Issue Title</label>
+            <label className="block font-medium text-slate-700 mb-1.5">Issue Title</label>
             <input 
               type="text" 
               name="title"
               required
-              className="w-full bg-red-50/30 border-0 ring-1 ring-red-100 rounded-xl p-4 focus:ring-2 focus:ring-red-500 transition-all outline-none"
+              className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow"
               placeholder="e.g. Critical delay in campaign launch"
               value={formData.title}
               onChange={handleChange}
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 gap-5">
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Client</label>
+              <label className="block font-medium text-slate-700 mb-1.5">Client</label>
               <select 
                 name="client_id"
                 required
-                className="w-full bg-red-50/30 border-0 ring-1 ring-red-100 rounded-xl p-4 focus:ring-2 focus:ring-red-500 transition-all outline-none appearance-none"
+                className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow bg-white"
                 value={formData.client_id}
                 onChange={handleChange}
               >
@@ -90,10 +90,10 @@ export default function RaiseEscalationPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Severity Level</label>
+              <label className="block font-medium text-slate-700 mb-1.5">Severity Level</label>
               <select 
                 name="severity"
-                className="w-full bg-red-50/30 border-0 ring-1 ring-red-100 rounded-xl p-4 focus:ring-2 focus:ring-red-500 transition-all outline-none appearance-none font-bold text-red-700"
+                className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow bg-white"
                 value={formData.severity}
                 onChange={handleChange}
               >
@@ -106,12 +106,12 @@ export default function RaiseEscalationPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">Detailed Description</label>
+            <label className="block font-medium text-slate-700 mb-1.5">Detailed Description</label>
             <textarea 
               name="issue_description"
               required
               rows={5}
-              className="w-full bg-red-50/30 border-0 ring-1 ring-red-100 rounded-xl p-4 focus:ring-2 focus:ring-red-500 transition-all outline-none"
+              className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow"
               placeholder="Explain the issue, impact, and expected resolution..."
               value={formData.issue_description}
               onChange={handleChange}
@@ -120,11 +120,11 @@ export default function RaiseEscalationPage() {
 
         </div>
 
-        <div className="mt-10 pt-6 border-t flex justify-end">
-          <button 
-            type="submit" 
-            className="bg-gradient-to-r from-red-600 to-orange-500 hover:from-red-700 hover:to-orange-600 text-white px-10 py-3 rounded-xl font-bold shadow-xl shadow-red-200 transition transform hover:-translate-y-1"
-          >
+        <div className="mt-8 pt-5 border-t border-slate-100 flex justify-end space-x-3">
+          <Link href="/escalations" className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 border border-slate-200 rounded-md transition-colors">
+            Cancel
+          </Link>
+          <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md shadow-sm transition-colors">
             Submit Escalation
           </button>
         </div>

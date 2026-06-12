@@ -23,6 +23,11 @@ export default function Sidebar() {
             </Link>
           </li>
           <li>
+            <Link href="/communications" className="block p-2 rounded hover:bg-gray-800 transition">
+              Communications
+            </Link>
+          </li>
+          <li>
             <Link href="/reports" className="block p-2 rounded hover:bg-gray-800 transition">
               Reports
             </Link>

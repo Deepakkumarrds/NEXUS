@@ -43,6 +43,24 @@ export default function ClientDetailsPage() {
           <h1 className="text-3xl font-bold text-slate-900 tracking-tight">{client.company_name}</h1>
           <p className="text-sm text-slate-500 mt-1">{client.service_type} • Since {new Date(client.created_at).getFullYear()}</p>
         </div>
+        
+        {/* Health Score Badge */}
+        {client.health_scores && client.health_scores.length > 0 ? (
+          <div className="flex flex-col items-end">
+            <span className="text-xs text-slate-500 uppercase tracking-wider mb-1">Health Score</span>
+            <div className={`flex items-center px-4 py-2 rounded-lg border ${client.health_scores[0].risk_level === 'Critical' ? 'bg-rose-50 border-rose-200 text-rose-700' : client.health_scores[0].risk_level === 'Risk' ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-emerald-50 border-emerald-200 text-emerald-700'}`}>
+              <span className="text-2xl font-bold mr-2">{client.health_scores[0].overall_score}</span>
+              <span className="text-xs font-medium uppercase">{client.health_scores[0].risk_level}</span>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col items-end">
+            <span className="text-xs text-slate-500 uppercase tracking-wider mb-1">Health Score</span>
+            <div className="flex items-center px-4 py-2 rounded-lg border bg-slate-50 border-slate-200 text-slate-500">
+              <span className="text-lg font-semibold italic">Pending</span>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

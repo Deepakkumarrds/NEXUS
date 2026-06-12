@@ -47,7 +47,8 @@ exports.getClientById = async (req, res) => {
         spocs: true,
         tasks: { orderBy: { created_at: 'desc' }, take: 5 },
         sows: { orderBy: { created_at: 'desc' }, take: 5 },
-        meetings: { orderBy: { meeting_date: 'desc' }, take: 5 }
+        meetings: { orderBy: { meeting_date: 'desc' }, take: 5 },
+        health_scores: { orderBy: { calculated_at: 'desc' }, take: 1 }
       }
     });
 

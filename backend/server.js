@@ -18,6 +18,7 @@ const escalationRoutes = require('./routes/escalationRoutes');
 const authRoutes = require('./routes/authRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const logRoutes = require('./routes/logRoutes');
+const userRoutes = require('./routes/userRoutes');
 
 // Middlewares
 app.use(cors());
@@ -40,6 +41,7 @@ app.use('/api/escalations', escalationRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/logs', logRoutes);
+app.use('/api/users', userRoutes);
 
 // Start the server
 app.listen(PORT, () => {

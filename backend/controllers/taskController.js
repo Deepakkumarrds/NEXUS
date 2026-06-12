@@ -84,3 +84,56 @@ exports.updateTaskStatus = async (req, res) => {
     res.status(500).json({ status: 'error', message: 'Failed to update task status' });
   }
 };
+
+// Get Task by ID
+exports.getTaskById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const task = await prisma.task.findUnique({
+      where: { id },
+      include: {
+        client: { select: { company_name: true } },
+        assignee: { select: { name: true, email: true } },
+        comments: {
+          include: { user: { select: { name: true } } },
+          orderBy: { created_at: 'desc' }
+        }
+      }
+    });
+
+    if (!task) {
+      return res.status(404).json({ status: 'error', message: 'Task not found' });
+    }
+
+    res.status(200).json({ status: 'success', data: task });
+  } catch (error) {
+    console.error('Error fetching task:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to fetch task' });
+  }
+};
+
+// Add Comment to Task
+exports.addTaskComment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { comment } = req.body;
+
+    let user = await prisma.user.findFirst();
+
+    const taskComment = await prisma.taskComment.create({
+      data: {
+        task_id: id,
+        user_id: user.id, // Should come from req.user.id with Auth middleware
+        comment
+      },
+      include: {
+        user: { select: { name: true } }
+      }
+    });
+
+    res.status(201).json({ status: 'success', data: taskComment });
+  } catch (error) {
+    console.error('Error adding comment:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to add comment' });
+  }
+};

@@ -82,8 +82,11 @@ export default function TasksPage() {
             <tbody className="bg-white divide-y divide-slate-100">
               {tasks.map(task => (
                 <tr key={task.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap font-medium text-slate-900">
-                    {task.title}
+                  <td className="px-6 py-4">
+                    <Link href={`/tasks/${task.id}`} className="block hover:bg-slate-50 -m-2 p-2 rounded transition-colors">
+                      <p className="font-medium text-indigo-600 hover:text-indigo-800">{task.title}</p>
+                      <p className="text-xs text-slate-500 mt-0.5">{task.client?.company_name || 'Internal Task'}</p>
+                    </Link>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-slate-600">
                     {task.client?.company_name || 'Internal'}

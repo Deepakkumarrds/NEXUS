@@ -72,8 +72,13 @@ export default function ClientsPage() {
             <tbody className="bg-white divide-y divide-slate-100">
               {clients.map(client => (
                 <tr key={client.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap font-medium text-slate-900">
-                    {client.company_name}
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <Link href={`/clients/${client.id}`} className="font-medium text-indigo-600 hover:text-indigo-800 flex items-center transition-colors">
+                      <div className="w-8 h-8 rounded bg-indigo-50 border border-indigo-100 text-indigo-700 flex items-center justify-center font-bold mr-3 text-xs">
+                        {client.company_name.substring(0, 2).toUpperCase()}
+                      </div>
+                      {client.company_name}
+                    </Link>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-slate-600">
                     {client.industry || '-'}

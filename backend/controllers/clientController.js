@@ -44,7 +44,10 @@ exports.getClientById = async (req, res) => {
       where: { id },
       include: {
         contacts: true,
-        spocs: true
+        spocs: true,
+        tasks: { orderBy: { created_at: 'desc' }, take: 5 },
+        sows: { orderBy: { created_at: 'desc' }, take: 5 },
+        meetings: { orderBy: { meeting_date: 'desc' }, take: 5 }
       }
     });
 
@@ -90,5 +93,50 @@ exports.deleteClient = async (req, res) => {
   } catch (error) {
     console.error('Error deleting client:', error);
     res.status(500).json({ status: 'error', message: 'Failed to delete client' });
+  }
+};
+
+// Add a contact to a client
+exports.addContact = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { contact_name, title, email, phone, is_primary } = req.body;
+
+    const contact = await prisma.clientContact.create({
+      data: {
+        client_id: id,
+        contact_name,
+        title,
+        email,
+        phone,
+        is_primary: is_primary || false
+      }
+    });
+
+    res.status(201).json({ status: 'success', data: contact });
+  } catch (error) {
+    console.error('Error adding contact:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to add contact' });
+  }
+};
+
+// Add an internal SPOC to a client
+exports.addSpoc = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { user_id, responsibility } = req.body;
+
+    const spoc = await prisma.clientSpoc.create({
+      data: {
+        client_id: id,
+        user_id,
+        responsibility
+      }
+    });
+
+    res.status(201).json({ status: 'success', data: spoc });
+  } catch (error) {
+    console.error('Error adding SPOC:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to add SPOC' });
   }
 };

@@ -17,4 +17,10 @@ router.put('/:id', clientController.updateClient);
 // DELETE a client
 router.delete('/:id', clientController.deleteClient);
 
+// POST a contact
+router.post('/:id/contacts', clientController.addContact);
+
+// POST a spoc
+router.post('/:id/spocs', clientController.addSpoc);
+
 module.exports = router;

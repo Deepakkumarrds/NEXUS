@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const { calculateClientHealth } = require('../utils/healthScoreEngine');
 
 // Create a new client
 exports.createClient = async (req, res) => {
@@ -40,6 +41,10 @@ exports.getAllClients = async (req, res) => {
 exports.getClientById = async (req, res) => {
   try {
     const { id } = req.params;
+    
+    // Auto-recalculate health score on fetch
+    await calculateClientHealth(id);
+
     const client = await prisma.client.findUnique({
       where: { id },
       include: {
@@ -48,6 +53,9 @@ exports.getClientById = async (req, res) => {
         tasks: { orderBy: { created_at: 'desc' }, take: 5 },
         sows: { orderBy: { created_at: 'desc' }, take: 5 },
         meetings: { orderBy: { meeting_date: 'desc' }, take: 5 },
+        communications: { orderBy: { created_at: 'desc' }, take: 5 },
+        reports: { orderBy: { created_at: 'desc' }, take: 5 },
+        escalations: { orderBy: { created_at: 'desc' }, take: 5 },
         health_scores: { orderBy: { calculated_at: 'desc' }, take: 1 }
       }
     });

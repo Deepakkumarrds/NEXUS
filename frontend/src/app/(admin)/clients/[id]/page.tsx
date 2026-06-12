@@ -181,6 +181,63 @@ export default function ClientDetailsPage() {
             )}
           </div>
 
+          {/* Communication Logs */}
+          <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+            <h3 className="font-semibold text-slate-900 mb-4 border-b border-slate-100 pb-2">Communication Logs</h3>
+            {client.communications && client.communications.length > 0 ? (
+              <div className="space-y-2">
+                {client.communications.map((comm: any) => (
+                  <div key={comm.id} className="flex justify-between items-center text-sm p-2 hover:bg-slate-50 rounded">
+                    <div>
+                      <p className="font-medium text-slate-800">{comm.subject}</p>
+                      <p className="text-xs text-slate-500">{comm.communication_type}</p>
+                    </div>
+                    <span className="text-slate-500 text-xs">{new Date(comm.created_at).toLocaleDateString()}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500 italic">No communications logged.</p>
+            )}
+          </div>
+
+          {/* Escalations */}
+          <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+            <h3 className="font-semibold text-slate-900 mb-4 border-b border-slate-100 pb-2">Open Escalations</h3>
+            {client.escalations && client.escalations.length > 0 ? (
+              <div className="space-y-2">
+                {client.escalations.map((esc: any) => (
+                  <div key={esc.id} className="flex justify-between items-center text-sm p-2 hover:bg-slate-50 rounded">
+                    <span className="font-medium text-slate-800">{esc.title}</span>
+                    <span className={`px-2 py-0.5 rounded text-xs border ${esc.severity === 'Critical' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>{esc.severity}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500 italic">No open escalations.</p>
+            )}
+          </div>
+
+          {/* Reports */}
+          <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+            <h3 className="font-semibold text-slate-900 mb-4 border-b border-slate-100 pb-2">Uploaded Reports</h3>
+            {client.reports && client.reports.length > 0 ? (
+              <div className="space-y-2">
+                {client.reports.map((report: any) => (
+                  <div key={report.id} className="flex justify-between items-center text-sm p-2 hover:bg-slate-50 rounded">
+                    <div>
+                      <p className="font-medium text-slate-800">{report.report_name}</p>
+                      <p className="text-xs text-slate-500">{report.report_month || 'Ongoing'}</p>
+                    </div>
+                    <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded text-xs">{report.report_type}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500 italic">No reports uploaded.</p>
+            )}
+          </div>
+
         </div>
       </div>
     </div>

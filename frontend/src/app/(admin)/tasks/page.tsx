@@ -16,6 +16,10 @@ type Task = {
 export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Filters
+  const [statusFilter, setStatusFilter] = useState('');
+  const [priorityFilter, setPriorityFilter] = useState('');
 
   useEffect(() => {
     fetch('http://localhost:5000/api/tasks')
@@ -64,6 +68,28 @@ export default function TasksPage() {
         </Link>
       </div>
 
+      <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200 mb-6 flex space-x-4">
+        <div>
+          <label className="block text-xs font-medium text-slate-500 mb-1">Filter by Status</label>
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="text-sm border border-slate-300 rounded p-1.5 focus:ring-1 focus:ring-indigo-500 outline-none min-w-[150px]">
+            <option value="">All Statuses</option>
+            <option value="Pending">Pending</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Review">Review</option>
+            <option value="Completed">Completed</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-slate-500 mb-1">Filter by Priority</label>
+          <select value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value)} className="text-sm border border-slate-300 rounded p-1.5 focus:ring-1 focus:ring-indigo-500 outline-none min-w-[150px]">
+            <option value="">All Priorities</option>
+            <option value="Low">Low</option>
+            <option value="Medium">Medium</option>
+            <option value="High">High</option>
+          </select>
+        </div>
+      </div>
+
       <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
         {loading ? (
           <div className="p-8 text-center text-slate-500 text-sm">Loading tasks...</div>
@@ -80,7 +106,7 @@ export default function TasksPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-slate-100">
-              {tasks.map(task => (
+              {tasks.filter(t => (statusFilter ? t.status === statusFilter : true) && (priorityFilter ? t.priority === priorityFilter : true)).map(task => (
                 <tr key={task.id} className="hover:bg-slate-50 transition-colors">
                   <td className="px-6 py-4">
                     <Link href={`/tasks/${task.id}`} className="block hover:bg-slate-50 -m-2 p-2 rounded transition-colors">

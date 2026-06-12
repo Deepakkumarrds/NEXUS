@@ -17,6 +17,7 @@ type Escalation = {
 export default function EscalationsPage() {
   const [escalations, setEscalations] = useState<Escalation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [severityFilter, setSeverityFilter] = useState('');
 
   useEffect(() => {
     fetchEscalations();
@@ -83,6 +84,19 @@ export default function EscalationsPage() {
         </Link>
       </div>
 
+      <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200 mb-6 flex space-x-4">
+        <div>
+          <label className="block text-xs font-medium text-slate-500 mb-1">Filter by Severity</label>
+          <select value={severityFilter} onChange={(e) => setSeverityFilter(e.target.value)} className="text-sm border border-slate-300 rounded p-1.5 focus:ring-1 focus:ring-indigo-500 outline-none min-w-[150px]">
+            <option value="">All Severities</option>
+            <option value="Low">Low</option>
+            <option value="Medium">Medium</option>
+            <option value="High">High</option>
+            <option value="Critical">Critical</option>
+          </select>
+        </div>
+      </div>
+
       <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
         {loading ? (
           <div className="p-8 text-center text-slate-500 text-sm">Loading escalations...</div>
@@ -98,7 +112,7 @@ export default function EscalationsPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-slate-100">
-              {escalations.map(esc => (
+              {escalations.filter(e => severityFilter ? e.severity === severityFilter : true).map(esc => (
                 <tr key={esc.id} className="hover:bg-slate-50 transition-colors">
                   <td className="px-6 py-4 font-medium text-slate-900">
                     {esc.title}

@@ -42,6 +42,11 @@ export default function Sidebar() {
               Reports
             </Link>
           </li>
+          <li>
+            <Link href="/escalations" className="block p-2 rounded hover:bg-gray-800 transition text-red-400 hover:text-red-300">
+              Escalations
+            </Link>
+          </li>
         </ul>
       </nav>
 

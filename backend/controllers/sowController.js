@@ -12,21 +12,19 @@ exports.createSow = async (req, res) => {
     const sow = await prisma.sow.create({
       data: {
         client_id,
-        title,
-        value: parseFloat(value),
+        sow_name: title,
+        total_value: parseFloat(value),
         start_date: new Date(start_date),
         end_date: new Date(end_date),
-        created_by: user.id,
-        sow_items: {
+        items: {
           create: sow_items && Array.isArray(sow_items) ? sow_items.map(item => ({
-            item_name: item.item_name,
-            description: item.description,
+            deliverable_name: item.item_name || 'Deliverable',
             status: 'Pending'
           })) : []
         }
       },
       include: {
-        sow_items: true
+        items: true
       }
     });
 
@@ -43,8 +41,7 @@ exports.getAllSows = async (req, res) => {
     const sows = await prisma.sow.findMany({
       include: {
         client: { select: { company_name: true } },
-        creator: { select: { name: true } },
-        sow_items: true
+        items: true
       },
       orderBy: { created_at: 'desc' }
     });

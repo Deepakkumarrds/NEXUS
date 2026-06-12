@@ -11,6 +11,7 @@ const PORT = process.env.PORT || 5000;
 const clientRoutes = require('./routes/clientRoutes');
 const taskRoutes = require('./routes/taskRoutes');
 const communicationRoutes = require('./routes/communicationRoutes');
+const meetingRoutes = require('./routes/meetingRoutes');
 
 // Middlewares
 app.use(cors());
@@ -26,6 +27,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/clients', clientRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/communications', communicationRoutes);
+app.use('/api/meetings', meetingRoutes);
 
 // Start the server
 app.listen(PORT, () => {

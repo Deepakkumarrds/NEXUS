@@ -9,7 +9,8 @@ export default function AddReportPage() {
     client_id: '',
     report_name: '',
     report_type: 'SEO',
-    report_month: ''
+    report_month: '',
+    file_path: ''
   });
 
   useEffect(() => {
@@ -106,16 +107,30 @@ export default function AddReportPage() {
           </div>
 
           <div>
-            <label className="block font-medium text-slate-700 mb-1.5">Report Month (e.g. "November 2026")</label>
+            <label className="block font-medium text-slate-700 mb-1.5">Report Month</label>
             <input 
               type="text" 
               name="report_month"
               required
               className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow"
-              placeholder="Month Year"
+              placeholder="e.g. November 2026"
               value={formData.report_month}
               onChange={handleChange}
             />
+          </div>
+
+          <div>
+            <label className="block font-medium text-slate-700 mb-1.5">Document Link (Google Drive, Canva, PDF URL)</label>
+            <input 
+              type="url" 
+              name="file_path"
+              required
+              className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow"
+              placeholder="https://docs.google.com/..."
+              value={formData.file_path || ''}
+              onChange={handleChange}
+            />
+            <p className="text-xs text-slate-500 mt-1">Paste the full URL to the report document.</p>
           </div>
 
         </div>

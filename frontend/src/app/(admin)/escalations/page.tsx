@@ -11,13 +11,18 @@ type Escalation = {
   status: string; // Open, In Progress, Resolved
   resolution_notes: string;
   created_at: string;
+  resolved_at: string | null;
   client?: { company_name: string };
 };
 
 export default function EscalationsPage() {
   const [escalations, setEscalations] = useState<Escalation[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Filters
+  const [searchQuery, setSearchQuery] = useState('');
   const [severityFilter, setSeverityFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
 
   useEffect(() => {
     fetchEscalations();
@@ -68,6 +73,23 @@ export default function EscalationsPage() {
     }
   };
 
+  const filteredEscalations = escalations.filter(e => {
+    const matchesSearch = e.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          (e.client?.company_name || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSeverity = severityFilter ? e.severity === severityFilter : true;
+    const matchesStatus = statusFilter ? e.status === statusFilter : true;
+    return matchesSearch && matchesSeverity && matchesStatus;
+  });
+
+  const getDuration = (created: string, resolved: string | null) => {
+    const start = new Date(created).getTime();
+    const end = resolved ? new Date(resolved).getTime() : new Date().getTime();
+    const days = Math.floor((end - start) / (1000 * 60 * 60 * 24));
+    
+    if (days === 0) return 'Today';
+    return `${days} days`;
+  };
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -84,7 +106,22 @@ export default function EscalationsPage() {
         </Link>
       </div>
 
-      <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200 mb-6 flex space-x-4">
+      <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200 mb-6 flex flex-wrap gap-4 items-end">
+        <div className="flex-1 min-w-[200px]">
+          <label className="block text-xs font-medium text-slate-500 mb-1">Search Escalations</label>
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg className="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div>
+            <input
+              type="text"
+              placeholder="Search issue or client..."
+              className="w-full pl-9 pr-3 py-1.5 text-sm border border-slate-300 rounded focus:ring-1 focus:ring-indigo-500 outline-none"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        </div>
         <div>
           <label className="block text-xs font-medium text-slate-500 mb-1">Filter by Severity</label>
           <select value={severityFilter} onChange={(e) => setSeverityFilter(e.target.value)} className="text-sm border border-slate-300 rounded p-1.5 focus:ring-1 focus:ring-indigo-500 outline-none min-w-[150px]">
@@ -95,24 +132,33 @@ export default function EscalationsPage() {
             <option value="Critical">Critical</option>
           </select>
         </div>
+        <div>
+          <label className="block text-xs font-medium text-slate-500 mb-1">Filter by Status</label>
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="text-sm border border-slate-300 rounded p-1.5 focus:ring-1 focus:ring-indigo-500 outline-none min-w-[150px]">
+            <option value="">All Statuses</option>
+            <option value="Open">Open</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Resolved">Resolved</option>
+          </select>
+        </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+      <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-x-auto">
         {loading ? (
           <div className="p-8 text-center text-slate-500 text-sm">Loading escalations...</div>
         ) : (
           <table className="min-w-full divide-y divide-slate-200 text-sm">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700">Issue Title</th>
+                <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700 w-1/3">Issue Title</th>
                 <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700">Client</th>
                 <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700">Severity</th>
                 <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700">Status</th>
-                <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700">Date Raised</th>
+                <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700">Timeline</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-slate-100">
-              {escalations.filter(e => severityFilter ? e.severity === severityFilter : true).map(esc => (
+              {filteredEscalations.map(esc => (
                 <tr key={esc.id} className="hover:bg-slate-50 transition-colors">
                   <td className="px-6 py-4 font-medium text-slate-900">
                     {esc.title}
@@ -139,15 +185,20 @@ export default function EscalationsPage() {
                       <option value="Resolved">Resolved</option>
                     </select>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-slate-500">
-                    {new Date(esc.created_at).toLocaleDateString()}
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-xs text-slate-500 mb-1">
+                      Raised: {new Date(esc.created_at).toLocaleDateString()}
+                    </div>
+                    <div className="text-xs font-medium text-slate-700">
+                      {esc.status === 'Resolved' ? 'Resolved in ' : 'Open for '}{getDuration(esc.created_at, esc.resolved_at)}
+                    </div>
                   </td>
                 </tr>
               ))}
-              {escalations.length === 0 && (
+              {filteredEscalations.length === 0 && (
                 <tr>
                   <td colSpan={5} className="px-6 py-8 text-center text-slate-500">
-                    No open escalations. All client accounts are healthy.
+                    {escalations.length === 0 ? 'No open escalations. All client accounts are healthy.' : 'No escalations match your search criteria.'}
                   </td>
                 </tr>
               )}

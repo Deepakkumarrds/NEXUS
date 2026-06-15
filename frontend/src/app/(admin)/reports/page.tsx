@@ -8,6 +8,7 @@ type Report = {
   report_name: string;
   report_type: string;
   report_month: string;
+  file_path: string;
   created_at: string;
   client?: { company_name: string };
   uploader?: { name: string };
@@ -60,6 +61,7 @@ export default function ReportsPage() {
                 <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700">Type</th>
                 <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700">Month</th>
                 <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700">Uploader</th>
+                <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700">Action</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-slate-100">
@@ -82,6 +84,21 @@ export default function ReportsPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-slate-500">
                     {report.uploader?.name || 'Unknown'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {report.file_path && report.file_path !== 'dummy/path/to/file.pdf' ? (
+                      <a 
+                        href={report.file_path} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-indigo-600 hover:text-indigo-800 font-medium text-xs flex items-center bg-indigo-50 px-2 py-1 rounded inline-flex border border-indigo-100"
+                      >
+                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                        View Report
+                      </a>
+                    ) : (
+                      <span className="text-slate-400 text-xs italic">No Link</span>
+                    )}
                   </td>
                 </tr>
               ))}

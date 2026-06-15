@@ -56,6 +56,9 @@ exports.getAllTasks = async (req, res) => {
         },
         assignee: {
           select: { name: true, email: true }
+        },
+        creator: {
+          select: { name: true }
         }
       },
       orderBy: { created_at: 'desc' }

@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const { createNotification } = require('../utils/notificationHelper');
 
 // Create a new task
 exports.createTask = async (req, res) => {
@@ -30,6 +31,8 @@ exports.createTask = async (req, res) => {
         status: 'Pending'
       },
     });
+
+    await createNotification('New Task Assigned', `Task: ${title} (${priority} Priority)`);
 
     res.status(201).json({ status: 'success', data: task });
   } catch (error) {

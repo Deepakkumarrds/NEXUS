@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const { createNotification } = require('../utils/notificationHelper');
 
 exports.createEscalation = async (req, res) => {
   try {
@@ -15,6 +16,8 @@ exports.createEscalation = async (req, res) => {
         status: 'Open'
       }
     });
+
+    await createNotification(`Escalation: ${severity}`, `Issue: ${title}`);
 
     res.status(201).json({ status: 'success', data: escalation });
   } catch (error) {
@@ -51,6 +54,10 @@ exports.updateEscalationStatus = async (req, res) => {
       where: { id },
       data
     });
+
+    if (status === 'Resolved') {
+      await createNotification('Escalation Resolved', `Issue: ${escalation.title} has been resolved.`);
+    }
 
     res.status(200).json({ status: 'success', data: escalation });
   } catch (error) {

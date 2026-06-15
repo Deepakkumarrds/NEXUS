@@ -1,6 +1,7 @@
 'use client';
 
 import Sidebar from '@/components/Sidebar';
+import NotificationBell from '@/components/NotificationBell';
 import { ReactNode, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -22,9 +23,14 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen bg-slate-50">
       <Sidebar />
-      <main className="flex-1 p-8 overflow-y-auto">
-        {children}
-      </main>
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <header className="bg-white border-b border-slate-200 h-16 flex items-center justify-end px-8 shrink-0">
+          <NotificationBell />
+        </header>
+        <main className="flex-1 p-8 overflow-y-auto">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

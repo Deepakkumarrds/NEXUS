@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const { createNotification } = require('../utils/notificationHelper');
 
 // Create a new SOW with deliverables
 exports.createSow = async (req, res) => {
@@ -27,6 +28,8 @@ exports.createSow = async (req, res) => {
         items: true
       }
     });
+
+    await createNotification('New Contract (SOW) Drafted', `SOW: ${sow_name} (${items?.length || 0} Deliverables)`);
 
     res.status(201).json({ status: 'success', data: sow });
   } catch (error) {

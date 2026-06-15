@@ -19,8 +19,8 @@ export default function TeamPage() {
   const fetchUsersAndRoles = async () => {
     try {
       const [usersRes, rolesRes] = await Promise.all([
-        fetch('http://localhost:5000/api/users'),
-        fetch('http://localhost:5000/api/users/roles')
+        fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/users'),
+        fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/users/roles')
       ]);
       const usersData = await usersRes.json();
       const rolesData = await rolesRes.json();
@@ -47,7 +47,7 @@ export default function TeamPage() {
     setError('');
 
     try {
-      const res = await fetch('http://localhost:5000/api/users', {
+      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, role_id: roleId, department, designation })

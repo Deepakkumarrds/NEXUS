@@ -28,7 +28,7 @@ export default function MeetingsPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/meetings')
+    fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/meetings')
       .then(res => res.json())
       .then(data => { 
         if (data && data.data) {

@@ -7,7 +7,7 @@ export default function LogsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/logs')
+    fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/logs')
       .then(res => res.json())
       .then(data => {
         if (data && data.data) {

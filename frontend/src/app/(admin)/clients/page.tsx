@@ -17,7 +17,7 @@ export default function ClientsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/clients')
+    fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/clients')
       .then(res => res.json())
       .then(data => {
         if (data && data.data) {

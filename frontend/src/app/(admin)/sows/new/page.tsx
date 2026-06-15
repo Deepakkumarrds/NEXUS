@@ -16,7 +16,7 @@ export default function NewSowPage() {
   const [sowItems, setSowItems] = useState([{ deliverable_name: '' }]);
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/clients').then(res => res.json()).then(data => { if(data && data.data) setClients(data.data); });
+    fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/clients').then(res => res.json()).then(data => { if(data && data.data) setClients(data.data); });
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -46,7 +46,7 @@ export default function NewSowPage() {
         items: sowItems.filter(i => i.deliverable_name.trim() !== '')
       };
 
-      const response = await fetch('http://localhost:5000/api/sows', {
+      const response = await fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/sows', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

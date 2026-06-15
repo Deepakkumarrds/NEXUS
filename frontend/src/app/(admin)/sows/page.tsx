@@ -30,7 +30,7 @@ export default function SowsPage() {
   }, []);
 
   const fetchSows = () => {
-    fetch('http://localhost:5000/api/sows')
+    fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/sows')
       .then(res => res.json())
       .then(data => { 
         if (data && data.data) {
@@ -46,7 +46,7 @@ export default function SowsPage() {
 
   const handleStatusChange = async (itemId: string, newStatus: string) => {
     try {
-      await fetch(`http://localhost:5000/api/sows/items/${itemId}/status`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/sows/items/${itemId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus }),

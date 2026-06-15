@@ -22,7 +22,7 @@ export default function TasksPage() {
   const [priorityFilter, setPriorityFilter] = useState('');
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/tasks')
+    fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/tasks')
       .then(res => res.json())
       .then(data => { 
         if (data && data.data) {

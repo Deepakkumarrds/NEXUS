@@ -12,7 +12,7 @@ export default function TaskDetailsPage() {
   const [newComment, setNewComment] = useState('');
 
   const fetchTaskDetails = () => {
-    fetch(`http://localhost:5000/api/tasks/${taskId}`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/tasks/${taskId}`)
       .then(res => res.json())
       .then(data => {
         if (data && data.data) {
@@ -35,7 +35,7 @@ export default function TaskDetailsPage() {
     if (!newComment.trim()) return;
 
     try {
-      const res = await fetch(`http://localhost:5000/api/tasks/${taskId}/comments`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/tasks/${taskId}/comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ comment: newComment }),

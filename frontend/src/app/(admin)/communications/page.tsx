@@ -18,7 +18,7 @@ export default function CommunicationsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/communications')
+    fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/communications')
       .then(res => res.json())
       .then(data => { 
         if (data && data.data) {

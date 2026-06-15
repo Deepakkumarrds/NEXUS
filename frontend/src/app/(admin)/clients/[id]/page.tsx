@@ -11,7 +11,7 @@ export default function ClientDetailsPage() {
   const [loading, setLoading] = useState(true);
 
   const fetchClientDetails = () => {
-    fetch(`http://localhost:5000/api/clients/${clientId}`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/clients/${clientId}`)
       .then(res => res.json())
       .then(data => {
         if (data && data.data) {

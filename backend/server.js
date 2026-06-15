@@ -30,6 +30,11 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'success', message: 'RDS Dashboard API is running!' });
 });
 
+// Root route
+app.get('/', (req, res) => {
+  res.send('RDS Dashboard Backend is running. Please access the frontend application.');
+});
+
 // Mount Routes
 app.use('/api/clients', clientRoutes);
 app.use('/api/tasks', taskRoutes);

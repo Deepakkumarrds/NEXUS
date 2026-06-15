@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 // Create a new SOW with deliverables
 exports.createSow = async (req, res) => {
   try {
-    const { client_id, title, value, start_date, end_date, sow_items } = req.body;
+    const { client_id, sow_name, total_value, start_date, end_date, items } = req.body;
     
     // Dummy user for created_by
     let user = await prisma.user.findFirst();
@@ -12,13 +12,13 @@ exports.createSow = async (req, res) => {
     const sow = await prisma.sow.create({
       data: {
         client_id,
-        sow_name: title,
-        total_value: parseFloat(value),
-        start_date: new Date(start_date),
-        end_date: new Date(end_date),
+        sow_name,
+        total_value: total_value ? parseFloat(total_value) : null,
+        start_date: start_date ? new Date(start_date) : null,
+        end_date: end_date ? new Date(end_date) : null,
         items: {
-          create: sow_items && Array.isArray(sow_items) ? sow_items.map(item => ({
-            deliverable_name: item.item_name || 'Deliverable',
+          create: items && Array.isArray(items) ? items.map(item => ({
+            deliverable_name: item.deliverable_name || 'Deliverable',
             status: 'Pending'
           })) : []
         }

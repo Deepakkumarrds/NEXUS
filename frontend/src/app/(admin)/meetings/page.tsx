@@ -112,13 +112,40 @@ export default function MeetingsPage() {
                       <ul className="space-y-2">
                         {meeting.action_items.map(item => (
                           <li key={item.id} className="flex items-center justify-between bg-white p-3 rounded border border-slate-200">
-                            <div className="flex items-center">
-                              <span className={`w-2 h-2 rounded-full mr-3 ${item.status === 'Completed' ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
+                            <div className="flex items-center flex-1">
+                              <input 
+                                type="checkbox" 
+                                checked={item.status === 'Completed'}
+                                onChange={async (e) => {
+                                  const newStatus = e.target.checked ? 'Completed' : 'Pending';
+                                  try {
+                                    const res = await fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + `/api/meetings/action-items/${item.id}/status`, {
+                                      method: 'PATCH',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify({ status: newStatus })
+                                    });
+                                    if (res.ok) {
+                                      setMeetings(meetings.map(m => {
+                                        if (m.id === meeting.id) {
+                                          return {
+                                            ...m,
+                                            action_items: m.action_items?.map(ai => ai.id === item.id ? { ...ai, status: newStatus } : ai)
+                                          };
+                                        }
+                                        return m;
+                                      }));
+                                    }
+                                  } catch (err) {
+                                    console.error('Failed to update status', err);
+                                  }
+                                }}
+                                className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500 mr-3 cursor-pointer" 
+                              />
                               <span className={`text-sm ${item.status === 'Completed' ? 'text-slate-400 line-through' : 'text-slate-700 font-medium'}`}>
                                 {item.action_item}
                               </span>
                             </div>
-                            <span className="text-xs text-slate-500 font-medium border border-slate-200 px-2 py-1 rounded bg-slate-50">
+                            <span className={`text-xs font-medium border px-2 py-1 rounded ${item.status === 'Completed' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'text-slate-500 border-slate-200 bg-slate-50'}`}>
                               Due: {item.deadline ? new Date(item.deadline).toLocaleDateString() : 'N/A'}
                             </span>
                           </li>

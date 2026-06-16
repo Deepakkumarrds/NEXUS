@@ -23,4 +23,16 @@ router.post('/:id/contacts', clientController.addContact);
 // POST a spoc
 router.post('/:id/spocs', clientController.addSpoc);
 
+// Onboarding Checklist
+router.get('/:id/onboarding', clientController.getOnboardingChecklist);
+router.post('/:id/onboarding', clientController.addOnboardingItem);
+router.put('/onboarding/:itemId', clientController.updateOnboardingItem);
+router.delete('/onboarding/:itemId', clientController.deleteOnboardingItem);
+
+// Social Media Handles
+router.get('/:id/socials', clientController.getSocialHandles);
+router.post('/:id/socials', clientController.addSocialHandle);
+router.delete('/socials/:handleId', clientController.deleteSocialHandle);
+
 module.exports = router;
+

@@ -24,13 +24,17 @@ export default function SowsPage() {
   const [sows, setSows] = useState<Sow[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    fetchSows();
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    setIsAdmin(user?.role_name === 'Admin');
+    fetchSows(user?.role_name);
   }, []);
 
-  const fetchSows = () => {
-    fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/sows')
+  const fetchSows = (roleName?: string) => {
+    const roleQuery = roleName ? `?role=${encodeURIComponent(roleName)}` : '';
+    fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/sows' + roleQuery)
       .then(res => res.json())
       .then(data => { 
         if (data && data.data) {
@@ -51,7 +55,8 @@ export default function SowsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus }),
       });
-      fetchSows();
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      fetchSows(user?.role_name);
     } catch (error) {
       console.error('Failed to update status', error);
     }
@@ -78,13 +83,15 @@ export default function SowsPage() {
           <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Statement of Work (SOW)</h1>
           <p className="text-sm text-slate-500 mt-1">Track contracts, values, and project deliverables.</p>
         </div>
-        <Link 
-          href="/sows/new" 
-          className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium transition shadow-sm flex items-center"
-        >
-          <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
-          Create SOW
-        </Link>
+        {isAdmin && (
+          <Link 
+            href="/sows/new" 
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium transition shadow-sm flex items-center"
+          >
+            <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+            Create SOW
+          </Link>
+        )}
       </div>
 
       {loading ? (
@@ -112,12 +119,14 @@ export default function SowsPage() {
                       </span>
                       <h3 className="font-bold text-slate-900 text-lg leading-tight">{sow.sow_name}</h3>
                     </div>
-                    <div className="text-right">
-                      <p className="text-lg font-bold text-slate-900">
-                        {sow.total_value ? `₹${sow.total_value.toLocaleString('en-IN')}` : '-'}
-                      </p>
-                      <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Contract Value</p>
-                    </div>
+                    {isAdmin && (
+                      <div className="text-right">
+                        <p className="text-lg font-bold text-slate-900">
+                          {sow.total_value ? `₹${sow.total_value.toLocaleString('en-IN')}` : '-'}
+                        </p>
+                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Contract Value</p>
+                      </div>
+                    )}
                   </div>
 
                   <div className="mb-4">

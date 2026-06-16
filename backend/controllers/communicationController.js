@@ -8,6 +8,16 @@ exports.createLog = async (req, res) => {
     
     // Fallback: Use a dummy user as the creator since auth isn't built yet
     let user = await prisma.user.findFirst();
+    if (!user) {
+      const role = await prisma.role.upsert({
+        where: { role_name: 'Admin' },
+        update: {},
+        create: { role_name: 'Admin' }
+      });
+      user = await prisma.user.create({
+        data: { name: 'Admin', email: 'admin@test.com', password_hash: '123', role_id: role.id }
+      });
+    }
 
     const log = await prisma.communicationLog.create({
       data: {

@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RDS Dashboard - Tab Menu Styling Showcase (10 Styles)</title>
+  
+  <!-- Premium Fonts from Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@800&family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&family=Fira+Code:wght@500&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==========================================================================
+       BASE THEME: SWISS CLEAN (Option 10)
+       ========================================================================== */
+    :root {
+      --bg-main: #F8FAFC;
+      --bg-sidebar: #FFFFFF;
+      --bg-card: #FFFFFF;
+      --border-color: #E2E8F0;
+      --text-main: #0F172A;
+      --text-muted: #64748B;
+      --accent: #4F46E5;
+      --accent-hover: #4338CA;
+      --success: #16A34A;
+      --warning: #D97706;
+      --danger: #DC2626;
+      --font-heading: 'Outfit', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      --card-radius: 12px;
+      --card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      transition: all 0.25s ease;
+    }
+
+    body {
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+      font-family: var(--font-body);
+      background: var(--bg-main);
+      color: var(--text-main);
+    }
+
+    /* ==========================================================================
+       SHOWCASE SELECTOR PANEL (LEFT COLUMN)
+       ========================================================================== */
+    .selector-panel {
+      width: 380px;
+      background: #0D1117;
+      border-right: 1px solid #21262D;
+      display: flex;
+      flex-direction: column;
+      z-index: 100;
+      box-shadow: 4px 0 25px rgba(0, 0, 0, 0.3);
+    }
+
+    .selector-header {
+      padding: 24px;
+      border-bottom: 1px solid #21262D;
+      background: #161B22;
+    }
+
+    .selector-header h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      color: #FFFFFF;
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+    }
+
+    .selector-header p {
+      font-size: 12px;
+      color: #8B949E;
+      line-height: 1.4;
+    }
+
+    .style-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .style-btn {
+      width: 100%;
+      padding: 14px 18px;
+      background: #161B22;
+      border: 1px solid #30363D;
+      border-radius: 12px;
+      color: #C9D1D9;
+      text-align: left;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: relative;
+    }
+
+    .style-btn:hover {
+      background: #21262D;
+      border-color: #8B949E;
+      transform: translateY(-1px);
+    }
+
+    .style-btn.active {
+      background: #30363D;
+      border-color: #58A6FF;
+      color: #FFFFFF;
+      box-shadow: inset 4px 0 0 #58A6FF;
+    }
+
+    .style-number {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: #FFF;
+    }
+
+    .btn-select-style {
+      margin: 16px;
+      padding: 16px;
+      background: #238636;
+      color: #FFF;
+      border: none;
+      border-radius: 12px;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .btn-select-style:hover {
+      background: #2EA043;
+    }
+
+    /* ==========================================================================
+       PREVIEW WRAPPER (RIGHT CONTAINER)
+       ========================================================================== */
+    .preview-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .preview-header {
+      padding: 20px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+      background: var(--bg-sidebar);
+    }
+
+    .preview-header h2 {
+      font-family: var(--font-heading);
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .preview-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+      align-items: center;
+      justify-content: flex-start;
+    }
+
+    /* Mock Client Details Page Wrapper */
+    .client-details-card {
+      width: 100%;
+      max-width: 850px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--card-radius);
+      box-shadow: var(--card-shadow);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .client-details-header {
+      padding: 30px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .client-title h1 {
+      font-family: var(--font-heading);
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .client-title p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* Content Pane */
+    .tab-content-pane {
+      padding: 30px;
+      min-height: 250px;
+      background: #FFFFFF;
+      border-radius: 0 0 var(--card-radius) var(--card-radius);
+    }
+
+    .pane-title {
+      font-family: var(--font-heading);
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 10px;
+    }
+
+    .pane-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* ==========================================================================
+       TAB BAR STYLING OPTIONS (10 PRESETS CHANGED DYNAMICALLY)
+       ========================================================================== */
+    .tab-bar-container {
+      background: #F8FAFC;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    /* Common list layout */
+    .tab-list {
+      display: flex;
+      list-style: none;
+      user-select: none;
+    }
+
+    .tab-item {
+      padding: 16px 24px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      position: relative;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tab-item:hover {
+      color: var(--text-main);
+    }
+
+    /* --- TAB STYLE 1: CLASSIC SLIDE UNDERLINE --- */
+    .tab-style-classic {
+      background: #FFFFFF;
+      padding: 0 20px;
+    }
+    .tab-style-classic .tab-item {
+      border-bottom: 2px solid transparent;
+      padding: 18px 20px;
+    }
+    .tab-style-classic .tab-item.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    /* --- TAB STYLE 2: SEGMENTED PILLS (iOS Control) --- */
+    .tab-style-segmented {
+      background: #F1F5F9;
+      padding: 6px;
+      margin: 16px 30px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+    }
+    .tab-style-segmented .tab-list {
+      gap: 4px;
+    }
+    .tab-style-segmented .tab-item {
+      flex: 1;
+      justify-content: center;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+    .tab-style-segmented .tab-item.active {
+      background: #FFFFFF;
+      color: var(--text-main);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+    }
+
+    /* --- TAB STYLE 3: ENCLOSED FOLDER CARDS --- */
+    .tab-style-enclosed {
+      background: #F8FAFC;
+      border-bottom: 1px solid var(--border-color);
+      padding: 10px 20px 0 20px;
+      gap: 4px;
+    }
+    .tab-style-enclosed .tab-item {
+      border: 1px solid transparent;
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
+      padding: 12px 20px;
+      margin-bottom: -1px;
+    }
+    .tab-style-enclosed .tab-item.active {
+      background: #FFFFFF;
+      border-color: var(--border-color);
+      color: var(--accent);
+      z-index: 2;
+    }
+
+    /* --- TAB STYLE 4: GLOWING BUBBLE LINE --- */
+    .tab-style-glow {
+      background: #FFFFFF;
+      padding: 0 20px;
+    }
+    .tab-style-glow .tab-item {
+      padding: 18px 24px;
+    }
+    .tab-style-glow .tab-item::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0%;
+      height: 4px;
+      background: var(--accent);
+      border-radius: 4px;
+      box-shadow: 0 0 10px var(--accent);
+      transition: width 0.3s;
+    }
+    .tab-style-glow .tab-item.active {
+      color: var(--accent);
+    }
+    .tab-style-glow .tab-item.active::after {
+      width: 60%;
+    }
+
+    /* --- TAB STYLE 5: NEO-BRUTALIST FLAT BLOCKS --- */
+    .tab-style-brutalist {
+      background: #FFFFFF;
+      padding: 16px 30px;
+      gap: 12px;
+      border-bottom: 2px solid #000000;
+    }
+    .tab-style-brutalist .tab-list {
+      gap: 10px;
+    }
+    .tab-style-brutalist .tab-item {
+      border: 2px solid #000000;
+      border-radius: 0px;
+      padding: 10px 18px;
+      color: #000000;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      box-shadow: 3px 3px 0px #000000;
+    }
+    .tab-style-brutalist .tab-item.active {
+      background: #FFE500;
+      transform: translate(-2px, -2px);
+      box-shadow: 5px 5px 0px #000000;
+    }
+
+    /* --- TAB STYLE 6: CYBER MICRO PIN DOT --- */
+    .tab-style-microdot {
+      background: #111827;
+      padding: 0 20px;
+      border-bottom-color: #1F2937;
+    }
+    .tab-style-microdot .tab-item {
+      padding: 20px 24px;
+      color: #9CA3AF;
+    }
+    .tab-style-microdot .tab-item::after {
+      content: '';
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #10B981;
+      opacity: 0;
+      box-shadow: 0 0 8px #10B981;
+    }
+    .tab-style-microdot .tab-item.active {
+      color: #FFFFFF;
+    }
+    .tab-style-microdot .tab-item.active::after {
+      opacity: 1;
+    }
+
+    /* --- TAB STYLE 7: FLOAT HIGHLIGHT SHADOW --- */
+    .tab-style-float {
+      background: #F8FAFC;
+      padding: 12px 30px;
+    }
+    .tab-style-float .tab-list {
+      gap: 8px;
+    }
+    .tab-style-float .tab-item {
+      padding: 10px 20px;
+      border-radius: 20px;
+    }
+    .tab-style-float .tab-item.active {
+      background: #FFFFFF;
+      color: var(--accent);
+      box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.1), 0 4px 6px -4px rgba(79, 70, 229, 0.1);
+    }
+
+    /* --- TAB STYLE 8: FROSTED GLASS PILLS --- */
+    .tab-style-glasspills {
+      background: radial-gradient(circle at 10% 20%, rgba(243, 203, 248, 0.8) 0%, rgba(206, 218, 252, 0.8) 90%);
+      padding: 14px 30px;
+    }
+    .tab-style-glasspills .tab-list {
+      gap: 12px;
+    }
+    .tab-style-glasspills .tab-item {
+      padding: 10px 22px;
+      border-radius: 30px;
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: #1E293B;
+      backdrop-filter: blur(10px);
+    }
+    .tab-style-glasspills .tab-item.active {
+      background: rgba(255, 255, 255, 0.65);
+      border-color: rgba(255, 255, 255, 0.8);
+      color: var(--accent);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    /* --- TAB STYLE 9: MONOSPACE TERMINAL BRACKET --- */
+    .tab-style-brackets {
+      background: #1E1E1E;
+      padding: 0 20px;
+      border-bottom: 1px solid #333333;
+    }
+    .tab-style-brackets .tab-item {
+      font-family: 'Fira Code', monospace;
+      padding: 18px 20px;
+      color: #888888;
+    }
+    .tab-style-brackets .tab-item.active {
+      color: #4AF626;
+    }
+    .tab-style-brackets .tab-item.active::before {
+      content: '[';
+      margin-right: 4px;
+    }
+    .tab-style-brackets .tab-item.active::after {
+      content: ']';
+      margin-left: 4px;
+    }
+
+    /* --- TAB STYLE 10: MODERN GRADIENT FILL --- */
+    .tab-style-gradient {
+      background: #FFFFFF;
+      padding: 12px 30px;
+    }
+    .tab-style-gradient .tab-list {
+      gap: 6px;
+    }
+    .tab-style-gradient .tab-item {
+      padding: 10px 20px;
+      border-radius: 8px;
+    }
+    .tab-style-gradient .tab-item.active {
+      background: linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%);
+      color: #FFFFFF;
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+    }
+
+    /* ==========================================================================
+       VERTICAL TABS OPTION EXTRA LAYOUT
+       ========================================================================== */
+    .layout-vertical {
+      display: flex;
+      flex-direction: row !important;
+    }
+    .layout-vertical .tab-bar-container {
+      width: 200px;
+      border-right: 1px solid var(--border-color);
+      border-bottom: none;
+      background: #F8FAFC;
+    }
+    .layout-vertical .tab-list {
+      flex-direction: column;
+      padding: 20px 0;
+    }
+    .layout-vertical .tab-item {
+      padding: 12px 24px;
+      border-left: 3px solid transparent;
+    }
+    .layout-vertical .tab-item.active {
+      color: var(--accent);
+      border-left-color: var(--accent);
+      background: rgba(79, 70, 229, 0.04);
+    }
+
+    /* Dialog styling */
+    .selection-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(10px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      color: #FFF;
+      text-align: center;
+    }
+
+    .selection-dialog {
+      background: #161B22;
+      border: 1px solid #30363D;
+      padding: 40px;
+      border-radius: 20px;
+      max-width: 450px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    }
+
+    .selection-dialog h3 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 24px;
+      margin-bottom: 12px;
+      color: #58A6FF;
+    }
+
+    .selection-dialog p {
+      font-size: 14px;
+      color: #8B949E;
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+
+    .btn-dialog-close {
+      padding: 10px 20px;
+      background: #30363D;
+      border: 1px solid #8B949E;
+      color: #FFF;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .btn-dialog-close:hover {
+      background: #21262D;
+    }
+  </style>
+</head>
+<body class="theme-swiss-corporate">
+
+  <!-- SELECTOR PANEL -->
+  <div class="selector-panel">
+    <div class="selector-header">
+      <h1>RDS Tab Styles</h1>
+      <p>Select from 10 premium tab menu visual styles to apply inside the Swiss Clean theme. Click to preview.</p>
+    </div>
+    
+    <ul class="style-list">
+      <li>
+        <button class="style-btn active" onclick="setTabStyle('classic', 1)">
+          <div class="style-number">01</div>
+          Classic Underline Slide
+        </button>
+      </li>
+      <li>
+        <button class="style-btn" onclick="setTabStyle('segmented', 2)">
+          <div class="style-number">02</div>
+          iOS Segmented Pill
+        </button>
+      </li>
+      <li>
+        <button class="style-btn" onclick="setTabStyle('enclosed', 3)">
+          <div class="style-number">03</div>
+          Enclosed Folder Cards
+        </button>
+      </li>
+      <li>
+        <button class="style-btn" onclick="setTabStyle('glow', 4)">
+          <div class="style-number">04</div>
+          Soft Glow Underline
+        </button>
+      </li>
+      <li>
+        <button class="style-btn" onclick="setTabStyle('brutalist', 5)">
+          <div class="style-number">05</div>
+          Neo-Brutalist Blocks
+        </button>
+      </li>
+      <li>
+        <button class="style-btn" onclick="setTabStyle('microdot', 6)">
+          <div class="style-number">06</div>
+          Cyber Micro Pin Dot
+        </button>
+      </li>
+      <li>
+        <button class="style-btn" onclick="setTabStyle('float', 7)">
+          <div class="style-number">07</div>
+          Floating Shadow Highlight
+        </button>
+      </li>
+      <li>
+        <button class="style-btn" onclick="setTabStyle('glasspills', 8)">
+          <div class="style-number">08</div>
+          Frosted Glass Pills
+        </button>
+      </li>
+      <li>
+        <button class="style-btn" onclick="setTabStyle('brackets', 9)">
+          <div class="style-number">09</div>
+          Monospace brackets
+        </button>
+      </li>
+      <li>
+        <button class="style-btn" onclick="setTabStyle('gradient', 10)">
+          <div class="style-number">10</div>
+          Modern Gradient Fill
+        </button>
+      </li>
+    </ul>
+    
+    <button class="btn-select-style" onclick="confirmSelection()">Select Tab Style</button>
+  </div>
+
+  <!-- DASHBOARD PREVIEW WRAPPER -->
+  <div class="preview-container">
+    
+    <!-- Top Nav -->
+    <div class="preview-header">
+      <h2>RDS Style Studio &rarr; Tab Configuration</h2>
+      <div style="display: flex; gap: 16px; align-items: center;">
+        <span style="font-size: 12px; font-weight: 500; opacity: 0.8;">Admin Portal</span>
+        <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--accent); opacity: 0.9;"></div>
+      </div>
+    </div>
+    
+    <!-- Content Dashboard Mockup -->
+    <div class="preview-content">
+      
+      <div class="client-details-card">
+        
+        <!-- Mock Client Header -->
+        <div class="client-details-header">
+          <div class="client-title">
+            <h1>Acme Retail Corp</h1>
+            <p>Retainer Retainer Account • Service Status: Active</p>
+          </div>
+          <span style="padding: 6px 12px; background: rgba(22, 163, 74, 0.1); border: 1px solid rgba(22, 163, 74, 0.2); color: var(--success); font-size: 12px; font-weight: 700; border-radius: 20px;">Health Score: 92</span>
+        </div>
+
+        <!-- The tab navigation bar container -->
+        <div id="tabContainer" class="tab-bar-container tab-style-classic">
+          <ul class="tab-list">
+            <li id="tab-overview" class="tab-item active" onclick="switchTab('overview')">
+              Overview & Contacts
+            </li>
+            <li id="tab-onboarding" class="tab-item" onclick="switchTab('onboarding')">
+              Onboarding Checklist
+            </li>
+            <li id="tab-socials" class="tab-item" onclick="switchTab('socials')">
+              Socials Vault
+            </li>
+            <li id="tab-campaigns" class="tab-item" onclick="switchTab('campaigns')">
+              Campaign Performance
+            </li>
+          </ul>
+        </div>
+
+        <!-- Inner Content Pane -->
+        <div id="cardContentLayout" class="tab-content-pane">
+          <div id="content-overview" class="tab-pane">
+            <h3 class="pane-title">Overview & Contacts Panel</h3>
+            <p class="pane-desc">This tab displays core brand metrics, client account manager details, and secondary contact tables, including celebration dates and festival greetings configurations.</p>
+          </div>
+          <div id="content-onboarding" class="tab-pane" style="display: none;">
+            <h3 class="pane-title">Onboarding Checklist</h3>
+            <p class="pane-desc">This tab tracks onboarding milestones. It allows adding custom checklist items (like "Google Analytics Setup") and recording completion statuses and timestamps.</p>
+          </div>
+          <div id="content-socials" class="tab-pane" style="display: none;">
+            <h3 class="pane-title">Socials Vault</h3>
+            <p class="pane-desc">This tab records links to official client profiles (Instagram, Meta, LinkedIn) and displays the current authorization role provided to the agency.</p>
+          </div>
+          <div id="content-campaigns" class="tab-pane" style="display: none;">
+            <h3 class="pane-title">Campaign Performance ROI</h3>
+            <p class="pane-desc">This tab provides campaign tracking metrics, spend, click rates, and automatically calculates Cost Per Lead (CPL) details in Indian Rupees.</p>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SELECTION CONFIRMATION OVERLAY -->
+  <div id="confirmOverlay" class="selection-overlay">
+    <div class="selection-dialog">
+      <h3 id="selectedStyleTitle">Style Selected!</h3>
+      <p id="selectedStyleDesc">Your choice has been recorded. Let me know in the chat window if you'd like me to apply this style variables setup to your global dashboard application files.</p>
+      <button class="btn-dialog-close" onclick="closeDialog()">Close Preview</button>
+    </div>
+  </div>
+
+  <script>
+    let currentStyleName = 'Classic Underline Slide';
+
+    function setTabStyle(styleClass, num) {
+      const tabContainer = document.getElementById('tabContainer');
+      const cardContentLayout = document.getElementById('cardContentLayout');
+      
+      // Reset layout classes
+      tabContainer.className = 'tab-bar-container';
+      cardContentLayout.className = 'tab-content-pane';
+      
+      // Apply style class
+      tabContainer.classList.add('tab-style-' + styleClass);
+
+      // Handle vertical list restructuring if selected
+      const bodyEl = document.querySelector('.client-details-card');
+      if (styleClass === 'vertical') {
+        bodyEl.classList.add('layout-vertical');
+      } else {
+        bodyEl.classList.remove('layout-vertical');
+      }
+      
+      // Update active selection button state
+      const buttons = document.querySelectorAll('.style-btn');
+      buttons.forEach(btn => btn.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+
+      // Update selected name reference
+      currentStyleName = event.currentTarget.innerText.trim().substring(2).trim();
+    }
+
+    function switchTab(tabId) {
+      // Toggle active classes on tabs
+      const tabs = document.querySelectorAll('.tab-item');
+      tabs.forEach(t => t.classList.remove('active'));
+      document.getElementById('tab-' + tabId).classList.add('active');
+
+      // Toggle content panes
+      const panes = document.querySelectorAll('.tab-pane');
+      panes.forEach(p => p.style.display = 'none');
+      document.getElementById('content-' + tabId).style.display = 'block';
+    }
+
+    function confirmSelection() {
+      const overlay = document.getElementById('confirmOverlay');
+      const title = document.getElementById('selectedStyleTitle');
+      const desc = document.getElementById('selectedStyleDesc');
+
+      title.innerHTML = `Selected: ${currentStyleName}`;
+      desc.innerHTML = `Awesome choice! Copy this selection and tell me: <strong>"Apply Tab Style: ${currentStyleName}"</strong> in the chat. I will instantly write the CSS styling classes to your RDS Dashboard Client profile page to implement it!`;
+      
+      overlay.style.display = 'flex';
+    }
+
+    function closeDialog() {
+      const overlay = document.getElementById('confirmOverlay');
+      overlay.style.display = 'none';
+    }
+  </script>
+</body>
+</html>

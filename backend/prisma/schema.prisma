@@ -16,6 +16,8 @@ model User {
   department       String?
   designation      String?
   status           String             @default("Active") // Active, Inactive
+  reset_token      String?
+  reset_token_expires DateTime?
   created_at       DateTime           @default(now())
   
   role             Role               @relation(fields: [role_id], references: [id])
@@ -31,6 +33,10 @@ model User {
   reports_uploaded Report[]
   notifications    Notification[]
   activity_logs    ActivityLog[]
+  asset_versions   CreativeAssetVersion[]
+  asset_annotations AssetAnnotation[]
+  skills           String[]
+  leave_records    LeaveRecord[]
 }
 
 model Role {
@@ -87,6 +93,9 @@ model Client {
   retainer_value     Float?
   service_type       String?
   account_manager_id String?  @db.ObjectId
+  primary_contact_name String?
+  spoc_name          String?
+  internal_notes     String?
   created_at         DateTime @default(now())
   updated_at         DateTime @updatedAt
 
@@ -99,8 +108,13 @@ model Client {
   reports            Report[]
   escalations        Escalation[]
   health_scores      ClientHealthScore[]
+  creative_assets    CreativeAsset[]
   
   client_users       ClientUser[]
+  onboarding_checklist OnboardingChecklist[]
+  social_handles       SocialHandle[]
+  campaign_performances CampaignPerformance[]
+  report_delivery_logs ReportDeliveryLog[] @relation("ClientReportDeliveryLogs")
 }
 
 model ClientUser {
@@ -110,9 +124,13 @@ model ClientUser {
   email            String   @unique
   password_hash    String
   status           String   @default("Active")
+  reset_token      String?
+  reset_token_expires DateTime?
   created_at       DateTime @default(now())
   
   client           Client   @relation(fields: [client_id], references: [id])
+  
+  asset_annotations AssetAnnotation[]
 }
 
 model ClientContact {
@@ -124,6 +142,9 @@ model ClientContact {
   email       String?
   phone       String?
   is_primary  Boolean  @default(false)
+  birth_date         DateTime?
+  anniversary_date   DateTime?
+  festival_greetings String[]
   created_at  DateTime @default(now())
   
   client      Client   @relation(fields: [client_id], references: [id])
@@ -151,6 +172,14 @@ model Task {
   status                String   @default("Pending") // Pending, In Progress, Review, Completed
   due_date              DateTime?
   completion_percentage Int      @default(0)
+  delay_reason          String?
+  delay_notes           String?
+  original_due_date     DateTime?
+  is_recurring          Boolean            @default(false)
+  recurrence_pattern    String?
+  recurrence_end        DateTime?
+  resource_links        String[]
+  checklist             Json?
   created_at            DateTime @default(now())
   updated_at            DateTime @updatedAt
   
@@ -159,6 +188,7 @@ model Task {
   creator               User     @relation("TaskCreator", fields: [assigned_by], references: [id])
   
   comments              TaskComment[]
+  creative_assets       CreativeAsset[]
 }
 
 model TaskComment {
@@ -181,6 +211,7 @@ model CommunicationLog {
   next_action        String?
   follow_up_date     DateTime?
   owner_id           String?  @db.ObjectId
+  is_pinned          Boolean  @default(false)
   created_by         String   @db.ObjectId
   created_at         DateTime @default(now())
   
@@ -308,4 +339,128 @@ model ActivityLog {
   created_at   DateTime @default(now())
   
   user         User     @relation(fields: [user_id], references: [id])
+}
+
+model CreativeAsset {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  client_id        String   @db.ObjectId
+  task_id          String?  @db.ObjectId
+  title            String
+  description      String?
+  internal_status  String   @default("Draft") // Draft, Internal Review, Client Review, Completed
+  client_status    String   @default("Pending") // Pending, Approved, Rejected
+  due_date         DateTime?
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+  
+  client           Client   @relation(fields: [client_id], references: [id])
+  task             Task?    @relation(fields: [task_id], references: [id])
+  
+  versions         CreativeAssetVersion[]
+}
+
+model CreativeAssetVersion {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  asset_id         String   @db.ObjectId
+  version_number   Int      @default(1)
+  file_url         String
+  file_type        String
+  uploaded_by      String   @db.ObjectId
+  created_at       DateTime @default(now())
+  
+  asset            CreativeAsset @relation(fields: [asset_id], references: [id], onDelete: Cascade)
+  uploader         User          @relation(fields: [uploaded_by], references: [id])
+  
+  annotations      AssetAnnotation[]
+}
+
+model AssetAnnotation {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  version_id       String   @db.ObjectId
+  x_percent        Float
+  y_percent        Float
+  comment          String
+  user_id          String?  @db.ObjectId
+  client_user_id   String?  @db.ObjectId
+  created_by_name  String
+  created_at       DateTime @default(now())
+  
+  version          CreativeAssetVersion @relation(fields: [version_id], references: [id], onDelete: Cascade)
+  user             User?                @relation(fields: [user_id], references: [id])
+  client_user      ClientUser?          @relation(fields: [client_user_id], references: [id])
+}
+
+model OnboardingChecklist {
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  client_id    String    @db.ObjectId
+  step_name    String
+  is_completed Boolean   @default(false)
+  completed_at DateTime?
+  
+  client       Client    @relation(fields: [client_id], references: [id], onDelete: Cascade)
+}
+
+model SocialHandle {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  client_id       String   @db.ObjectId
+  platform        String   // Instagram, Meta, YouTube, LinkedIn, Twitter
+  profile_url     String
+  access_provided String   // Admin, Advertiser, Analyst, None
+  
+  client          Client   @relation(fields: [client_id], references: [id], onDelete: Cascade)
+}
+
+model Holiday {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  holiday_name String
+  holiday_date DateTime
+  is_national  Boolean  @default(true)
+}
+
+model LeaveRecord {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  user_id    String   @db.ObjectId
+  start_date DateTime
+  end_date   DateTime
+  leave_type String   // Sick, Casual, Earned
+  status     String   @default("Pending") // Pending, Approved, Rejected
+  
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model CampaignPerformance {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  client_id         String   @db.ObjectId
+  campaign_name     String
+  impressions       Int      @default(0)
+  clicks            Int      @default(0)
+  leads_conversions Int      @default(0)
+  cost_per_lead_inr Float    @default(0.0)
+  spend_inr         Float    @default(0.0)
+  start_date        DateTime
+  
+  client            Client   @relation(fields: [client_id], references: [id], onDelete: Cascade)
+}
+
+model GlobalSettings {
+  id                      String   @id @default(auto()) @map("_id") @db.ObjectId
+  weekly_report_day       Int      @default(5)
+  weekly_report_time      String   @default("17:00")
+  email_subject_template  String   @default("Weekly Activity Report: {company_name}")
+  email_intro_message     String?
+  include_campaigns       Boolean  @default(true)
+  include_tasks           Boolean  @default(true)
+  include_communications  Boolean  @default(true)
+  created_at              DateTime @default(now())
+  updated_at              DateTime @updatedAt
+}
+
+model ReportDeliveryLog {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  client_id     String   @db.ObjectId
+  sent_at       DateTime @default(now())
+  status        String   // "Success" or "Failed"
+  error_message String?
+  
+  client        Client   @relation("ClientReportDeliveryLogs", fields: [client_id], references: [id], onDelete: Cascade)
 }

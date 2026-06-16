@@ -2,13 +2,154 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
+import toast from 'react-hot-toast';
 
 export default function ClientDetailsPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const clientId = params.id as string;
+  const isEditMode = searchParams.get('edit') === 'true';
   const [client, setClient] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'overview' | 'onboarding' | 'socials' | 'campaigns' | 'timeline'>('overview');
+  const [timelineFilter, setTimelineFilter] = useState<'all'|'task'|'communication'|'sow'|'meeting'|'escalation'>('all');
+
+  const [internalNotes, setInternalNotes] = useState('');
+  const [savingNotes, setSavingNotes] = useState(false);
+
+  useEffect(() => {
+    if (client) setInternalNotes(client.internal_notes || '');
+  }, [client]);
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success('Copied to clipboard');
+  };
+
+  const handleSaveNotes = async () => {
+    setSavingNotes(true);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/clients/${clientId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ internal_notes: internalNotes })
+      });
+      if (res.ok) toast.success('Notes saved');
+      else toast.error('Failed to save notes');
+    } catch (e) {
+      toast.error('Error saving notes');
+    }
+    setSavingNotes(false);
+  };
+  // Edit Profile Form State
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editCompanyName, setEditCompanyName] = useState('');
+  const [editBrandName, setEditBrandName] = useState('');
+  const [editIndustry, setEditIndustry] = useState('');
+  const [editStatus, setEditStatus] = useState<'Active' | 'Hold' | 'Lost'>('Active');
+  const [editEmail, setEditEmail] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editWebsite, setEditWebsite] = useState('');
+  const [editRetainer, setEditRetainer] = useState('');
+  const [editServices, setEditServices] = useState<string[]>([]);
+  const [editPrimaryContact, setEditPrimaryContact] = useState('');
+  const [editSpocName, setEditSpocName] = useState('');
+
+  const SERVICES = [
+    'SEO', 
+    'SMM (Social Media)', 
+    'Web Development', 
+    'PPC Advertising', 
+    'Content Marketing', 
+    'Branding & Design', 
+    'Email Marketing', 
+    'WhatsApp Marketing'
+  ];
+
+  const openEditModal = () => {
+    if (client) {
+      setEditCompanyName(client.company_name || '');
+      setEditBrandName(client.brand_name || '');
+      setEditIndustry(client.industry || '');
+      setEditStatus(client.client_status || 'Active');
+      setEditEmail(client.email || '');
+      setEditPhone(client.phone || '');
+      setEditWebsite(client.website || '');
+      setEditRetainer(client.retainer_value ? client.retainer_value.toString() : '');
+      setEditPrimaryContact(client.primary_contact_name || '');
+      setEditSpocName(client.spoc_name || '');
+      
+      // Parse service_type from string to array
+      if (client.service_type) {
+        setEditServices(client.service_type.split(',').map((s: string) => s.trim()));
+      } else {
+        setEditServices([]);
+      }
+      
+      setShowEditModal(true);
+    }
+  };
+
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/clients/${clientId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          company_name: editCompanyName,
+          brand_name: editBrandName || null,
+          industry: editIndustry || null,
+          client_status: editStatus,
+          email: editEmail || null,
+          phone: editPhone || null,
+          website: editWebsite || null,
+          retainer_value: editRetainer ? parseFloat(editRetainer) : null,
+          service_type: editServices.join(', '),
+          primary_contact_name: editPrimaryContact || null,
+          spoc_name: editSpocName || null
+        })
+      });
+      if (res.ok) {
+        toast.success('Profile updated!');
+        setShowEditModal(false);
+        fetchClientDetails();
+      } else {
+        toast.error('Failed to update profile');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Error updating profile');
+    }
+  };
+
+  // New Contact Form State
+  const [showContactModal, setShowContactModal] = useState(false);
+  const [contactName, setContactName] = useState('');
+  const [contactDesig, setContactDesig] = useState('');
+  const [contactDept, setContactDept] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
+  const [contactBirth, setContactBirth] = useState('');
+  const [contactAnniv, setContactAnniv] = useState('');
+  const [contactFestivals, setContactFestivals] = useState<string[]>([]);
+
+  // Onboarding Checklist Form State
+  const [newStepName, setNewStepName] = useState('');
+
+  // Social Handles Form State
+  const [socialPlatform, setSocialPlatform] = useState('Instagram');
+  const [socialUrl, setSocialUrl] = useState('');
+  const [socialAccess, setSocialAccess] = useState('Analyst');
+
+  // Campaign Performance Form State
+  const [campaignName, setCampaignName] = useState('');
+  const [campImpressions, setCampImpressions] = useState('');
+  const [campClicks, setCampClicks] = useState('');
+  const [campConversions, setCampConversions] = useState('');
+  const [campSpend, setCampSpend] = useState('');
+  const [campStartDate, setCampStartDate] = useState('');
 
   const fetchClientDetails = () => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/clients/${clientId}`)
@@ -29,19 +170,224 @@ export default function ClientDetailsPage() {
     fetchClientDetails();
   }, [clientId]);
 
-  if (loading) return <div className="text-slate-500">Loading client profile...</div>;
-  if (!client) return <div className="text-rose-500">Client not found.</div>;
+  useEffect(() => {
+    if (client && isEditMode) {
+      openEditModal();
+    }
+  }, [client, isEditMode]);
+
+  // Handle Add Contact
+  const handleAddContact = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/clients/${clientId}/contacts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: contactName,
+          designation: contactDesig,
+          department: contactDept,
+          email: contactEmail,
+          phone: contactPhone,
+          birth_date: contactBirth || null,
+          anniversary_date: contactAnniv || null,
+          festival_greetings: contactFestivals
+        })
+      });
+      if (res.ok) {
+        toast.success('Contact added!');
+        setShowContactModal(false);
+        setContactName(''); setContactDesig(''); setContactDept(''); setContactEmail(''); setContactPhone(''); setContactBirth(''); setContactAnniv(''); setContactFestivals([]);
+        fetchClientDetails();
+      } else {
+        toast.error('Failed to add contact');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Error adding contact');
+    }
+  };
+
+  // Handle Onboarding Item toggle
+  const toggleOnboardingItem = async (itemId: string, currentStatus: boolean) => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/clients/onboarding/${itemId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_completed: !currentStatus })
+      });
+      if (res.ok) {
+        fetchClientDetails();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Add Onboarding Item
+  const handleAddOnboardingItem = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newStepName.trim()) return;
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/clients/${clientId}/onboarding`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ step_name: newStepName })
+      });
+      if (res.ok) {
+        setNewStepName('');
+        fetchClientDetails();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Delete Onboarding Item
+  const handleDeleteOnboardingItem = async (itemId: string) => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/clients/onboarding/${itemId}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        fetchClientDetails();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Add Social Handle
+  const handleAddSocialHandle = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!socialUrl.trim()) return;
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/clients/${clientId}/socials`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ platform: socialPlatform, profile_url: socialUrl, access_provided: socialAccess })
+      });
+      if (res.ok) {
+        setSocialUrl('');
+        fetchClientDetails();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Delete Social Handle
+  const handleDeleteSocialHandle = async (handleId: string) => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/clients/socials/${handleId}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        fetchClientDetails();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Log Campaign Performance
+  const handleLogCampaign = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!campaignName.trim() || !campStartDate) return;
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/campaigns`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_id: clientId,
+          campaign_name: campaignName,
+          impressions: campImpressions,
+          clicks: campClicks,
+          leads_conversions: campConversions,
+          spend_inr: campSpend,
+          start_date: campStartDate
+        })
+      });
+      if (res.ok) {
+        setCampaignName(''); setCampImpressions(''); setCampClicks(''); setCampConversions(''); setCampSpend(''); setCampStartDate('');
+        toast.success('Campaign metrics logged!');
+        fetchClientDetails();
+      } else {
+        toast.error('Failed to log campaign metrics');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Delete Campaign Log
+  const handleDeleteCampaign = async (id: string) => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/campaigns/${id}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        fetchClientDetails();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const toggleFestival = (festival: string) => {
+    if (contactFestivals.includes(festival)) {
+      setContactFestivals(contactFestivals.filter(f => f !== festival));
+    } else {
+      setContactFestivals([...contactFestivals, festival]);
+    }
+  };
+
+  if (loading) return <div className="p-8 text-center text-slate-500">Loading client profile...</div>;
+  if (!client) return <div className="p-8 text-center text-rose-500">Client not found.</div>;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <Link href="/clients" className="text-indigo-600 hover:text-indigo-800 text-sm font-medium flex items-center mb-2">
-            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-            Back to Clients
-          </Link>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">{client.company_name}</h1>
-          <p className="text-sm text-slate-500 mt-1">{client.service_type} • Since {new Date(client.created_at).getFullYear()}</p>
+          {/* Breadcrumb Navigation */}
+          <nav className="flex items-center text-sm font-medium text-slate-500 mb-3 space-x-2">
+            <Link href="/" className="hover:text-indigo-600 transition-colors flex items-center">
+              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+              Dashboard
+            </Link>
+            <span className="text-slate-300">/</span>
+            <Link href="/clients" className="hover:text-indigo-600 transition-colors">
+              Clients
+            </Link>
+            <span className="text-slate-300">/</span>
+            <span className="text-slate-900 font-semibold truncate max-w-[200px]">{client.company_name}</span>
+          </nav>
+          
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
+            {client.company_name}
+            <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
+              client.client_status === 'Active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+              client.client_status === 'Hold' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+              'bg-rose-50 text-rose-700 border-rose-200'
+            }`}>
+              {client.client_status}
+            </span>
+          </h1>
+          <p className="text-sm text-slate-500 mt-1">{client.service_type || 'No services selected'} • Since {new Date(client.created_at).getFullYear()}</p>
+          <div className="flex space-x-3 mt-3">
+            {client.primary_contact_name && (
+              <div className="flex items-center text-sm text-slate-700 bg-white border border-slate-200 px-3 py-1.5 rounded-md shadow-sm">
+                <svg className="w-4 h-4 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                <span className="font-medium mr-1.5">Client:</span> {client.primary_contact_name}
+              </div>
+            )}
+            {client.spoc_name && (
+              <div className="flex items-center text-sm text-slate-700 bg-white border border-slate-200 px-3 py-1.5 rounded-md shadow-sm">
+                <svg className="w-4 h-4 mr-2 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                <span className="font-medium mr-1.5">SPOC:</span> {client.spoc_name}
+              </div>
+            )}
+          </div>
         </div>
         
         {/* Health Score Badge */}
@@ -63,183 +409,681 @@ export default function ClientDetailsPage() {
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* Left Column: Details & Contacts */}
-        <div className="space-y-6 lg:col-span-1">
-          {/* Profile Card */}
-          <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
-            <h3 className="font-semibold text-slate-900 mb-4 border-b border-slate-100 pb-2">Profile Details</h3>
-            <div className="space-y-3 text-sm">
-              <div>
-                <span className="block text-slate-500 text-xs uppercase tracking-wide">Primary Email</span>
-                <span className="font-medium text-slate-800">{client.email}</span>
-              </div>
-              <div>
-                <span className="block text-slate-500 text-xs uppercase tracking-wide">Retainer Value</span>
-                <span className="font-medium text-slate-800">{client.retainer_value ? `₹${client.retainer_value.toLocaleString('en-IN')}` : 'N/A'}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Contacts Card */}
-          <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
-            <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
-              <h3 className="font-semibold text-slate-900">Client Contacts</h3>
-              <button className="text-xs font-medium text-indigo-600 hover:text-indigo-800">+ Add</button>
-            </div>
-            {client.contacts && client.contacts.length > 0 ? (
-              <ul className="space-y-3">
-                {client.contacts.map((contact: any) => (
-                  <li key={contact.id} className="text-sm">
-                    <p className="font-medium text-slate-800 flex items-center">
-                      {contact.contact_name} 
-                      {contact.is_primary && <span className="ml-2 text-[10px] bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded border border-indigo-100">PRIMARY</span>}
-                    </p>
-                    <p className="text-slate-500 text-xs">{contact.title}</p>
-                    <p className="text-slate-500 text-xs">{contact.email}</p>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-sm text-slate-500 italic">No contacts added yet.</p>
-            )}
-          </div>
-
-          {/* SPOCs Card */}
-          <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
-            <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
-              <h3 className="font-semibold text-slate-900">Internal SPOCs</h3>
-              <button className="text-xs font-medium text-indigo-600 hover:text-indigo-800">+ Assign</button>
-            </div>
-            {client.spocs && client.spocs.length > 0 ? (
-              <ul className="space-y-3">
-                {client.spocs.map((spoc: any) => (
-                  <li key={spoc.id} className="text-sm">
-                    <p className="font-medium text-slate-800">User ID: {spoc.user_id}</p>
-                    <p className="text-slate-500 text-xs">{spoc.responsibility}</p>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-sm text-slate-500 italic">No internal SPOCs assigned.</p>
-            )}
-          </div>
-        </div>
-
-        {/* Right Column: Related Data */}
-        <div className="space-y-6 lg:col-span-2">
-          
-          {/* Recent Tasks */}
-          <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
-            <h3 className="font-semibold text-slate-900 mb-4 border-b border-slate-100 pb-2">Recent Tasks</h3>
-            {client.tasks && client.tasks.length > 0 ? (
-              <div className="space-y-2">
-                {client.tasks.map((task: any) => (
-                  <div key={task.id} className="flex justify-between items-center text-sm p-2 hover:bg-slate-50 rounded">
-                    <span className="font-medium text-slate-800">{task.task_name}</span>
-                    <span className={`px-2 py-0.5 rounded text-xs border ${task.status === 'Done' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-50 text-slate-600 border-slate-200'}`}>{task.status}</span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-slate-500 italic">No tasks for this client.</p>
-            )}
-          </div>
-
-          {/* Active SOWs */}
-          <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
-            <h3 className="font-semibold text-slate-900 mb-4 border-b border-slate-100 pb-2">Active SOWs</h3>
-            {client.sows && client.sows.length > 0 ? (
-              <div className="space-y-2">
-                {client.sows.map((sow: any) => (
-                  <div key={sow.id} className="flex justify-between items-center text-sm p-2 hover:bg-slate-50 rounded">
-                    <span className="font-medium text-slate-800">{sow.sow_name}</span>
-                    <span className="text-slate-600">{sow.total_value ? `₹${sow.total_value.toLocaleString('en-IN')}` : '-'}</span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-slate-500 italic">No SOWs drafted.</p>
-            )}
-          </div>
-
-          {/* Recent Meetings */}
-          <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
-            <h3 className="font-semibold text-slate-900 mb-4 border-b border-slate-100 pb-2">Recent Meetings</h3>
-            {client.meetings && client.meetings.length > 0 ? (
-              <div className="space-y-2">
-                {client.meetings.map((meeting: any) => (
-                  <div key={meeting.id} className="flex justify-between items-center text-sm p-2 hover:bg-slate-50 rounded">
-                    <span className="font-medium text-slate-800">{meeting.meeting_title}</span>
-                    <span className="text-slate-500 text-xs">{new Date(meeting.meeting_date).toLocaleDateString()}</span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-slate-500 italic">No meetings logged.</p>
-            )}
-          </div>
-
-          {/* Communication Logs */}
-          <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
-            <h3 className="font-semibold text-slate-900 mb-4 border-b border-slate-100 pb-2">Communication Logs</h3>
-            {client.communications && client.communications.length > 0 ? (
-              <div className="space-y-2">
-                {client.communications.map((comm: any) => (
-                  <div key={comm.id} className="flex justify-between items-center text-sm p-2 hover:bg-slate-50 rounded">
-                    <div>
-                      <p className="font-medium text-slate-800">{comm.subject}</p>
-                      <p className="text-xs text-slate-500">{comm.communication_type}</p>
-                    </div>
-                    <span className="text-slate-500 text-xs">{new Date(comm.created_at).toLocaleDateString()}</span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-slate-500 italic">No communications logged.</p>
-            )}
-          </div>
-
-          {/* Escalations */}
-          <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
-            <h3 className="font-semibold text-slate-900 mb-4 border-b border-slate-100 pb-2">Open Escalations</h3>
-            {client.escalations && client.escalations.length > 0 ? (
-              <div className="space-y-2">
-                {client.escalations.map((esc: any) => (
-                  <div key={esc.id} className="flex justify-between items-center text-sm p-2 hover:bg-slate-50 rounded">
-                    <span className="font-medium text-slate-800">{esc.title}</span>
-                    <span className={`px-2 py-0.5 rounded text-xs border ${esc.severity === 'Critical' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>{esc.severity}</span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-slate-500 italic">No open escalations.</p>
-            )}
-          </div>
-
-          {/* Reports */}
-          <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
-            <h3 className="font-semibold text-slate-900 mb-4 border-b border-slate-100 pb-2">Uploaded Reports</h3>
-            {client.reports && client.reports.length > 0 ? (
-              <div className="space-y-2">
-                {client.reports.map((report: any) => (
-                  <div key={report.id} className="flex justify-between items-center text-sm p-2 hover:bg-slate-50 rounded">
-                    <div>
-                      <p className="font-medium text-slate-800">{report.report_name}</p>
-                      <p className="text-xs text-slate-500">{report.report_month || 'Ongoing'}</p>
-                    </div>
-                    <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded text-xs">{report.report_type}</span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-slate-500 italic">No reports uploaded.</p>
-            )}
-          </div>
-
-        </div>
+      {/* Tabs Menu (iOS Segmented Pills Style) */}
+      <div className="bg-slate-100 p-1.5 rounded-xl border border-slate-200/80 flex space-x-1.5 mb-6 max-w-3xl">
+        <button 
+          onClick={() => setActiveTab('overview')} 
+          className={`flex-1 py-2 px-3 text-center text-xs md:text-sm font-semibold rounded-lg transition-all duration-200 outline-none cursor-pointer ${
+            activeTab === 'overview' 
+              ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50' 
+              : 'text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          Overview & Contacts
+        </button>
+        <button 
+          onClick={() => setActiveTab('onboarding')} 
+          className={`flex-1 py-2 px-3 text-center text-xs md:text-sm font-semibold rounded-lg transition-all duration-200 outline-none cursor-pointer ${
+            activeTab === 'onboarding' 
+              ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50' 
+              : 'text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          Onboarding Checklist
+        </button>
+        <button 
+          onClick={() => setActiveTab('socials')} 
+          className={`flex-1 py-2 px-3 text-center text-xs md:text-sm font-semibold rounded-lg transition-all duration-200 outline-none cursor-pointer ${
+            activeTab === 'socials' 
+              ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50' 
+              : 'text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          Socials Vault
+        </button>
+        <button 
+          onClick={() => setActiveTab('campaigns')} 
+          className={`flex-1 py-2 px-3 text-center text-xs md:text-sm font-semibold rounded-lg transition-all duration-200 outline-none cursor-pointer ${
+            activeTab === 'campaigns' 
+              ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50' 
+              : 'text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          Campaigns
+        </button>
+        <button 
+          onClick={() => setActiveTab('timeline')} 
+          className={`flex-1 py-2 px-3 text-center text-xs md:text-sm font-semibold rounded-lg transition-all duration-200 outline-none cursor-pointer ${
+            activeTab === 'timeline' 
+              ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50' 
+              : 'text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          Activity Timeline
+        </button>
       </div>
+
+      {/* Tab Contents */}
+      <div className="grid grid-cols-1 gap-6">
+        
+        {activeTab === 'overview' && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Details & Contacts Sidebar */}
+            <div className="space-y-6 lg:col-span-1">
+              <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+                <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
+                  <h3 className="font-semibold text-slate-900">Profile Details</h3>
+                  <button onClick={() => openEditModal()} className="px-3 py-1.5 bg-indigo-50 border border-indigo-100 text-indigo-700 hover:bg-indigo-600 hover:text-white rounded-md text-xs font-semibold transition-colors flex items-center shadow-sm">
+                    <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                    Edit Profile
+                  </button>
+                </div>
+                <div className="space-y-3 text-sm">
+                  <div>
+                    <span className="block text-slate-500 text-[10px] uppercase tracking-wide font-bold">Brand Name</span>
+                    <span className="font-medium text-slate-800">{client.brand_name || 'N/A'}</span>
+                  </div>
+                  <div>
+                    <span className="block text-slate-500 text-[10px] uppercase tracking-wide font-bold">Industry</span>
+                    <span className="font-medium text-slate-800">{client.industry || 'N/A'}</span>
+                  </div>
+                  <div>
+                    <span className="block text-slate-500 text-[10px] uppercase tracking-wide font-bold">Primary Email</span>
+                    <span className="font-medium text-slate-800 flex items-center gap-2">
+                      {client.email || 'N/A'}
+                      {client.email && <button onClick={() => copyToClipboard(client.email)} className="text-slate-400 hover:text-indigo-600"><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg></button>}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="block text-slate-500 text-[10px] uppercase tracking-wide font-bold">Phone</span>
+                    <span className="font-medium text-slate-800 flex items-center gap-2">
+                      {client.phone || 'N/A'}
+                      {client.phone && <button onClick={() => copyToClipboard(client.phone)} className="text-slate-400 hover:text-indigo-600"><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg></button>}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="block text-slate-500 text-[10px] uppercase tracking-wide font-bold">Website</span>
+                    {client.website ? (
+                      <span className="flex items-center gap-2">
+                        <a href={client.website} target="_blank" rel="noreferrer" className="font-medium text-indigo-600 hover:underline">
+                          {client.website}
+                        </a>
+                        <button onClick={() => copyToClipboard(client.website)} className="text-slate-400 hover:text-indigo-600"><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg></button>
+                      </span>
+                    ) : (
+                      <span className="font-medium text-slate-800">N/A</span>
+                    )}
+                  </div>
+                  <div>
+                    <span className="block text-slate-500 text-[10px] uppercase tracking-wide font-bold">Retainer Value</span>
+                    <span className="font-medium text-slate-800">
+                      {client.retainer_value ? `₹${client.retainer_value.toLocaleString('en-IN')}/mo` : 'N/A'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="block text-slate-500 text-[10px] uppercase tracking-wide font-bold">Services</span>
+                    <span className="font-medium text-slate-800 block leading-tight">{client.service_type || 'None'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Contacts Card with Birthdays & Greetings */}
+              <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+                <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
+                  <h3 className="font-semibold text-slate-900">Client Contacts</h3>
+                  <button onClick={() => setShowContactModal(true)} className="text-xs font-semibold text-indigo-600 hover:text-indigo-800">+ Add Contact</button>
+                </div>
+                {client.contacts && client.contacts.length > 0 ? (
+                  <ul className="space-y-4">
+                    {client.contacts.map((contact: any) => (
+                      <li key={contact.id} className="text-sm border-b border-slate-50 pb-3 last:border-b-0 last:pb-0">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-medium text-slate-800 flex items-center">
+                              {contact.name} 
+                              {contact.is_primary && <span className="ml-2 text-[9px] bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded border border-indigo-100 font-bold">PRIMARY</span>}
+                            </p>
+                            <p className="text-slate-500 text-xs font-medium">{contact.designation} {contact.department ? `(${contact.department})` : ''}</p>
+                            <p className="text-slate-500 text-xs mt-1">{contact.email} • {contact.phone || 'No phone'}</p>
+                            
+                            {/* Key Celebrations Logs */}
+                            {(contact.birth_date || contact.anniversary_date || (contact.festival_greetings && contact.festival_greetings.length > 0)) && (
+                              <div className="mt-2 p-2 bg-slate-50 rounded border border-slate-100 space-y-1 text-[11px]">
+                                {contact.birth_date && (
+                                  <p className="text-slate-600">🎂 Birthday: <span className="font-semibold">{new Date(contact.birth_date).toLocaleDateString(undefined, {month: 'long', day: 'numeric'})}</span></p>
+                                )}
+                                {contact.anniversary_date && (
+                                  <p className="text-slate-600">🎉 Anniversary: <span className="font-semibold">{new Date(contact.anniversary_date).toLocaleDateString(undefined, {month: 'long', day: 'numeric'})}</span></p>
+                                )}
+                                {contact.festival_greetings && contact.festival_greetings.length > 0 && (
+                                  <p className="text-slate-600">🪔 Festivals: <span className="font-semibold">{contact.festival_greetings.join(', ')}</span></p>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-slate-500 italic">No contacts added yet.</p>
+                )}
+              </div>
+
+              {/* Internal Notes / Scratchpad */}
+              <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+                <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
+                  <h3 className="font-semibold text-slate-900">Internal Scratchpad</h3>
+                  <button onClick={handleSaveNotes} disabled={savingNotes} className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">
+                    {savingNotes ? 'Saving...' : 'Save Notes'}
+                  </button>
+                </div>
+                <textarea 
+                  value={internalNotes}
+                  onChange={(e) => setInternalNotes(e.target.value)}
+                  placeholder="Leave internal observations, links, or notes here..."
+                  className="w-full h-32 p-3 text-sm border border-slate-200 rounded-md focus:ring-1 focus:ring-indigo-500 outline-none resize-y"
+                ></textarea>
+              </div>
+            </div>
+
+            {/* Standard deliverables tables */}
+            <div className="space-y-6 lg:col-span-2">
+              <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+                <h3 className="font-semibold text-slate-900 mb-4 border-b border-slate-100 pb-2">Recent Tasks</h3>
+                {client.tasks && client.tasks.length > 0 ? (
+                  <div className="space-y-2">
+                    {client.tasks.map((task: any) => (
+                      <div key={task.id} className="flex justify-between items-center text-sm p-2 hover:bg-slate-50 rounded">
+                        <Link href={`/tasks/${task.id}`} className="font-semibold text-slate-800 hover:text-indigo-600">{task.title}</Link>
+                        <span className={`px-2 py-0.5 rounded text-xs border ${task.status === 'Completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200 font-semibold' : 'bg-slate-50 text-slate-600 border-slate-200'}`}>{task.status}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-500 italic">No tasks logged.</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Onboarding Checklist Tab */}
+        {activeTab === 'onboarding' && (
+          <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm space-y-6">
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">Client Onboarding Checklist</h2>
+              <p className="text-xs text-slate-500 mt-1">Track key setup milestones required to begin project operations.</p>
+            </div>
+
+            <form onSubmit={handleAddOnboardingItem} className="flex space-x-2">
+              <input 
+                type="text" 
+                placeholder="Add new checklist item (e.g. 'Get Meta Business Manager access')"
+                value={newStepName}
+                onChange={e => setNewStepName(e.target.value)}
+                className="flex-1 text-sm border border-slate-300 rounded px-3 py-1.5 focus:ring-1 focus:ring-indigo-500 outline-none"
+              />
+              <button type="submit" className="bg-indigo-600 text-white font-semibold text-xs px-4 rounded hover:bg-indigo-700 transition">Add Item</button>
+            </form>
+
+            {client.onboarding_checklist && client.onboarding_checklist.length > 0 ? (
+              <div className="space-y-3">
+                {client.onboarding_checklist.map((item: any) => (
+                  <div key={item.id} className="flex items-center justify-between p-3 rounded-lg border border-slate-100 hover:bg-slate-50 transition">
+                    <div className="flex items-center space-x-3">
+                      <input 
+                        type="checkbox" 
+                        checked={item.is_completed} 
+                        onChange={() => toggleOnboardingItem(item.id, item.is_completed)}
+                        className="h-4.5 w-4.5 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500 cursor-pointer"
+                      />
+                      <span className={`text-sm ${item.is_completed ? 'line-through text-slate-400' : 'text-slate-700 font-medium'}`}>
+                        {item.step_name}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      {item.is_completed && item.completed_at && (
+                        <span className="text-[10px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100 font-semibold">Done {new Date(item.completed_at).toLocaleDateString()}</span>
+                      )}
+                      <button onClick={() => handleDeleteOnboardingItem(item.id)} className="text-slate-400 hover:text-rose-600 text-xs">Delete</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500 italic text-center py-6">No onboarding checklist items added yet.</p>
+            )}
+          </div>
+        )}
+
+        {/* Social Media Handles Tab */}
+        {activeTab === 'socials' && (
+          <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm space-y-6">
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">Brand Social Media Handles</h2>
+              <p className="text-xs text-slate-500 mt-1">Authorized social profile URLs and client-provided access roles.</p>
+            </div>
+
+            <form onSubmit={handleAddSocialHandle} className="grid grid-cols-1 md:grid-cols-4 gap-3 bg-slate-50 p-4 rounded-lg border border-slate-100">
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Platform</label>
+                <select value={socialPlatform} onChange={e => setSocialPlatform(e.target.value)} className="w-full text-xs border border-slate-300 rounded p-1.5 bg-white outline-none">
+                  <option value="Instagram">Instagram</option>
+                  <option value="Meta (Facebook)">Meta (Facebook)</option>
+                  <option value="LinkedIn">LinkedIn</option>
+                  <option value="YouTube">YouTube</option>
+                  <option value="Twitter/X">Twitter/X</option>
+                </select>
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Profile Link / Handle URL</label>
+                <input required type="url" placeholder="https://instagram.com/brandname" value={socialUrl} onChange={e => setSocialUrl(e.target.value)} className="w-full text-xs border border-slate-300 rounded p-1.5 outline-none" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Access Type</label>
+                <div className="flex space-x-2">
+                  <select value={socialAccess} onChange={e => setSocialAccess(e.target.value)} className="flex-1 text-xs border border-slate-300 rounded p-1.5 bg-white outline-none">
+                    <option value="Admin">Admin / Owner</option>
+                    <option value="Advertiser">Advertiser / Editor</option>
+                    <option value="Analyst">Analyst / Viewer</option>
+                  </select>
+                  <button type="submit" className="bg-indigo-600 text-white font-semibold text-xs px-3 rounded hover:bg-indigo-700 transition">Save</button>
+                </div>
+              </div>
+            </form>
+
+            {client.social_handles && client.social_handles.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {client.social_handles.map((handle: any) => (
+                  <div key={handle.id} className="p-4 rounded-lg border border-slate-200 flex items-center justify-between shadow-sm hover:border-indigo-100 transition">
+                    <div>
+                      <div className="flex items-center space-x-2">
+                        <span className="font-bold text-slate-800 text-sm">{handle.platform}</span>
+                        <span className="text-[10px] bg-slate-100 border border-slate-200 text-slate-600 px-2 py-0.5 rounded-full font-bold uppercase">{handle.access_provided}</span>
+                      </div>
+                      <a href={handle.profile_url} target="_blank" rel="noreferrer" className="text-xs text-indigo-600 hover:underline block mt-1 truncate max-w-[250px]">{handle.profile_url}</a>
+                    </div>
+                    <button onClick={() => handleDeleteSocialHandle(handle.id)} className="text-slate-400 hover:text-rose-600 text-xs">Remove</button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500 italic text-center py-6">No social media handles stored for this brand.</p>
+            )}
+          </div>
+        )}
+
+        {/* Campaign Performance Tab */}
+        {activeTab === 'campaigns' && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            {/* Logger Form */}
+            <div className="lg:col-span-1 bg-white p-5 rounded-lg border border-slate-200 shadow-sm space-y-4">
+              <div>
+                <h3 className="font-bold text-slate-900">Log Campaign Metric</h3>
+                <p className="text-xs text-slate-500">Record performance statistics and budget costs.</p>
+              </div>
+
+              <form onSubmit={handleLogCampaign} className="space-y-4 text-xs font-semibold text-slate-600">
+                <div>
+                  <label className="block mb-1">Campaign Name</label>
+                  <input required type="text" placeholder="e.g. Summer Leads 2026" value={campaignName} onChange={e => setCampaignName(e.target.value)} className="w-full border border-slate-300 rounded p-2 outline-none" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block mb-1">Impressions</label>
+                    <input type="number" placeholder="50000" value={campImpressions} onChange={e => setCampImpressions(e.target.value)} className="w-full border border-slate-300 rounded p-2 outline-none" />
+                  </div>
+                  <div>
+                    <label className="block mb-1">Clicks</label>
+                    <input type="number" placeholder="2500" value={campClicks} onChange={e => setCampClicks(e.target.value)} className="w-full border border-slate-300 rounded p-2 outline-none" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block mb-1">Conversions / Leads</label>
+                    <input type="number" placeholder="120" value={campConversions} onChange={e => setCampConversions(e.target.value)} className="w-full border border-slate-300 rounded p-2 outline-none" />
+                  </div>
+                  <div>
+                    <label className="block mb-1">Spend (INR `₹`)</label>
+                    <input required type="number" placeholder="15000" value={campSpend} onChange={e => setCampSpend(e.target.value)} className="w-full border border-slate-300 rounded p-2 outline-none" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block mb-1">Start Date</label>
+                  <input required type="date" value={campStartDate} onChange={e => setCampStartDate(e.target.value)} className="w-full border border-slate-300 rounded p-2 outline-none" />
+                </div>
+                <button type="submit" className="w-full bg-indigo-600 text-white py-2 rounded text-xs font-bold hover:bg-indigo-700 transition">Log Metric Record</button>
+              </form>
+            </div>
+
+            {/* Metric Displays */}
+            <div className="lg:col-span-2 bg-white p-5 rounded-lg border border-slate-200 shadow-sm space-y-6">
+              <div>
+                <h3 className="font-bold text-slate-900">Campaign ROI Records</h3>
+                <p className="text-xs text-slate-500">List of ad campaign results and calculated Cost Per Lead values.</p>
+              </div>
+
+              {client.campaign_performances && client.campaign_performances.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full text-xs text-left">
+                    <thead>
+                      <tr className="border-b border-slate-200 text-slate-500">
+                        <th className="py-2">Campaign</th>
+                        <th className="py-2">Impressions</th>
+                        <th className="py-2">Clicks (CTR)</th>
+                        <th className="py-2">Conversions</th>
+                        <th className="py-2">Spend (INR)</th>
+                        <th className="py-2">CPL (INR)</th>
+                        <th className="py-2 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                      {client.campaign_performances.map((camp: any) => {
+                        const ctr = camp.impressions > 0 ? ((camp.clicks / camp.impressions) * 100).toFixed(2) : '0';
+                        return (
+                          <tr key={camp.id} className="hover:bg-slate-50">
+                            <td className="py-3 font-semibold text-slate-900">
+                              <p>{camp.campaign_name}</p>
+                              <span className="text-[10px] text-slate-400 font-normal">{new Date(camp.start_date).toLocaleDateString()}</span>
+                            </td>
+                            <td className="py-3">{camp.impressions.toLocaleString()}</td>
+                            <td className="py-3">{camp.clicks.toLocaleString()} ({ctr}%)</td>
+                            <td className="py-3">{camp.leads_conversions.toLocaleString()}</td>
+                            <td className="py-3">₹{camp.spend_inr.toLocaleString('en-IN')}</td>
+                            <td className="py-3 text-indigo-600 font-bold">₹{camp.cost_per_lead_inr.toFixed(2)}</td>
+                            <td className="py-3 text-right">
+                              <button onClick={() => handleDeleteCampaign(camp.id)} className="text-rose-600 hover:underline font-semibold">Delete</button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="text-sm text-slate-500 italic text-center py-12">No marketing campaigns logged for this client yet.</p>
+              )}
+            </div>
+
+          </div>
+        )}
+
+        {/* Activity Timeline Tab */}
+        {activeTab === 'timeline' && (
+          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 border-b border-slate-100 pb-4">
+              <h2 className="text-xl font-bold text-slate-900 font-heading flex items-center mb-4 md:mb-0">
+                <svg className="w-5 h-5 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Activity Timeline
+              </h2>
+              
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { id: 'all', label: 'All Activity' },
+                  { id: 'task', label: 'Tasks' },
+                  { id: 'communication', label: 'Comms' },
+                  { id: 'meeting', label: 'Meetings' },
+                  { id: 'sow', label: 'SOWs' },
+                  { id: 'escalation', label: 'Escalations' }
+                ].map(f => (
+                  <button
+                    key={f.id}
+                    onClick={() => setTimelineFilter(f.id as any)}
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-colors ${
+                      timelineFilter === f.id 
+                        ? 'bg-slate-800 border-slate-800 text-white shadow-sm' 
+                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            
+            <div className="relative border-l-2 border-slate-100 ml-3 space-y-8">
+              {(() => {
+                let events: any[] = [];
+                if (client.tasks) {
+                  client.tasks.forEach((t: any) => {
+                    events.push({ ...t, type: 'task', event_title: `Task Created: ${t.title}`, date: new Date(t.created_at) });
+                    if (t.status === 'Completed' && t.updated_at) {
+                      events.push({ ...t, type: 'task_completed', event_title: `Task Completed: ${t.title}`, date: new Date(t.updated_at) });
+                    }
+                  });
+                }
+                if (client.communications) events.push(...client.communications.map((c: any) => ({ ...c, type: 'communication', event_title: `Communication Logged: ${c.subject}`, date: new Date(c.created_at) })));
+                if (client.sows) events.push(...client.sows.map((s: any) => ({ ...s, type: 'sow', event_title: `SOW Added: ${s.title}`, date: new Date(s.created_at) })));
+                if (client.escalations) {
+                  client.escalations.forEach((e: any) => {
+                    events.push({ ...e, type: 'escalation', event_title: `Escalation: ${e.issue}`, date: new Date(e.created_at) });
+                    if (e.status === 'Resolved' && e.updated_at) {
+                      events.push({ ...e, type: 'escalation_resolved', event_title: `Escalation Resolved: ${e.issue}`, date: new Date(e.updated_at) });
+                    }
+                  });
+                }
+                if (client.meetings) events.push(...client.meetings.map((m: any) => ({ ...m, type: 'meeting', event_title: `Meeting: ${m.title}`, date: new Date(m.meeting_date) })));
+                
+                if (timelineFilter !== 'all') {
+                  events = events.filter(e => e.type.startsWith(timelineFilter));
+                }
+
+                events.sort((a, b) => b.date.getTime() - a.date.getTime());
+
+                if (events.length === 0) {
+                  return <p className="text-sm text-slate-500 italic pl-6">No {timelineFilter === 'all' ? 'activity' : timelineFilter + 's'} found for this client.</p>;
+                }
+
+                return events.map((ev, i) => (
+                  <div key={i} className="relative pl-6">
+                    <span className={`absolute -left-3 top-1 w-6 h-6 rounded-full flex items-center justify-center border-2 border-white ring-4 ring-white shadow-sm ${
+                      ev.type.startsWith('task') ? 'bg-indigo-100 text-indigo-600' :
+                      ev.type === 'communication' ? 'bg-sky-100 text-sky-600' :
+                      ev.type === 'sow' ? 'bg-emerald-100 text-emerald-600' :
+                      ev.type === 'meeting' ? 'bg-amber-100 text-amber-600' :
+                      'bg-rose-100 text-rose-600'
+                    }`}>
+                      {ev.type === 'task' && <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>}
+                      {(ev.type === 'task_completed' || ev.type === 'escalation_resolved') && <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>}
+                      {ev.type === 'communication' && <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>}
+                      {ev.type === 'meeting' && <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>}
+                      {ev.type === 'sow' && <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>}
+                      {ev.type === 'escalation' && <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>}
+                    </span>
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-baseline">
+                      <div className="text-sm font-semibold text-slate-900">
+                        {ev.event_title}
+                      </div>
+                      <time className="text-xs text-slate-500 mt-1 sm:mt-0 font-medium">
+                        {ev.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </time>
+                    </div>
+                    <div className="mt-1.5 text-sm text-slate-600 line-clamp-2">
+                      {ev.type.startsWith('task') && ev.description}
+                      {ev.type === 'communication' && (ev.summary ? ev.summary.replace(/<[^>]+>/g, '') : '')}
+                      {ev.type === 'sow' && `Amount: ₹${ev.total_amount?.toLocaleString() || 0} | Status: ${ev.status}`}
+                      {ev.type === 'meeting' && ev.agenda}
+                      {ev.type.startsWith('escalation') && ev.resolution_notes}
+                    </div>
+                  </div>
+                ));
+              })()}
+            </div>
+          </div>
+        )}
+
+      </div>
+
+      {/* Add Contact Modal */}
+      {showContactModal && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl border border-slate-200 max-w-lg w-full overflow-hidden">
+            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <h3 className="font-bold text-slate-900">Add New Contact</h3>
+              <button onClick={() => setShowContactModal(false)} className="text-slate-400 hover:text-slate-600">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+              </button>
+            </div>
+            
+            <form onSubmit={handleAddContact} className="p-5 space-y-4 text-xs font-semibold text-slate-600">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block mb-1">Full Name</label>
+                  <input required type="text" value={contactName} onChange={e => setContactName(e.target.value)} className="w-full border border-slate-300 rounded p-2 outline-none" />
+                </div>
+                <div>
+                  <label className="block mb-1">Designation</label>
+                  <input type="text" value={contactDesig} onChange={e => setContactDesig(e.target.value)} className="w-full border border-slate-300 rounded p-2 outline-none" placeholder="e.g. Marketing Lead" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block mb-1">Department</label>
+                  <input type="text" value={contactDept} onChange={e => setContactDept(e.target.value)} className="w-full border border-slate-300 rounded p-2 outline-none" placeholder="e.g. Marketing" />
+                </div>
+                <div>
+                  <label className="block mb-1">Email</label>
+                  <input type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} className="w-full border border-slate-300 rounded p-2 outline-none" />
+                </div>
+              </div>
+              <div>
+                <label className="block mb-1">Phone Number</label>
+                <input type="text" value={contactPhone} onChange={e => setContactPhone(e.target.value)} className="w-full border border-slate-300 rounded p-2 outline-none" placeholder="e.g. +91 98765 43210" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block mb-1">Date of Birth</label>
+                  <input type="date" value={contactBirth} onChange={e => setContactBirth(e.target.value)} className="w-full border border-slate-300 rounded p-2 outline-none" />
+                </div>
+                <div>
+                  <label className="block mb-1">Anniversary Date</label>
+                  <input type="date" value={contactAnniv} onChange={e => setContactAnniv(e.target.value)} className="w-full border border-slate-300 rounded p-2 outline-none" />
+                </div>
+              </div>
+
+              <div>
+                <label className="block mb-1">Festival Greetings Opt-in</label>
+                <div className="flex flex-wrap gap-2 mt-1.5">
+                  {['Diwali', 'Eid', 'Christmas', 'Holi', 'New Year'].map(fest => (
+                    <button 
+                      key={fest} 
+                      type="button" 
+                      onClick={() => toggleFestival(fest)}
+                      className={`px-3 py-1 rounded-full border text-[10px] font-bold transition ${contactFestivals.includes(fest) ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-white border-slate-200 text-slate-500'}`}
+                    >
+                      {fest}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 flex justify-end space-x-2">
+                <button type="button" onClick={() => setShowContactModal(false)} className="px-4 py-2 bg-white border border-slate-200 rounded text-slate-600 hover:bg-slate-50 transition">Cancel</button>
+                <button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition">Save Contact</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Profile Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl border border-slate-200 max-w-lg w-full overflow-hidden">
+            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <h3 className="font-bold text-slate-900">Edit Client Profile</h3>
+              <button onClick={() => setShowEditModal(false)} className="text-slate-400 hover:text-slate-600">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+              </button>
+            </div>
+            
+            <form onSubmit={handleUpdateProfile} className="p-5 space-y-4 text-xs font-semibold text-slate-600 max-h-[70vh] overflow-y-auto">
+              <div>
+                <label className="block mb-1">Company Name <span className="text-rose-500">*</span></label>
+                <input required type="text" value={editCompanyName} onChange={e => setEditCompanyName(e.target.value)} className="w-full border border-slate-300 rounded p-2 outline-none font-normal text-slate-800" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block mb-1">Brand Name</label>
+                  <input type="text" value={editBrandName} onChange={e => setEditBrandName(e.target.value)} className="w-full border border-slate-300 rounded p-2 outline-none font-normal text-slate-800" />
+                </div>
+                <div>
+                  <label className="block mb-1">Industry</label>
+                  <input type="text" value={editIndustry} onChange={e => setEditIndustry(e.target.value)} className="w-full border border-slate-300 rounded p-2 outline-none font-normal text-slate-800" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block mb-1">Primary Client Name</label>
+                  <input type="text" value={editPrimaryContact} onChange={e => setEditPrimaryContact(e.target.value)} className="w-full border border-slate-300 rounded p-2 outline-none font-normal text-slate-800" placeholder="e.g. John Doe" />
+                </div>
+                <div>
+                  <label className="block mb-1">Internal SPOC</label>
+                  <input type="text" value={editSpocName} onChange={e => setEditSpocName(e.target.value)} className="w-full border border-slate-300 rounded p-2 outline-none font-normal text-slate-800" placeholder="e.g. Sarah Smith" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block mb-1">Client Status <span className="text-rose-500">*</span></label>
+                  <select value={editStatus} onChange={e => setEditStatus(e.target.value as any)} className="w-full border border-slate-300 rounded p-2 bg-white outline-none font-normal text-slate-800">
+                    <option value="Active">Active</option>
+                    <option value="Hold">Hold</option>
+                    <option value="Lost">Lost</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block mb-1">Monthly Retainer (INR ₹)</label>
+                  <input type="number" value={editRetainer} onChange={e => setEditRetainer(e.target.value)} className="w-full border border-slate-300 rounded p-2 outline-none font-normal text-slate-800" placeholder="e.g. 50000" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block mb-1">Email</label>
+                  <input type="email" value={editEmail} onChange={e => setEditEmail(e.target.value)} className="w-full border border-slate-300 rounded p-2 outline-none font-normal text-slate-800" />
+                </div>
+                <div>
+                  <label className="block mb-1">Phone Number</label>
+                  <input type="text" value={editPhone} onChange={e => setEditPhone(e.target.value)} className="w-full border border-slate-300 rounded p-2 outline-none font-normal text-slate-800" placeholder="e.g. +91 98765 43210" />
+                </div>
+              </div>
+              <div>
+                <label className="block mb-1">Website URL</label>
+                <input type="url" value={editWebsite} onChange={e => setEditWebsite(e.target.value)} className="w-full border border-slate-300 rounded p-2 outline-none font-normal text-slate-800" placeholder="https://example.com" />
+              </div>
+
+              <div>
+                <label className="block mb-2 text-slate-700">Services Selected</label>
+                <div className="grid grid-cols-2 gap-3 bg-slate-50 p-4 rounded-lg border border-slate-200">
+                  {SERVICES.map(service => (
+                    <label key={service} className="flex items-center space-x-2 text-xs text-slate-700 cursor-pointer font-medium">
+                      <input 
+                        type="checkbox" 
+                        checked={editServices.includes(service)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setEditServices([...editServices, service]);
+                          } else {
+                            setEditServices(editServices.filter(s => s !== service));
+                          }
+                        }}
+                        className="rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 w-4 h-4 cursor-pointer"
+                      />
+                      <span>{service}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 flex justify-end space-x-2">
+                <button type="button" onClick={() => setShowEditModal(false)} className="px-4 py-2 bg-white border border-slate-200 rounded text-slate-600 hover:bg-slate-50 transition">Cancel</button>
+                <button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition">Save Changes</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

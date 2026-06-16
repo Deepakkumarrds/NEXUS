@@ -30,6 +30,7 @@ export default function ClientPortalLogin() {
       if (res.ok && data.status === 'success') {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.data));
+        document.cookie = `token=${data.token}; path=/; max-age=86400; SameSite=Lax`;
         // Redirect to client dashboard
         router.push('/client/dashboard');
       } else {

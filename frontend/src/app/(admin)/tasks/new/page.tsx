@@ -2,10 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import toast from 'react-hot-toast';
 
 export default function NewTaskPage() {
   const [clients, setClients] = useState<{id: string, company_name: string}[]>([]);
-  const [users, setUsers] = useState<{id: string, name: string}[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
+  const [holidays, setHolidays] = useState<any[]>([]);
+  const [holidayWarning, setHolidayWarning] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
     client_id: '',
@@ -13,16 +16,58 @@ export default function NewTaskPage() {
     description: '',
     assigned_to: '',
     priority: 'Medium',
-    due_date: ''
+    due_date: '',
+    is_recurring: false,
+    recurrence_pattern: 'Weekly',
+    recurrence_end: ''
   });
 
   useEffect(() => {
-    // Ideally we fetch clients and users from backend here
-    fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/clients').then(res => res.json()).then(data => { if(data && data.data) setClients(data.data); });
+    // Fetch Clients
+    fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/clients')
+      .then(res => res.json())
+      .then(data => { if(data && data.data) setClients(data.data); });
+
+    // Fetch Users (for assignment and skill tags)
+    fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/users')
+      .then(res => res.json())
+      .then(data => { if(data && data.data) setUsers(data.data); });
+
+    // Fetch Holidays (for holiday-aware warning checks)
+    fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/holidays')
+      .then(res => res.json())
+      .then(data => { if(data && data.data) setHolidays(data.data); });
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value, type } = e.target;
+    
+    if (type === 'checkbox') {
+      const checked = (e.target as HTMLInputElement).checked;
+      setFormData(prev => ({ ...prev, [name]: checked }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+      
+      // Perform Holiday check if due_date is changed
+      if (name === 'due_date') {
+        checkHoliday(value);
+      }
+    }
+  };
+
+  const checkHoliday = (selectedDateStr: string) => {
+    if (!selectedDateStr) {
+      setHolidayWarning(null);
+      return;
+    }
+    const selectedDate = new Date(selectedDateStr).toISOString().split('T')[0];
+    const match = holidays.find(h => new Date(h.holiday_date).toISOString().split('T')[0] === selectedDate);
+    
+    if (match) {
+      setHolidayWarning(`⚠️ Scheduled date coincides with public holiday: ${match.holiday_name}`);
+    } else {
+      setHolidayWarning(null);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -35,6 +80,7 @@ export default function NewTaskPage() {
       });
       
       if (response.ok) {
+        toast.success('Task created successfully!');
         window.location.href = '/tasks';
       } else {
         alert('Failed to save task.');
@@ -64,6 +110,7 @@ export default function NewTaskPage() {
               type="text" 
               name="title" 
               required 
+              style={{ color: '#0f172a', backgroundColor: '#ffffff' }}
               className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow"
               onChange={handleChange}
             />
@@ -74,7 +121,8 @@ export default function NewTaskPage() {
             <select 
               name="client_id" 
               required 
-              className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow bg-white"
+              style={{ color: '#0f172a', backgroundColor: '#ffffff' }}
+              className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow"
               onChange={handleChange}
             >
               <option value="">Select a client...</option>
@@ -85,10 +133,32 @@ export default function NewTaskPage() {
           </div>
 
           <div>
+            <label className="block font-medium text-slate-700 mb-1.5">Assignee (Skill-Based Tagging)</label>
+            <select 
+              name="assigned_to" 
+              style={{ color: '#0f172a', backgroundColor: '#ffffff' }}
+              className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow"
+              onChange={handleChange}
+              value={formData.assigned_to}
+            >
+              <option value="">Select an assignee...</option>
+              {users.map(u => {
+                const skillsStr = u.skills && u.skills.length > 0 ? ` [${u.skills.join(', ')}]` : ' [No skills listed]';
+                return (
+                  <option key={u.id} value={u.id}>
+                    {u.name} ({u.designation || 'Staff'}){skillsStr}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+
+          <div>
             <label className="block font-medium text-slate-700 mb-1.5">Description</label>
             <textarea 
               name="description" 
               rows={4}
+              style={{ color: '#0f172a', backgroundColor: '#ffffff' }}
               className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow"
               onChange={handleChange}
             />
@@ -99,7 +169,8 @@ export default function NewTaskPage() {
               <label className="block font-medium text-slate-700 mb-1.5">Priority</label>
               <select 
                 name="priority" 
-                className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow bg-white"
+                style={{ color: '#0f172a', backgroundColor: '#ffffff' }}
+                className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow"
                 onChange={handleChange}
               >
                 <option value="Low">Low</option>
@@ -112,10 +183,45 @@ export default function NewTaskPage() {
               <input 
                 type="date" 
                 name="due_date" 
+                style={{ color: '#0f172a', backgroundColor: '#ffffff' }}
                 className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow"
                 onChange={handleChange}
               />
+              {holidayWarning && (
+                <p className="text-xs text-amber-600 font-bold mt-1.5">{holidayWarning}</p>
+              )}
             </div>
+          </div>
+
+          {/* Recurrence Section */}
+          <div className="pt-4 border-t border-slate-100 space-y-4">
+            <div className="flex items-center space-x-3">
+              <input 
+                type="checkbox" 
+                id="is_recurring" 
+                name="is_recurring"
+                checked={formData.is_recurring}
+                onChange={handleChange}
+                className="h-4.5 w-4.5 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500 cursor-pointer"
+              />
+              <label htmlFor="is_recurring" className="font-semibold text-slate-700 cursor-pointer">Make this a Recurring Task (Social Calendar Scheduler)</label>
+            </div>
+
+            {formData.is_recurring && (
+              <div className="grid grid-cols-2 gap-5 p-4 bg-slate-50 border border-slate-100 rounded-lg">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Recurrence Pattern</label>
+                  <select name="recurrence_pattern" value={formData.recurrence_pattern} onChange={handleChange} style={{ color: '#0f172a', backgroundColor: '#ffffff' }} className="w-full text-xs border border-slate-300 rounded p-2 outline-none">
+                    <option value="Weekly">Weekly (Every Monday)</option>
+                    <option value="Monthly">Monthly (1st of Month)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">End Recurrence Date</label>
+                  <input type="date" name="recurrence_end" value={formData.recurrence_end} onChange={handleChange} style={{ color: '#0f172a', backgroundColor: '#ffffff' }} className="w-full text-xs border border-slate-300 rounded p-2 outline-none" />
+                </div>
+              </div>
+            )}
           </div>
 
         </div>

@@ -13,7 +13,7 @@ exports.getDashboardStats = async (req, res) => {
 
     // 3. Pending Tasks
     const pendingTasks = await prisma.task.count({
-      where: { status: { not: 'Done' } }
+      where: { status: { not: 'Completed' } }
     });
 
     // 4. Total SOW Value (Sum of all active SOWs)
@@ -33,6 +33,11 @@ exports.getDashboardStats = async (req, res) => {
       orderBy: { created_at: 'desc' },
       include: { client: { select: { company_name: true } } }
     });
+
+    // Role-Based Financial Privacy
+    if (req.query.role === 'Team Member') {
+      totalSowValue = null;
+    }
 
     res.status(200).json({
       status: 'success',

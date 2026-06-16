@@ -41,13 +41,24 @@ exports.createSow = async (req, res) => {
 // Get all SOWs
 exports.getAllSows = async (req, res) => {
   try {
-    const sows = await prisma.sow.findMany({
+    let sows = await prisma.sow.findMany({
       include: {
         client: { select: { company_name: true } },
         items: true
       },
       orderBy: { created_at: 'desc' }
     });
+
+    // Role-based Financial Privacy
+    if (req.query.role === 'Team Member') {
+      sows = sows.map(sow => {
+        return {
+          ...sow,
+          total_value: null // Strip out the financial value
+        };
+      });
+    }
+
     res.status(200).json({ status: 'success', data: sows });
   } catch (error) {
     console.error('Error fetching SOWs:', error);

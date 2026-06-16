@@ -6,4 +6,7 @@ const meetingController = require('../controllers/meetingController');
 router.post('/', meetingController.createMeeting);
 router.get('/', meetingController.getAllMeetings);
 
+// Update Action Item Status
+router.patch('/action-items/:id/status', meetingController.updateActionItemStatus);
+
 module.exports = router;

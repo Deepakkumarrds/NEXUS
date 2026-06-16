@@ -19,7 +19,7 @@ exports.getAllUsers = async (req, res) => {
 // Create a new user
 exports.createUser = async (req, res) => {
   try {
-    const { name, email, password, role_id, department, designation } = req.body;
+    const { name, email, password, role_id, department, designation, skills } = req.body;
 
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
@@ -36,7 +36,8 @@ exports.createUser = async (req, res) => {
         role_id,
         department,
         designation,
-        status: 'Active'
+        status: 'Active',
+        skills: skills || []
       },
       include: { role: true }
     });
@@ -45,6 +46,32 @@ exports.createUser = async (req, res) => {
   } catch (error) {
     console.error('Error creating user:', error);
     res.status(500).json({ status: 'error', message: 'Failed to create user' });
+  }
+};
+
+// Update a user (e.g. designation, department, skills)
+exports.updateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, email, department, designation, skills, status } = req.body;
+
+    const user = await prisma.user.update({
+      where: { id },
+      data: {
+        name,
+        email,
+        department,
+        designation,
+        skills: skills || undefined,
+        status
+      },
+      include: { role: true }
+    });
+
+    res.status(200).json({ status: 'success', data: user });
+  } catch (error) {
+    console.error('Error updating user:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to update user' });
   }
 };
 
@@ -58,3 +85,4 @@ exports.getRoles = async (req, res) => {
     res.status(500).json({ status: 'error', message: 'Failed to fetch roles' });
   }
 };
+

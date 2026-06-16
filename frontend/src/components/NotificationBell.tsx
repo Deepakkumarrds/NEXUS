@@ -15,13 +15,6 @@ export default function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
 
-  useEffect(() => {
-    fetchNotifications();
-    // Poll every 30 seconds for new notifications
-    const interval = setInterval(fetchNotifications, 30000);
-    return () => clearInterval(interval);
-  }, []);
-
   const fetchNotifications = async () => {
     try {
       const res = await fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/notifications');
@@ -44,6 +37,15 @@ export default function NotificationBell() {
       console.error('Failed to mark all as read:', error);
     }
   };
+
+  useEffect(() => {
+    fetchNotifications();
+    // Poll every 30 seconds for new notifications
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
 

@@ -20,6 +20,10 @@ const dashboardRoutes = require('./routes/dashboardRoutes');
 const logRoutes = require('./routes/logRoutes');
 const userRoutes = require('./routes/userRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const holidayRoutes = require('./routes/holidayRoutes');
+const leaveRoutes = require('./routes/leaveRoutes');
+const campaignRoutes = require('./routes/campaignRoutes');
+const settingsRoutes = require('./routes/settingsRoutes');
 
 // Middlewares
 app.use(cors());
@@ -36,6 +40,9 @@ app.get('/', (req, res) => {
   res.send('RDS Dashboard Backend is running. Please access the frontend application.');
 });
 
+const assetRoutes = require('./routes/assetRoutes');
+const path = require('path');
+
 // Mount Routes
 app.use('/api/clients', clientRoutes);
 app.use('/api/tasks', taskRoutes);
@@ -49,8 +56,20 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/logs', logRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/assets', assetRoutes);
+app.use('/api/holidays', holidayRoutes);
+app.use('/api/leaves', leaveRoutes);
+app.use('/api/campaigns', campaignRoutes);
+app.use('/api/settings', settingsRoutes);
+
+// Static uploads folder
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
+  
+  // Initialize cron jobs
+  const cronService = require('./services/cronService');
+  cronService.startCronJobs();
 });

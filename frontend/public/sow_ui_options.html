@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>50 SOW UI Options (Light Theme)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Poppins', sans-serif; background-color: #f8fafc; }
+  </style>
+</head>
+<body class="p-10">
+  <div class="max-w-4xl mx-auto">
+    <div class="mb-10 border-b border-slate-200 pb-6">
+      <h1 class="text-3xl font-black text-slate-900 tracking-tight">50 SOW UI Options</h1>
+      <p class="text-slate-500 mt-2">Light theme variations without gradients. Scroll down to see 50 unique layout, border, radius, and shadow combinations.</p>
+    </div>
+    
+    <div id="grid-container" class="grid grid-cols-1 md:grid-cols-2 gap-x-8">
+      <!-- Options will be injected here by JavaScript -->
+    </div>
+  </div>
+
+  <script>
+    const borderStyles = [
+      'border border-slate-200', 'border-2 border-indigo-100', 'border-l-4 border-indigo-500', 
+      'border-t-4 border-emerald-400', 'border-0', 'border border-slate-100'
+    ];
+    const radiusStyles = ['rounded-none', 'rounded-md', 'rounded-lg', 'rounded-xl', 'rounded-2xl', 'rounded-3xl'];
+    const shadowStyles = [
+      'shadow-sm', 'shadow', 'shadow-md', 'shadow-lg', 
+      'shadow-[0_8px_30px_rgb(0,0,0,0.04)]', 'shadow-none'
+    ];
+    const bgStyles = ['bg-white', 'bg-slate-50', 'bg-indigo-50/30', 'bg-blue-50/20'];
+    
+    const badgeStyles = [
+      'bg-indigo-100 text-indigo-700', 'bg-slate-100 text-slate-700', 
+      'bg-blue-50 text-blue-600 border border-blue-200', 'text-slate-500 uppercase tracking-widest text-[10px]'
+    ];
+    
+    const pBarStyle = [
+      'bg-indigo-500', 'bg-emerald-500', 'bg-blue-600', 'bg-slate-800', 
+      'bg-indigo-600'
+    ];
+
+    const container = document.getElementById('grid-container');
+
+    for (let i = 0; i < 50; i++) {
+      const border = borderStyles[i % borderStyles.length];
+      const radius = radiusStyles[Math.floor(i / borderStyles.length) % radiusStyles.length];
+      const shadow = shadowStyles[Math.floor(i / 2) % shadowStyles.length];
+      const bg = bgStyles[Math.floor(i / 3) % bgStyles.length];
+      const badge = badgeStyles[i % badgeStyles.length];
+      const bar = pBarStyle[(i * 2) % pBarStyle.length];
+      const layoutType = i % 3; 
+      
+      let innerHtml = '';
+
+      if (layoutType === 0) {
+        innerHtml = `
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <span class="text-[10px] font-bold px-2 py-1 rounded-md mb-2 inline-block ${badge}">
+                Acme Corp
+              </span>
+              <h3 class="font-bold text-slate-900 text-lg">Website Redesign SOW</h3>
+            </div>
+            <div class="text-right">
+              <p class="text-lg font-black text-slate-900">₹1,50,000</p>
+              <p class="text-[10px] font-bold text-slate-400 uppercase">Value</p>
+            </div>
+          </div>
+          <div class="mb-4">
+            <div class="flex justify-between text-xs font-semibold mb-1 text-slate-600">
+              <span>Progress</span>
+              <span>45%</span>
+            </div>
+            <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+              <div class="${bar} h-full rounded-full" style="width: 45%"></div>
+            </div>
+          </div>
+        `;
+      } else if (layoutType === 1) {
+        innerHtml = `
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="font-bold text-slate-900 text-base mb-1">Website Redesign SOW</h3>
+              <div class="flex items-center gap-3 text-xs text-slate-500">
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${badge}">Acme Corp</span>
+                <span>•</span>
+                <span>12 Deliverables</span>
+              </div>
+            </div>
+            <div class="w-1/3">
+              <div class="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden mb-1">
+                <div class="${bar} h-full rounded-full" style="width: 45%"></div>
+              </div>
+              <p class="text-[10px] font-semibold text-right text-slate-400">45% Complete</p>
+            </div>
+          </div>
+        `;
+      } else {
+        innerHtml = `
+          <div class="grid grid-cols-3 gap-6 items-center">
+            <div class="col-span-2 border-r border-slate-100 pr-6">
+              <span class="text-[10px] font-bold px-2 py-1 rounded mb-2 inline-block ${badge}">
+                Acme Corp
+              </span>
+              <h3 class="font-bold text-slate-900 text-xl mb-3">Website Redesign SOW</h3>
+              <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                <div class="${bar} h-full rounded-full" style="width: 45%"></div>
+              </div>
+            </div>
+            <div class="col-span-1 text-center">
+              <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Contract Value</p>
+              <p class="text-2xl font-black text-slate-800">₹1,50,000</p>
+              <button class="mt-3 text-xs font-bold text-indigo-600 bg-indigo-50 px-4 py-2 rounded-lg w-full hover:bg-indigo-100">
+                View
+              </button>
+            </div>
+          </div>
+        `;
+      }
+
+      const card = document.createElement('div');
+      card.className = `mb-10 overflow-hidden ${bg} ${border} ${radius} ${shadow}`;
+      card.innerHTML = `
+        <div class="bg-slate-100/50 px-4 py-2 border-b border-slate-100 text-xs font-bold text-slate-400 flex justify-between">
+          <span>Option #${i + 1}</span>
+          <span>Classes: ${radius} | ${shadow}</span>
+        </div>
+        <div class="p-6">
+          ${innerHtml}
+        </div>
+      `;
+      container.appendChild(card);
+    }
+  </script>
+</body>
+</html>

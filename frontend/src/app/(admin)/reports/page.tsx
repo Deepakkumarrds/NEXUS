@@ -18,7 +18,8 @@ export default function ReportsPage() {
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchReports = () => {
+    setLoading(true);
     fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/reports')
       .then(res => res.json())
       .then(data => { 
@@ -31,7 +32,29 @@ export default function ReportsPage() {
         console.error('Error fetching reports:', error);
         setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    fetchReports();
   }, []);
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this report?')) return;
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/reports/${id}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) fetchReports();
+      else console.error('Failed to delete report');
+    } catch (err) {
+      console.error('Error:', err);
+    }
+  };
+
+  const copyLink = (url: string) => {
+    navigator.clipboard.writeText(url);
+    alert('Link copied to clipboard!');
+  };
 
   return (
     <div>
@@ -86,19 +109,39 @@ export default function ReportsPage() {
                     {report.uploader?.name || 'Unknown'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {report.file_path && report.file_path !== 'dummy/path/to/file.pdf' ? (
-                      <a 
-                        href={report.file_path} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-indigo-600 hover:text-indigo-800 font-medium text-xs flex items-center bg-indigo-50 px-2 py-1 rounded inline-flex border border-indigo-100"
+                    <div className="flex items-center gap-2">
+                      {report.file_path && report.file_path !== 'dummy/path/to/file.pdf' ? (
+                        <>
+                          <a 
+                            href={report.file_path} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded transition"
+                            title="View Report"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                          </a>
+                          <button 
+                            onClick={() => copyLink(report.file_path)}
+                            className="p-1.5 text-slate-500 hover:bg-slate-100 rounded transition"
+                            title="Copy Link"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                          </button>
+                        </>
+                      ) : (
+                        <span className="text-slate-400 text-xs italic px-2">No Link</span>
+                      )}
+                      
+                      {/* Delete Button */}
+                      <button 
+                        onClick={() => handleDelete(report.id)}
+                        className="p-1.5 text-rose-500 hover:bg-rose-50 rounded transition ml-2"
+                        title="Delete Report"
                       >
-                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-                        View Report
-                      </a>
-                    ) : (
-                      <span className="text-slate-400 text-xs italic">No Link</span>
-                    )}
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

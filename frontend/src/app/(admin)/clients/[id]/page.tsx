@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
+import * as XLSX from 'xlsx';
 
 export default function ClientDetailsPage() {
   const params = useParams();
@@ -17,6 +18,120 @@ export default function ClientDetailsPage() {
 
   const [internalNotes, setInternalNotes] = useState('');
   const [savingNotes, setSavingNotes] = useState(false);
+
+  // Export Report State
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportStartDate, setExportStartDate] = useState('');
+  const [exportEndDate, setExportEndDate] = useState('');
+  const [exportFormat, setExportFormat] = useState<'excel' | 'pdf'>('pdf');
+  const [exportIncludes, setExportIncludes] = useState({
+    profile: true,
+    tasks: true,
+    comms: true
+  });
+
+  const handleExportReport = async () => {
+    if (!exportStartDate || !exportEndDate) {
+      toast.error('Please select both start and end dates.');
+      return;
+    }
+    
+    if (!exportIncludes.profile && !exportIncludes.tasks && !exportIncludes.comms) {
+      toast.error('Please select at least one type of content to export.');
+      return;
+    }
+
+    if (exportFormat === 'pdf') {
+      const query = new URLSearchParams({
+        start: exportStartDate,
+        end: exportEndDate,
+        profile: exportIncludes.profile.toString(),
+        tasks: exportIncludes.tasks.toString(),
+        comms: exportIncludes.comms.toString()
+      }).toString();
+      
+      window.open(`/clients/${clientId}/report?${query}`, '_blank');
+      setShowExportModal(false);
+      return;
+    }
+    
+    try {
+      toast.loading('Generating report...', { id: 'export' });
+      
+      const [tasksRes, commsRes] = await Promise.all([
+        fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/tasks?client_id=${clientId}`),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/communications`)
+      ]);
+      
+      const tasksData = await tasksRes.json();
+      const commsData = await commsRes.json();
+      
+      const allTasks = tasksData.data || [];
+      const allComms = commsData.data ? commsData.data.filter((c: any) => c.client_id === clientId) : [];
+      
+      const start = new Date(exportStartDate);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(exportEndDate);
+      end.setHours(23, 59, 59, 999);
+      
+      const filteredTasks = allTasks.filter((t: any) => {
+        const d = new Date(t.created_at);
+        return d >= start && d <= end;
+      });
+      
+      const filteredComms = allComms.filter((c: any) => {
+        const d = new Date(c.created_at);
+        return d >= start && d <= end;
+      });
+      
+      if (filteredTasks.length === 0 && filteredComms.length === 0) {
+        toast.error('No work found in this date range.', { id: 'export' });
+        return;
+      }
+      
+      const tasksSheetData = filteredTasks.map((t: any) => ({
+        'Task ID': t.id,
+        'Title': t.title,
+        'Description': t.description?.replace(/<[^>]+>/g, ''),
+        'Status': t.status,
+        'Priority': t.priority,
+        'Created At': new Date(t.created_at).toLocaleDateString(),
+        'Due Date': t.due_date ? new Date(t.due_date).toLocaleDateString() : 'N/A',
+        'Assignee': t.assignee ? t.assignee.name : 'Unassigned',
+      }));
+      
+      const commsSheetData = filteredComms.map((c: any) => ({
+        'Log ID': c.id,
+        'Type': c.communication_type,
+        'Date': new Date(c.created_at).toLocaleDateString(),
+        'Subject': c.subject,
+        'Summary': c.summary?.replace(/<[^>]+>/g, ''),
+        'Next Action': c.next_action || 'N/A',
+        'Creator': c.creator ? c.creator.name : 'Unknown'
+      }));
+      
+      const wb = XLSX.utils.book_new();
+      
+      if (exportIncludes.tasks && tasksSheetData.length > 0) {
+        const wsTasks = XLSX.utils.json_to_sheet(tasksSheetData);
+        XLSX.utils.book_append_sheet(wb, wsTasks, 'Tasks');
+      }
+      
+      if (exportIncludes.comms && commsSheetData.length > 0) {
+        const wsComms = XLSX.utils.json_to_sheet(commsSheetData);
+        XLSX.utils.book_append_sheet(wb, wsComms, 'Communications');
+      }
+      
+      const fileName = `${client.company_name.replace(/\s+/g, '_')}_Report_${exportStartDate}_to_${exportEndDate}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+      
+      toast.success('Report downloaded successfully!', { id: 'export' });
+      setShowExportModal(false);
+    } catch (e) {
+      console.error(e);
+      toast.error('Error generating report.', { id: 'export' });
+    }
+  };
 
   useEffect(() => {
     if (client) setInternalNotes(client.internal_notes || '');
@@ -390,23 +505,30 @@ export default function ClientDetailsPage() {
           </div>
         </div>
         
-        {/* Health Score Badge */}
-        {client.health_scores && client.health_scores.length > 0 ? (
-          <div className="flex flex-col items-end">
-            <span className="text-xs text-slate-500 uppercase tracking-wider mb-1">Health Score</span>
-            <div className={`flex items-center px-4 py-2 rounded-lg border ${client.health_scores[0].risk_level === 'Critical' ? 'bg-rose-50 border-rose-200 text-rose-700' : client.health_scores[0].risk_level === 'Risk' ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-emerald-50 border-emerald-200 text-emerald-700'}`}>
-              <span className="text-2xl font-bold mr-2">{client.health_scores[0].overall_score}</span>
-              <span className="text-xs font-medium uppercase">{client.health_scores[0].risk_level}</span>
+        {/* Actions & Health Score Badge */}
+        <div className="flex flex-col items-end gap-4">
+          {client.health_scores && client.health_scores.length > 0 ? (
+            <div className="flex flex-col items-end">
+              <span className="text-xs text-slate-500 uppercase tracking-wider mb-1">Health Score</span>
+              <div className={`flex items-center px-4 py-2 rounded-lg border ${client.health_scores[0].risk_level === 'Critical' ? 'bg-rose-50 border-rose-200 text-rose-700' : client.health_scores[0].risk_level === 'Risk' ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-emerald-50 border-emerald-200 text-emerald-700'}`}>
+                <span className="text-2xl font-bold mr-2">{client.health_scores[0].overall_score}</span>
+                <span className="text-xs font-medium uppercase">{client.health_scores[0].risk_level}</span>
+              </div>
             </div>
-          </div>
-        ) : (
-          <div className="flex flex-col items-end">
-            <span className="text-xs text-slate-500 uppercase tracking-wider mb-1">Health Score</span>
-            <div className="flex items-center px-4 py-2 rounded-lg border bg-slate-50 border-slate-200 text-slate-500">
-              <span className="text-lg font-semibold italic">Pending</span>
+          ) : (
+            <div className="flex flex-col items-end">
+              <span className="text-xs text-slate-500 uppercase tracking-wider mb-1">Health Score</span>
+              <div className="flex items-center px-4 py-2 rounded-lg border bg-slate-50 border-slate-200 text-slate-500">
+                <span className="text-lg font-semibold italic">Pending</span>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+          
+          <button onClick={() => setShowExportModal(true)} className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-md shadow text-sm font-semibold hover:bg-slate-800 transition">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+            Export Report
+          </button>
+        </div>
       </div>
 
       {/* Tabs Menu (iOS Segmented Pills Style) */}
@@ -467,10 +589,10 @@ export default function ClientDetailsPage() {
       <div className="grid grid-cols-1 gap-6">
         
         {activeTab === 'overview' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Details & Contacts Sidebar */}
-            <div className="space-y-6 lg:col-span-1">
-              <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* Column 1: Profile & Notes */}
+            <div className="space-y-8 lg:col-span-4">
+              <div className="bg-white p-6 rounded-xl border border-slate-200/60 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)]">
                 <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
                   <h3 className="font-semibold text-slate-900">Profile Details</h3>
                   <button onClick={() => openEditModal()} className="px-3 py-1.5 bg-indigo-50 border border-indigo-100 text-indigo-700 hover:bg-indigo-600 hover:text-white rounded-md text-xs font-semibold transition-colors flex items-center shadow-sm">
@@ -527,8 +649,27 @@ export default function ClientDetailsPage() {
                 </div>
               </div>
 
+              {/* Internal Notes / Scratchpad */}
+              <div className="bg-white p-6 rounded-xl border border-slate-200/60 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)]">
+                <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
+                  <h3 className="font-semibold text-slate-900">Internal Scratchpad</h3>
+                  <button onClick={handleSaveNotes} disabled={savingNotes} className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">
+                    {savingNotes ? 'Saving...' : 'Save Notes'}
+                  </button>
+                </div>
+                <textarea 
+                  value={internalNotes}
+                  onChange={(e) => setInternalNotes(e.target.value)}
+                  placeholder="Leave internal observations, links, or notes here..."
+                  className="w-full h-40 p-3 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none resize-y"
+                ></textarea>
+              </div>
+            </div>
+
+            {/* Column 2: Contacts & Tasks */}
+            <div className="space-y-8 lg:col-span-8">
               {/* Contacts Card with Birthdays & Greetings */}
-              <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+              <div className="bg-white p-6 rounded-xl border border-slate-200/60 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)]">
                 <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
                   <h3 className="font-semibold text-slate-900">Client Contacts</h3>
                   <button onClick={() => setShowContactModal(true)} className="text-xs font-semibold text-indigo-600 hover:text-indigo-800">+ Add Contact</button>
@@ -570,27 +711,12 @@ export default function ClientDetailsPage() {
                 )}
               </div>
 
-              {/* Internal Notes / Scratchpad */}
-              <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+              {/* Standard deliverables tables */}
+              <div className="bg-white p-6 rounded-xl border border-slate-200/60 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)]">
                 <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
-                  <h3 className="font-semibold text-slate-900">Internal Scratchpad</h3>
-                  <button onClick={handleSaveNotes} disabled={savingNotes} className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">
-                    {savingNotes ? 'Saving...' : 'Save Notes'}
-                  </button>
+                  <h3 className="font-semibold text-slate-900">Recent Tasks</h3>
+                  <Link href="/tasks" className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">View All Tasks &rarr;</Link>
                 </div>
-                <textarea 
-                  value={internalNotes}
-                  onChange={(e) => setInternalNotes(e.target.value)}
-                  placeholder="Leave internal observations, links, or notes here..."
-                  className="w-full h-32 p-3 text-sm border border-slate-200 rounded-md focus:ring-1 focus:ring-indigo-500 outline-none resize-y"
-                ></textarea>
-              </div>
-            </div>
-
-            {/* Standard deliverables tables */}
-            <div className="space-y-6 lg:col-span-2">
-              <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
-                <h3 className="font-semibold text-slate-900 mb-4 border-b border-slate-100 pb-2">Recent Tasks</h3>
                 {client.tasks && client.tasks.length > 0 ? (
                   <div className="space-y-2">
                     {client.tasks.map((task: any) => (
@@ -1081,6 +1207,93 @@ export default function ClientDetailsPage() {
                 <button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition">Save Changes</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Export Report Modal */}
+      {showExportModal && (
+        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+              <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                Export Work Report
+              </h2>
+              <button onClick={() => setShowExportModal(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-5 text-sm">
+              <p className="text-slate-600">Select the contents, date range, and format for your report.</p>
+              
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-2">Report Contents</label>
+                <div className="space-y-2">
+                  <label className="flex items-center space-x-2 text-slate-700 cursor-pointer font-medium">
+                    <input type="checkbox" checked={exportIncludes.profile} onChange={(e) => setExportIncludes({...exportIncludes, profile: e.target.checked})} className="rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 w-4 h-4 cursor-pointer" />
+                    <span>Profile & SOW (Client Details)</span>
+                  </label>
+                  <label className="flex items-center space-x-2 text-slate-700 cursor-pointer font-medium">
+                    <input type="checkbox" checked={exportIncludes.tasks} onChange={(e) => setExportIncludes({...exportIncludes, tasks: e.target.checked})} className="rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 w-4 h-4 cursor-pointer" />
+                    <span>Tasks Log</span>
+                  </label>
+                  <label className="flex items-center space-x-2 text-slate-700 cursor-pointer font-medium">
+                    <input type="checkbox" checked={exportIncludes.comms} onChange={(e) => setExportIncludes({...exportIncludes, comms: e.target.checked})} className="rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 w-4 h-4 cursor-pointer" />
+                    <span>Minutes of Meeting (Communications)</span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">Start Date</label>
+                  <input 
+                    type="date" 
+                    value={exportStartDate} 
+                    onChange={(e) => setExportStartDate(e.target.value)}
+                    className="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all shadow-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">End Date</label>
+                  <input 
+                    type="date" 
+                    value={exportEndDate} 
+                    onChange={(e) => setExportEndDate(e.target.value)}
+                    className="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all shadow-sm"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-2">Export Format</label>
+                <div className="flex space-x-4">
+                  <label className={`flex-1 border rounded-lg p-3 cursor-pointer transition-all ${exportFormat === 'pdf' ? 'border-indigo-500 bg-indigo-50/50 shadow-sm ring-1 ring-indigo-500' : 'border-slate-200 hover:border-indigo-300'}`}>
+                    <div className="flex items-center space-x-2 mb-1">
+                      <input type="radio" name="format" value="pdf" checked={exportFormat === 'pdf'} onChange={() => setExportFormat('pdf')} className="text-indigo-600 focus:ring-indigo-500 w-4 h-4" />
+                      <span className="font-semibold text-slate-900">PDF Report</span>
+                    </div>
+                    <p className="text-xs text-slate-500 pl-6">Clean, printable document</p>
+                  </label>
+                  <label className={`flex-1 border rounded-lg p-3 cursor-pointer transition-all ${exportFormat === 'excel' ? 'border-emerald-500 bg-emerald-50/50 shadow-sm ring-1 ring-emerald-500' : 'border-slate-200 hover:border-emerald-300'}`}>
+                    <div className="flex items-center space-x-2 mb-1">
+                      <input type="radio" name="format" value="excel" checked={exportFormat === 'excel'} onChange={() => setExportFormat('excel')} className="text-emerald-600 focus:ring-emerald-500 w-4 h-4" />
+                      <span className="font-semibold text-slate-900">Excel Data</span>
+                    </div>
+                    <p className="text-xs text-slate-500 pl-6">Raw spreadsheet data</p>
+                  </label>
+                </div>
+              </div>
+            </div>
+            
+            <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+              <button onClick={() => setShowExportModal(false)} className="px-4 py-2 font-semibold text-slate-600 bg-white border border-slate-200 rounded-lg shadow-sm hover:bg-slate-50 transition-colors">Cancel</button>
+              <button onClick={handleExportReport} className={`px-4 py-2 font-semibold text-white rounded-lg shadow-sm transition-colors flex items-center gap-2 ${exportFormat === 'pdf' ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-emerald-600 hover:bg-emerald-700'}`}>
+                {exportFormat === 'pdf' ? 'Generate PDF' : 'Download Excel'}
+              </button>
+            </div>
           </div>
         </div>
       )}

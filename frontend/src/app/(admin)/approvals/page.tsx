@@ -56,7 +56,7 @@ export default function ApprovalsPage() {
   };
 
   const fetchClients = () => {
-    fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/clients')
+    fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/clients?activeOnly=true')
       .then(res => res.json())
       .then(data => {
         if (data && data.data) setClients(data.data);

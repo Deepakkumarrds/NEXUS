@@ -5,6 +5,10 @@ const sowController = require('../controllers/sowController');
 // Routes
 router.post('/', sowController.createSow);
 router.get('/', sowController.getAllSows);
+router.get('/:id', sowController.getSowById);
+router.put('/:id', sowController.updateSow);
+router.delete('/:id', sowController.deleteSow);
 router.patch('/items/:id/status', sowController.updateSowItemStatus);
+router.post('/:id/items', sowController.addSowItem);
 
 module.exports = router;

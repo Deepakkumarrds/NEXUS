@@ -69,10 +69,47 @@ export default function TasksPage() {
 
   const getPriorityBadge = (priority: string) => {
     switch(priority) {
-      case 'High': return 'bg-rose-50 text-rose-700 border-rose-200';
+      case 'High':   return 'bg-rose-50 text-rose-700 border-rose-200';
       case 'Medium': return 'bg-amber-50 text-amber-700 border-amber-200';
-      default: return 'bg-slate-100 text-slate-700 border-slate-200';
+      case 'Low':    return 'bg-blue-50 text-blue-700 border-blue-200';
+      default:       return 'bg-slate-100 text-slate-700 border-slate-200';
     }
+  };
+
+  // Returns the subtle bg based on priority / completed status (removed thick left borders)
+  const getCardAccent = (priority: string, status: string) => {
+    if (status === 'Completed') return 'bg-emerald-50/20';
+    switch(priority) {
+      case 'High':   return 'bg-rose-50/10';
+      case 'Medium': return 'bg-amber-50/10';
+      case 'Low':    return 'bg-blue-50/10';
+      default:       return '';
+    }
+  };
+
+  // Warning / check icon per priority
+  const getPriorityIcon = (priority: string, status: string) => {
+    if (status === 'Completed') return (
+      <svg className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+      </svg>
+    );
+    if (priority === 'High') return (
+      <svg className="w-3.5 h-3.5 text-rose-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+      </svg>
+    );
+    if (priority === 'Medium') return (
+      <svg className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+      </svg>
+    );
+    if (priority === 'Low') return (
+      <svg className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20A10 10 0 0012 2z" />
+      </svg>
+    );
+    return null;
   };
 
   const filteredTasks = tasks.filter(task => {
@@ -178,7 +215,7 @@ export default function TasksPage() {
         <div className="p-8 text-center text-slate-500 text-sm bg-white rounded-lg border border-slate-200">Loading Kanban board...</div>
       ) : (
         <DragDropContext onDragEnd={onDragEnd}>
-          <div className="flex overflow-x-auto gap-6 pb-4 items-start min-h-[600px]">
+          <div className="flex overflow-x-auto gap-6 pb-4 items-start min-h-[600px] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {COLUMNS.map((columnId) => (
               <div key={columnId} className="flex flex-col bg-slate-50 rounded-xl min-w-[300px] max-w-[300px] shrink-0 border border-slate-200 shadow-sm">
                 <div className="p-3 border-b border-slate-200 flex justify-between items-center bg-slate-100 rounded-t-xl">
@@ -204,42 +241,65 @@ export default function TasksPage() {
                                 ref={provided.innerRef}
                                 {...provided.draggableProps}
                                 {...provided.dragHandleProps}
-                                className={`relative bg-white p-4 rounded-lg mb-3 border ${snapshot.isDragging ? 'shadow-lg border-indigo-300 ring-1 ring-indigo-300 scale-105' : 'shadow-sm hover:border-slate-300'} ${isOverdue ? 'border-rose-400 bg-rose-50' : 'border-slate-200'} transition-all`}
+                                className={`relative bg-white p-4 rounded-xl mb-3 border
+                                  ${snapshot.isDragging ? 'shadow-xl border-indigo-300 ring-1 ring-indigo-300 scale-[1.02] z-50' : 'shadow-sm border-slate-200 hover:shadow-md hover:border-slate-300'}
+                                  transition-all duration-200 group`}
                               >
-                                {task.status !== 'Completed' && (
-                                  <input type="checkbox" checked={selectedTasks.includes(task.id)} onChange={(e) => {
-                                    if(e.target.checked) setSelectedTasks([...selectedTasks, task.id]);
-                                    else setSelectedTasks(selectedTasks.filter(id => id !== task.id));
-                                  }} className="absolute top-4 right-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer" />
-                                )}
-                                <div className="flex justify-between items-start mb-2">
-                                  <span className={`px-2 py-0.5 text-[10px] font-bold uppercase rounded-md border ${getPriorityBadge(task.priority)}`}>
-                                    {task.priority}
+
+                                {/* Priority badge row */}
+                                <div className="flex justify-between items-center mb-3">
+                                  <span className={`inline-flex items-center px-2 py-1 text-[10px] font-bold uppercase rounded-md border ${task.status === 'Completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : getPriorityBadge(task.priority)}`}>
+                                    {task.status === 'Completed' ? 'Done' : task.priority}
                                   </span>
-                                  {task.due_date && (
-                                    <span className={`text-[10px] font-medium mr-6 ${isOverdue ? 'text-rose-600 font-bold' : 'text-slate-400'}`}>
-                                      {new Date(task.due_date).toLocaleDateString()}
-                                    </span>
-                                  )}
+                                  
+                                  <div className="flex items-center gap-2">
+                                    {task.due_date && (
+                                      <span className={`flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-md ${isOverdue && task.status !== 'Completed' ? 'bg-rose-50 text-rose-600 border border-rose-100' : 'text-slate-400'}`}>
+                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                        {new Date(task.due_date).toLocaleDateString()}
+                                      </span>
+                                    )}
+                                    {task.status !== 'Completed' && (
+                                      <input type="checkbox" checked={selectedTasks.includes(task.id)} onChange={(e) => {
+                                        if(e.target.checked) setSelectedTasks([...selectedTasks, task.id]);
+                                        else setSelectedTasks(selectedTasks.filter(id => id !== task.id));
+                                      }} className="rounded text-indigo-600 border-slate-300 focus:ring-indigo-500 cursor-pointer w-3.5 h-3.5" />
+                                    )}
+                                  </div>
                                 </div>
-                                <Link href={`/tasks/${task.id}`} className="block font-semibold text-slate-800 text-sm mb-1 hover:text-indigo-600">
+
+                                <Link href={`/tasks/${task.id}`} className={`block font-bold text-sm mb-1.5 leading-snug group-hover:text-indigo-600 transition-colors ${task.status === 'Completed' ? 'text-slate-500 line-through' : 'text-slate-800'}`}>
                                   {task.title}
                                 </Link>
-                                <p className="text-xs text-slate-500 mb-3 font-medium">
-                                  {task.client?.company_name || 'Internal'}
+                                <p className="text-xs text-slate-500 mb-4 font-medium flex items-center">
+                                  <span className="truncate">{task.client?.company_name || 'Internal Task'}</span>
                                 </p>
-                                
-                                <div className="flex justify-between items-center mt-3 pt-3 border-t border-slate-100">
-                                  <div className="flex -space-x-2 overflow-hidden">
-                                    <div className="inline-block h-6 w-6 rounded-full ring-2 ring-white bg-indigo-100 flex items-center justify-center text-[10px] font-bold text-indigo-700" title={task.assignee?.name || 'Unassigned'}>
-                                      {(task.assignee?.name || 'U').charAt(0).toUpperCase()}
+
+                                {/* Progress bar */}
+                                {task.completion_percentage !== undefined && (
+                                  <div className="mb-4">
+                                    <div className="flex justify-between items-center mb-1.5">
+                                      <span className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">Progress</span>
+                                      <span className="text-[10px] font-bold text-slate-600">{task.completion_percentage}%</span>
+                                    </div>
+                                    <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                                      <div
+                                        className={`h-full rounded-full transition-all duration-500 ${
+                                          task.status === 'Completed' ? 'bg-emerald-500' : 'bg-indigo-500'
+                                        }`}
+                                        style={{ width: `${task.completion_percentage}%` }}
+                                      />
                                     </div>
                                   </div>
-                                  {task.completion_percentage !== undefined && (
-                                    <span className="text-xs font-bold text-slate-400">
-                                      {task.completion_percentage}%
-                                    </span>
-                                  )}
+                                )}
+
+                                <div className="flex justify-between items-center pt-3 border-t border-slate-100">
+                                  <div className="flex items-center gap-2">
+                                    <div className="flex items-center justify-center h-6 w-6 rounded-full bg-indigo-50 border border-indigo-100 text-[10px] font-bold text-indigo-600 shadow-sm" title={task.assignee?.name || 'Unassigned'}>
+                                      {(task.assignee?.name || 'U').charAt(0).toUpperCase()}
+                                    </div>
+                                    <span className="text-xs font-medium text-slate-500">{task.assignee?.name || 'Unassigned'}</span>
+                                  </div>
                                 </div>
                               </div>
                             )}

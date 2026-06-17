@@ -65,3 +65,16 @@ exports.updateEscalationStatus = async (req, res) => {
     res.status(500).json({ status: 'error', message: 'Failed to update escalation' });
   }
 };
+
+exports.deleteEscalation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await prisma.escalation.delete({
+      where: { id }
+    });
+    res.status(200).json({ status: 'success', message: 'Escalation deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting escalation:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to delete escalation' });
+  }
+};

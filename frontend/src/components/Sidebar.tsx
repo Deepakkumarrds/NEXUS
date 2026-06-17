@@ -26,21 +26,10 @@ export default function Sidebar() {
     return pathname.startsWith(path);
   };
 
-  const [recentClients, setRecentClients] = useState<any[]>([]);
-  useEffect(() => {
-    fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/clients')
-      .then(res => res.json())
-      .then(data => {
-        if (data && data.data) {
-          const sorted = data.data.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-          setRecentClients(sorted.slice(0, 5));
-        }
-      })
-      .catch(e => console.log(e));
-  }, []);
+
 
   return (
-    <aside className="w-64 bg-white text-slate-700 min-h-screen p-5 flex flex-col border-r border-slate-200/85">
+    <aside className="w-64 bg-white text-slate-700 h-screen sticky top-0 p-5 flex flex-col border-r border-slate-200/85">
       <div className="mb-10 px-2">
         <h1 className="text-xl font-extrabold tracking-tight text-slate-900 font-heading">RDS Platform</h1>
         <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-wider font-bold">Client Management</p>
@@ -212,24 +201,7 @@ export default function Sidebar() {
         </ul>
       </nav>
       
-      {/* Recent Clients Widget */}
-      {recentClients.length > 0 && (
-        <div className="mt-6 mb-4">
-          <p className="text-[10px] text-slate-400 uppercase tracking-wider font-bold mb-2 px-2">Recent Clients</p>
-          <ul className="space-y-1">
-            {recentClients.map(client => (
-              <li key={client.id}>
-                <Link href={`/clients/${client.id}`} className="flex items-center px-3 py-1.5 text-xs text-slate-600 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-colors truncate">
-                  <div className="w-5 h-5 rounded bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold mr-2 text-[8px] flex-shrink-0 border border-indigo-100">
-                    {client.company_name.substring(0, 2).toUpperCase()}
-                  </div>
-                  <span className="truncate">{client.company_name}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+
 
       <div className="mt-auto border-t border-slate-100 pt-5">
         <button 

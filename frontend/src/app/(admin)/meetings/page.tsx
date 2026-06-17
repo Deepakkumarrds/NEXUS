@@ -40,7 +40,34 @@ export default function MeetingsPage() {
         console.error('Error fetching meetings:', error);
         setLoading(false);
       });
+    fetchMeetings();
   }, []);
+
+  const fetchMeetings = () => {
+    fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/meetings')
+      .then(res => res.json())
+      .then(data => { 
+        if (data && data.data) {
+          setMeetings(data.data); 
+        }
+        setLoading(false); 
+      })
+      .catch(error => {
+        console.error('Error fetching meetings:', error);
+        setLoading(false);
+      });
+  };
+
+  const deleteMeeting = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if(!window.confirm('Are you sure you want to delete this meeting?')) return;
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/meetings/${id}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) fetchMeetings();
+    } catch (err) { console.error(err); }
+  };
 
   return (
     <div>
@@ -87,8 +114,23 @@ export default function MeetingsPage() {
                       </span>
                     </div>
                   </div>
-                  <div className="flex items-center text-slate-400">
-                    <svg className={`w-5 h-5 transform transition-transform ${expandedId === meeting.id ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                  <div className="flex items-center space-x-2 text-slate-400">
+                    <Link 
+                      href={`/meetings/${meeting.id}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="p-1.5 text-slate-500 hover:bg-slate-100 rounded transition"
+                      title="Edit Meeting"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                    </Link>
+                    <button 
+                      onClick={(e) => deleteMeeting(meeting.id, e)}
+                      className="p-1.5 text-rose-500 hover:bg-rose-50 rounded transition"
+                      title="Delete Meeting"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                    <svg className={`w-5 h-5 ml-2 transform transition-transform ${expandedId === meeting.id ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                   </div>
                 </div>
               </div>

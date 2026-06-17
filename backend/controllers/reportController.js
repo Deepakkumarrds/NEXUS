@@ -39,3 +39,16 @@ exports.getAllReports = async (req, res) => {
     res.status(500).json({ status: 'error', message: 'Failed to fetch reports' });
   }
 };
+
+exports.deleteReport = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await prisma.report.delete({
+      where: { id }
+    });
+    res.status(200).json({ status: 'success', message: 'Report deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting report:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to delete report' });
+  }
+};

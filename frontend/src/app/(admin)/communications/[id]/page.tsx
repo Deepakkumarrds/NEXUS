@@ -2,12 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import 'react-quill-new/dist/quill.snow.css';
 
 const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
 
-export default function NewCommunicationPage() {
+export default function EditCommunicationPage() {
+  const params = useParams();
+  const router = useRouter();
+  const id = params.id as string;
+
   const [clients, setClients] = useState<{id: string, company_name: string}[]>([]);
   const [users, setUsers] = useState<{id: string, name: string}[]>([]);
   
@@ -20,17 +25,34 @@ export default function NewCommunicationPage() {
     follow_up_date: ''
   });
 
-  const [selectedAttendees, setSelectedAttendees] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/clients?activeOnly=true')
-      .then(res => res.json())
-      .then(data => { if(data && data.data) setClients(data.data); });
+    Promise.all([
+      fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/clients?activeOnly=true').then(res => res.json()),
+      fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/users').then(res => res.json()),
+      fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + `/api/communications/${id}`).then(res => res.json())
+    ]).then(([clientsData, usersData, logData]) => {
+      if (clientsData && clientsData.data) setClients(clientsData.data);
+      if (usersData && usersData.data) setUsers(usersData.data);
       
-    fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/users')
-      .then(res => res.json())
-      .then(data => { if(data && data.data) setUsers(data.data); });
-  }, []);
+      if (logData && logData.data) {
+        const d = logData.data;
+        setFormData({
+          client_id: d.client_id || '',
+          communication_type: d.communication_type || 'Call',
+          subject: d.subject || '',
+          summary: d.summary || '',
+          next_action: d.next_action || '',
+          follow_up_date: d.follow_up_date ? new Date(d.follow_up_date).toISOString().split('T')[0] : ''
+        });
+      }
+      setLoading(false);
+    }).catch(error => {
+      console.error('Error loading data:', error);
+      setLoading(false);
+    });
+  }, [id]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -40,37 +62,20 @@ export default function NewCommunicationPage() {
     setFormData({ ...formData, summary: value });
   };
 
-  const toggleAttendee = (userId: string) => {
-    if (selectedAttendees.includes(userId)) {
-      setSelectedAttendees(selectedAttendees.filter(id => id !== userId));
-    } else {
-      setSelectedAttendees([...selectedAttendees, userId]);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Append attendees to summary if any
-    let finalSummary = formData.summary;
-    if (selectedAttendees.length > 0) {
-      const attendeeNames = selectedAttendees.map(id => users.find(u => u.id === id)?.name).filter(Boolean);
-      finalSummary = `<strong>Attendees:</strong> ${attendeeNames.join(', ')}<br/><br/>` + finalSummary;
-    }
-
-    const payload = { ...formData, summary: finalSummary };
 
     try {
-      const response = await fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/communications', {
-        method: 'POST',
+      const response = await fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + `/api/communications/${id}`, {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(formData),
       });
       
       if (response.ok) {
-        window.location.href = '/communications';
+        router.push('/communications');
       } else {
-        alert('Failed to log communication.');
+        alert('Failed to update communication.');
       }
     } catch (error) {
       console.error('Error:', error);
@@ -88,6 +93,10 @@ export default function NewCommunicationPage() {
     ],
   };
 
+  if (loading) {
+    return <div className="p-8 text-center text-slate-500 text-sm">Loading log...</div>;
+  }
+
   return (
     <div className="max-w-3xl mx-auto pb-10">
       <div className="mb-6">
@@ -95,7 +104,7 @@ export default function NewCommunicationPage() {
           <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
           Back to Communications
         </Link>
-        <h1 className="text-2xl font-semibold text-slate-900 mt-4 tracking-tight">Log Interaction / MOM</h1>
+        <h1 className="text-2xl font-semibold text-slate-900 mt-4 tracking-tight">Edit Interaction / MOM</h1>
       </div>
 
       <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-sm border border-slate-200">
@@ -147,24 +156,6 @@ export default function NewCommunicationPage() {
           </div>
 
           <div>
-            <label className="block font-medium text-slate-700 mb-1.5">Internal Attendees</label>
-            <div className="flex flex-wrap gap-2 p-3 border border-slate-200 rounded-md bg-slate-50">
-              {users.map(u => (
-                <label key={u.id} className="inline-flex items-center space-x-1.5 bg-white border border-slate-200 px-2 py-1 rounded cursor-pointer hover:border-indigo-300">
-                  <input 
-                    type="checkbox" 
-                    checked={selectedAttendees.includes(u.id)}
-                    onChange={() => toggleAttendee(u.id)}
-                    className="rounded text-indigo-600 focus:ring-indigo-500"
-                  />
-                  <span className="text-xs font-medium text-slate-700">{u.name}</span>
-                </label>
-              ))}
-              {users.length === 0 && <span className="text-xs text-slate-400">Loading users...</span>}
-            </div>
-          </div>
-
-          <div>
             <label className="block font-medium text-slate-700 mb-1.5">Summary / Minutes of Meeting</label>
             <div className="h-64 mb-12">
               <ReactQuill 
@@ -189,7 +180,6 @@ export default function NewCommunicationPage() {
                 className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow resize-y"
                 onChange={handleChange}
               />
-              <p className="text-[10px] text-slate-400 mt-1">This can be converted to a formal Task later.</p>
             </div>
             <div>
               <label className="block font-medium text-slate-700 mb-1.5">Follow Up Date</label>
@@ -210,7 +200,7 @@ export default function NewCommunicationPage() {
             Cancel
           </Link>
           <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md shadow-sm transition-colors">
-            Save Communication
+            Update Communication
           </button>
         </div>
       </form>

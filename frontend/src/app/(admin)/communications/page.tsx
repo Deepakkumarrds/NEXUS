@@ -63,18 +63,20 @@ export default function CommunicationsPage() {
     } catch (err) { console.error(err); }
   };
 
-  const convertToTask = async (id: string) => {
+  const deleteLog = async (id: string) => {
+    if(!window.confirm('Are you sure you want to delete this communication log?')) return;
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/tasks/from-action-item/${id}`, {
-        method: 'POST'
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/communications/${id}`, {
+        method: 'DELETE'
       });
       if (res.ok) {
-        toast.success('Task created from Action Item!');
-      } else {
-        toast.error('Failed to create task');
+        toast.success('Log deleted');
+        fetchLogs();
       }
     } catch (err) { console.error(err); }
   };
+
+
 
   const triggerPrint = (log: Communication) => {
     setPrintLog(log);
@@ -190,68 +192,90 @@ export default function CommunicationsPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
           {loading ? (
-            <div className="p-8 text-center text-slate-500 text-sm">Loading data...</div>
+            <div className="p-12 text-center text-slate-500 text-sm">Loading communications data...</div>
           ) : (
-            <table className="min-w-full divide-y divide-slate-200 text-sm">
-              <thead className="bg-slate-50 border-b border-slate-200">
-                <tr>
-                  <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700 w-10"></th>
-                  <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700">Type</th>
-                  <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700">Client</th>
-                  <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700 w-2/5">Subject & Summary</th>
-                  <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700">Logged By</th>
-                  <th scope="col" className="px-6 py-3 text-right font-semibold text-slate-700">Actions</th>
+            <table className="w-full text-left border-collapse min-w-[800px]">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50/50">
+                  <th className="py-3 px-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Type & Date</th>
+                  <th className="py-3 px-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Client</th>
+                  <th className="py-3 px-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Subject & Details</th>
+                  <th className="py-3 px-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wider text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 text-sm">
                 {filteredLogs.map(log => (
-                  <tr key={log.id} className={`hover:bg-slate-50 transition-colors ${log.is_pinned ? 'bg-amber-50/30' : ''}`}>
-                    <td className="px-4 py-4 whitespace-nowrap text-center">
-                      <button onClick={() => togglePin(log.id, log.is_pinned)} className={`${log.is_pinned ? 'text-amber-500' : 'text-slate-300 hover:text-amber-500'} transition-colors`} title="Pin Communication">
-                        <svg className="w-5 h-5" fill={log.is_pinned ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path></svg>
-                      </button>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center text-slate-700">
-                        <span className="text-slate-400 mr-2">{getTypeIcon(log.communication_type)}</span>
-                        <span className="font-medium">{log.communication_type}</span>
+                  <tr key={log.id} className={`group hover:bg-slate-50/80 transition-colors ${log.is_pinned ? 'bg-amber-50/20' : ''}`}>
+                    {/* Type & Date */}
+                    <td className="py-4 px-4 align-top w-48">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <span className="text-slate-400">{getTypeIcon(log.communication_type)}</span>
+                        <span className="font-semibold text-slate-700">{log.communication_type}</span>
+                      </div>
+                      <div className="text-xs text-slate-500">
+                        {new Date(log.created_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-slate-600 font-medium">
-                      {log.client?.company_name || 'General'}
+                    
+                    {/* Client */}
+                    <td className="py-4 px-4 align-top w-48">
+                      <span className="font-medium text-slate-700">
+                        {log.client?.company_name || 'Internal / General'}
+                      </span>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="text-slate-900 font-bold mb-1">{log.subject}</div>
+                    
+                    {/* Subject & Summary */}
+                    <td className="py-4 px-4 align-top max-w-md">
+                      <div className="mb-3">
+                        <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Subject</span>
+                        <div className="font-semibold text-slate-900 leading-snug">{log.subject}</div>
+                      </div>
+                      
                       {log.summary && (
-                        <div className="text-xs text-slate-500 line-clamp-2 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: log.summary }}></div>
+                        <div className="mb-3">
+                          <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Summary</span>
+                          <div className="text-slate-600 text-[13px] leading-relaxed line-clamp-3 group-hover:line-clamp-none transition-all" dangerouslySetInnerHTML={{ __html: log.summary }}></div>
+                        </div>
                       )}
+                      
                       {log.next_action && (
-                        <div className="mt-2 text-xs bg-indigo-50 text-indigo-700 p-2 rounded border border-indigo-100 flex items-center justify-between">
-                          <span><strong>Action:</strong> {log.next_action}</span>
-                          <button onClick={() => convertToTask(log.id)} className="bg-indigo-600 text-white px-2 py-1 rounded shadow-sm hover:bg-indigo-700 transition">
-                            Create Task
-                          </button>
+                        <div>
+                          <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Action Item</span>
+                          <div className="text-sm text-slate-800">
+                            {log.next_action}
+                          </div>
                         </div>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-slate-600">
-                      <div>{log.creator?.name || 'System'}</div>
-                      <div className="text-[10px] text-slate-400 mt-0.5">{new Date(log.created_at).toLocaleDateString()}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <button onClick={() => triggerPrint(log)} className="text-slate-500 hover:text-indigo-600 bg-white border border-slate-200 px-3 py-1.5 rounded shadow-sm text-xs font-semibold flex items-center ml-auto">
-                        <svg className="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                        PDF
-                      </button>
+
+                    {/* Actions */}
+                    <td className="py-4 px-4 align-top w-32">
+                      <div className="flex items-center justify-end gap-2">
+                        <Link 
+                          href={`/communications/${log.id}?edit=true`}
+                          className="p-1.5 text-slate-500 hover:bg-slate-100 rounded transition"
+                          title="Edit Log"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                        </Link>
+                        <button 
+                          onClick={() => deleteLog(log.id)}
+                          className="p-1.5 text-rose-500 hover:bg-rose-50 rounded transition"
+                          title="Delete Log"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
+                
                 {filteredLogs.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
-                      No communication logs found. Click "Log Interaction" to record one.
+                    <td colSpan={3} className="py-12 text-center text-slate-500 text-sm">
+                      No communications found. Click "Log Interaction" to add one.
                     </td>
                   </tr>
                 )}

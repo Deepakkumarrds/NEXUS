@@ -121,7 +121,24 @@ export default function ClientsPage() {
     } catch (error) {
       toast.error('Failed to archive client');
     }
-    setOpenDropdownId(null);
+  };
+
+  const deleteClient = async (id: string) => {
+    if(!window.confirm('Are you sure you want to completely DELETE this client? This cannot be undone.')) return;
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/clients/${id}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        toast.success('Client Deleted');
+        fetchClients();
+      } else {
+        toast.error('Failed to delete client');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('Failed to delete client');
+    }
   };
 
   return (
@@ -247,19 +264,30 @@ export default function ClientsPage() {
                   {columns.renewal && <td className="px-6 py-4 whitespace-nowrap text-slate-500">
                     {client.renewal_date ? new Date(client.renewal_date).toLocaleDateString() : 'N/A'}
                   </td>}
-                  <td className="px-6 py-4 whitespace-nowrap text-right relative">
-                    <button onClick={() => setOpenDropdownId(openDropdownId === client.id ? null : client.id)} className="p-1.5 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors">
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"></path></svg>
-                    </button>
-                    {openDropdownId === client.id && (
-                      <div className="absolute right-8 top-8 w-40 bg-white border border-slate-200 rounded-lg shadow-xl z-50 py-1 text-left">
-                        <Link href={`/clients/${client.id}?edit=true`} className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-indigo-600">Edit Client</Link>
-                        <Link href={`/tasks/new?client_id=${client.id}`} className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-indigo-600">Add Task</Link>
-                        <Link href={`/communications/new?client_id=${client.id}`} className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-indigo-600">Log Call</Link>
-                        <div className="border-t border-slate-100 my-1"></div>
-                        <button onClick={() => archiveClient(client.id)} className="block w-full text-left px-4 py-2 text-sm text-rose-600 hover:bg-rose-50">Archive Client</button>
-                      </div>
-                    )}
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center justify-end gap-2">
+                      <Link 
+                        href={`/clients/${client.id}`}
+                        className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded transition"
+                        title="View Details"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                      </Link>
+                      <Link 
+                        href={`/clients/${client.id}?edit=true`}
+                        className="p-1.5 text-slate-500 hover:bg-slate-100 rounded transition"
+                        title="Edit Client"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                      </Link>
+                      <button 
+                        onClick={() => deleteClient(client.id)}
+                        className="p-1.5 text-rose-500 hover:bg-rose-50 rounded transition ml-2"
+                        title="Delete Client"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

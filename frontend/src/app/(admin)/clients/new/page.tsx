@@ -63,7 +63,7 @@ export default function NewClientPage() {
         retainer_value: data.retainer_value ? parseFloat(data.retainer_value) : null
       };
 
-      const response = await fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/clients', {
+      const response = await fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/clients?activeOnly=true', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

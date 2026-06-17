@@ -73,6 +73,16 @@ export default function EscalationsPage() {
     }
   };
 
+  const deleteEscalation = async (id: string) => {
+    if(!window.confirm('Are you sure you want to delete this escalation?')) return;
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/escalations/${id}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) fetchEscalations();
+    } catch (err) { console.error(err); }
+  };
+
   const filteredEscalations = escalations.filter(e => {
     const matchesSearch = e.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           (e.client?.company_name || '').toLowerCase().includes(searchQuery.toLowerCase());
@@ -155,6 +165,7 @@ export default function EscalationsPage() {
                 <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700">Severity</th>
                 <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700">Status</th>
                 <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700">Timeline</th>
+                <th scope="col" className="px-6 py-3 text-right font-semibold text-slate-700">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-slate-100">
@@ -191,6 +202,24 @@ export default function EscalationsPage() {
                     </div>
                     <div className="text-xs font-medium text-slate-700">
                       {esc.status === 'Resolved' ? 'Resolved in ' : 'Open for '}{getDuration(esc.created_at, esc.resolved_at)}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <Link 
+                        href={`/escalations/${esc.id}?edit=true`}
+                        className="p-1.5 text-slate-500 hover:bg-slate-100 rounded transition"
+                        title="Edit Escalation"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                      </Link>
+                      <button 
+                        onClick={() => deleteEscalation(esc.id)}
+                        className="p-1.5 text-rose-500 hover:bg-rose-50 rounded transition"
+                        title="Delete Escalation"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                      </button>
                     </div>
                   </td>
                 </tr>

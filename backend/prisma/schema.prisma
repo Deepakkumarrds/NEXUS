@@ -271,6 +271,7 @@ model SowItem {
   due_date         DateTime?
   status           String   @default("Pending") // Pending, In Progress, Completed
   remarks          String?
+  tracking_month   String?  // e.g., "January 2026"
   
   sow              Sow      @relation(fields: [sow_id], references: [id])
 }

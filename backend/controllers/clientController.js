@@ -33,7 +33,11 @@ exports.createClient = async (req, res) => {
 // Get all clients
 exports.getAllClients = async (req, res) => {
   try {
+    const { activeOnly } = req.query;
+    const whereClause = activeOnly === 'true' ? { client_status: 'Active' } : {};
+
     const clients = await prisma.client.findMany({
+      where: whereClause,
       orderBy: { created_at: 'desc' }
     });
     res.status(200).json({ status: 'success', data: clients });

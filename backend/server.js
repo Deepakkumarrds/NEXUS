@@ -24,6 +24,7 @@ const holidayRoutes = require('./routes/holidayRoutes');
 const leaveRoutes = require('./routes/leaveRoutes');
 const campaignRoutes = require('./routes/campaignRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
+const chatRoutes = require('./routes/chatRoutes');
 
 // Middlewares
 app.use(cors());
@@ -61,6 +62,7 @@ app.use('/api/holidays', holidayRoutes);
 app.use('/api/leaves', leaveRoutes);
 app.use('/api/campaigns', campaignRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/chat', chatRoutes);
 
 // Static uploads folder
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

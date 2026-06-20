@@ -70,7 +70,7 @@ const tools = [
 async function executeTool(toolCall) {
   const functionName = toolCall.function.name;
   const args = JSON.parse(toolCall.function.arguments || '{}');
-  
+
   try {
     if (functionName === 'getClients') {
       const query = {};
@@ -81,7 +81,7 @@ async function executeTool(toolCall) {
       });
       return JSON.stringify(clients);
     }
-    
+
     if (functionName === 'getTasks') {
       const query = {};
       if (args.status) query.status = args.status;
@@ -94,12 +94,12 @@ async function executeTool(toolCall) {
       }
       const tasks = await prisma.task.findMany({
         where: query,
-        select: { 
-          id: true, 
-          title: true, 
+        select: {
+          id: true,
+          title: true,
           description: true,
-          status: true, 
-          priority: true, 
+          status: true,
+          priority: true,
           due_date: true,
           client: { select: { company_name: true } },
           assignee: { select: { name: true } }
@@ -108,7 +108,7 @@ async function executeTool(toolCall) {
       });
       return JSON.stringify(tasks);
     }
-    
+
     if (functionName === 'getEscalations') {
       const query = {};
       if (args.status) query.status = args.status;
@@ -119,7 +119,7 @@ async function executeTool(toolCall) {
       });
       return JSON.stringify(escalations);
     }
-    
+
     return JSON.stringify({ error: `Function ${functionName} not found` });
   } catch (error) {
     console.error('Error executing tool:', error);
@@ -128,11 +128,11 @@ async function executeTool(toolCall) {
 }
 
 const handleChat = async (messages) => {
-  // Add a system prompt if it doesn't exist
+    // Add a system prompt if it doesn't exist
   if (!messages.find(m => m.role === 'system')) {
     messages.unshift({
       role: 'system',
-      content: 'You are a helpful AI assistant for the RDS Dashboard. You can access backend database queries via tools to answer user questions about clients, tasks, and escalations. Always try to be concise and format lists nicely.'
+      content: 'You are a helpful AI assistant for the RDS Dashboard. You can access backend database queries via tools to answer user questions about clients, tasks, and escalations. Always try to be concise and format lists nicely. CRITICAL: Never output raw <function> tags, XML tags, or JSON syntax in your final response to the user. Just present the data naturally.'
     });
   }
 
@@ -145,11 +145,11 @@ const handleChat = async (messages) => {
     });
 
     let message = response.choices[0].message;
-    
+
     // Check if Groq wants to call a function
     if (message.tool_calls && message.tool_calls.length > 0) {
       messages.push(message); // append the assistant's tool call request
-      
+
       // Execute all tool calls
       for (const toolCall of message.tool_calls) {
         const functionResult = await executeTool(toolCall);
@@ -160,17 +160,23 @@ const handleChat = async (messages) => {
           content: functionResult
         });
       }
-      
+
       // Get the final response from Groq with the tool data
       const finalResponse = await groq.chat.completions.create({
         model: 'llama-3.1-8b-instant',
         messages: messages
       });
-      
-      return finalResponse.choices[0].message;
+
+      let finalMsg = finalResponse.choices[0].message;
+      if (finalMsg && finalMsg.content) {
+        finalMsg.content = finalMsg.content.replace(/<function[^>]*>.*?<\/function>/gi, '').trim();
+      }
+      return finalMsg;
     }
-    
-    // If no tool call, just return the response
+
+    if (message && message.content) {
+      message.content = message.content.replace(/<function[^>]*>.*?<\/function>/gi, '').trim();
+    }
     return message;
   } catch (error) {
     console.error('Groq chat error:', error);

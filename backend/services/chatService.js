@@ -77,7 +77,7 @@ async function executeTool(toolCall) {
       if (args.status) query.client_status = args.status;
       const clients = await prisma.client.findMany({
         where: query,
-        select: { id: true, company_name: true, client_status: true, industry: true }
+        select: { company_name: true, client_status: true, industry: true }
       });
       return JSON.stringify(clients);
     }
@@ -95,7 +95,6 @@ async function executeTool(toolCall) {
       const tasks = await prisma.task.findMany({
         where: query,
         select: {
-          id: true,
           title: true,
           description: true,
           status: true,
@@ -114,7 +113,7 @@ async function executeTool(toolCall) {
       if (args.status) query.status = args.status;
       const escalations = await prisma.escalation.findMany({
         where: query,
-        select: { id: true, title: true, status: true, severity: true },
+        select: { title: true, status: true, severity: true },
         take: 10
       });
       return JSON.stringify(escalations);

@@ -186,7 +186,7 @@ CRITICAL RULES:
     return message;
   } catch (error) {
     console.error('Groq chat error:', error);
-    throw new Error('Failed to generate chat response');
+    throw new Error(`Groq API Error: ${error.message}`);
   }
 };
 

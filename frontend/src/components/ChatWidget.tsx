@@ -56,11 +56,11 @@ export default function ChatWidget() {
       if (data.status === 'success' && data.data) {
         setMessages(prev => [...prev, data.data]);
       } else {
-        setMessages(prev => [...prev, { role: 'assistant', content: "Sorry, I encountered an error. Please try again." }]);
+        setMessages(prev => [...prev, { role: 'assistant', content: `Error: ${data.message || 'I encountered an issue.'}` }]);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Chat error:', error);
-      setMessages(prev => [...prev, { role: 'assistant', content: "Failed to connect to the server." }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: `Connection error: ${error.message}` }]);
     } finally {
       setIsLoading(false);
     }

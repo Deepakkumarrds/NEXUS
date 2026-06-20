@@ -21,7 +21,7 @@ router.post('/', protect, async (req, res) => {
     });
   } catch (error) {
     console.error('Chat API Error:', error);
-    res.status(500).json({ status: 'error', message: 'Failed to process chat message' });
+    res.status(500).json({ status: 'error', message: error.message || 'Failed to process chat message' });
   }
 });
 

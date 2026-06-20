@@ -34,5 +34,20 @@ router.get('/:id/socials', clientController.getSocialHandles);
 router.post('/:id/socials', clientController.addSocialHandle);
 router.delete('/socials/:handleId', clientController.deleteSocialHandle);
 
+// SEO Accesses
+router.get('/:id/seo', clientController.getSeoAccesses);
+router.post('/:id/seo', clientController.addSeoAccess);
+router.delete('/seo/:accessId', clientController.deleteSeoAccess);
+
+// Paid Media Accesses
+router.get('/:id/paid-media', clientController.getPaidMediaAccesses);
+router.post('/:id/paid-media', clientController.addPaidMediaAccess);
+router.delete('/paid-media/:accessId', clientController.deletePaidMediaAccess);
+
+// Monthly Plans
+router.get('/:id/monthly-plans', clientController.getMonthlyPlans);
+router.post('/:id/monthly-plans', clientController.addMonthlyPlan);
+router.delete('/monthly-plans/:planId', clientController.deleteMonthlyPlan);
+
 module.exports = router;
 

@@ -96,6 +96,13 @@ model Client {
   primary_contact_name String?
   spoc_name          String?
   internal_notes     String?
+  
+  // Strategy & Brand
+  brand_shortcode    String?
+  objective          String?
+  focused_area       String?
+  customer_mindset   String?
+  
   created_at         DateTime @default(now())
   updated_at         DateTime @updatedAt
 
@@ -113,8 +120,12 @@ model Client {
   client_users       ClientUser[]
   onboarding_checklist OnboardingChecklist[]
   social_handles       SocialHandle[]
+  seo_accesses         SeoAccess[]
+  paid_media_accesses  PaidMediaAccess[]
+  
   campaign_performances CampaignPerformance[]
   report_delivery_logs ReportDeliveryLog[] @relation("ClientReportDeliveryLogs")
+  monthly_plans        ClientMonthlyPlan[]
 }
 
 model ClientUser {
@@ -259,12 +270,24 @@ model Sow {
   created_at  DateTime @default(now())
   
   client      Client   @relation(fields: [client_id], references: [id])
+  months      SowMonth[]
   items       SowItem[]
+}
+
+model SowMonth {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  sow_id         String   @db.ObjectId
+  month_year     String   // e.g. "January 2026"
+  value          Float    @default(0)
+  
+  sow            Sow      @relation(fields: [sow_id], references: [id], onDelete: Cascade)
+  items          SowItem[]
 }
 
 model SowItem {
   id               String   @id @default(auto()) @map("_id") @db.ObjectId
   sow_id           String   @db.ObjectId
+  sow_month_id     String?  @db.ObjectId
   deliverable_name String
   frequency        String?  // Weekly, Monthly
   owner_id         String?  @db.ObjectId
@@ -274,6 +297,7 @@ model SowItem {
   tracking_month   String?  // e.g., "January 2026"
   
   sow              Sow      @relation(fields: [sow_id], references: [id])
+  sow_month        SowMonth? @relation(fields: [sow_month_id], references: [id])
 }
 
 model Report {
@@ -406,7 +430,34 @@ model SocialHandle {
   client_id       String   @db.ObjectId
   platform        String   // Instagram, Meta, YouTube, LinkedIn, Twitter
   profile_url     String
+  username        String?
+  password        String?
   access_provided String   // Admin, Advertiser, Analyst, None
+  
+  client          Client   @relation(fields: [client_id], references: [id], onDelete: Cascade)
+}
+
+model SeoAccess {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  client_id       String   @db.ObjectId
+  platform        String   // Google Analytics, Search Console, etc.
+  profile_url     String
+  username        String?
+  password        String?
+  access_provided String
+  
+  client          Client   @relation(fields: [client_id], references: [id], onDelete: Cascade)
+}
+
+model PaidMediaAccess {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  client_id       String   @db.ObjectId
+  platform        String   // Google Ads, Meta Ads
+  ad_account_id   String?
+  profile_url     String
+  username        String?
+  password        String?
+  access_provided String
   
   client          Client   @relation(fields: [client_id], references: [id], onDelete: Cascade)
 }
@@ -464,4 +515,15 @@ model ReportDeliveryLog {
   error_message String?
   
   client        Client   @relation("ClientReportDeliveryLogs", fields: [client_id], references: [id], onDelete: Cascade)
+}
+
+model ClientMonthlyPlan {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  client_id     String   @db.ObjectId
+  department    String   // Social Media, Paid Media, SEO
+  month_year    String   // e.g., "January 2026"
+  document_link String
+  created_at    DateTime @default(now())
+
+  client        Client   @relation(fields: [client_id], references: [id], onDelete: Cascade)
 }

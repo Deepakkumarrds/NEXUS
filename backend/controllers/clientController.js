@@ -5,7 +5,7 @@ const { calculateClientHealth } = require('../utils/healthScoreEngine');
 // Create a new client
 exports.createClient = async (req, res) => {
   try {
-    const { company_name, brand_name, industry, website, email, phone, client_status, service_type, retainer_value, primary_contact_name, spoc_name } = req.body;
+    const { company_name, brand_name, industry, website, email, phone, client_status, service_type, retainer_value, primary_contact_name, spoc_name, brand_shortcode, objective, focused_area, customer_mindset } = req.body;
     
     const client = await prisma.client.create({
       data: {
@@ -20,6 +20,10 @@ exports.createClient = async (req, res) => {
         retainer_value: retainer_value ? parseFloat(retainer_value) : null,
         primary_contact_name,
         spoc_name,
+        brand_shortcode,
+        objective,
+        focused_area,
+        customer_mindset
       },
     });
 
@@ -69,7 +73,10 @@ exports.getClientById = async (req, res) => {
         health_scores: { orderBy: { calculated_at: 'desc' }, take: 1 },
         onboarding_checklist: true,
         social_handles: true,
-        campaign_performances: true
+        seo_accesses: true,
+        paid_media_accesses: true,
+        campaign_performances: true,
+        monthly_plans: true
       }
     });
 
@@ -249,12 +256,14 @@ exports.getSocialHandles = async (req, res) => {
 exports.addSocialHandle = async (req, res) => {
   try {
     const { id } = req.params;
-    const { platform, profile_url, access_provided } = req.body;
+    const { platform, profile_url, access_provided, username, password } = req.body;
     const handle = await prisma.socialHandle.create({
       data: {
         client_id: id,
         platform,
         profile_url,
+        username: username || null,
+        password: password || null,
         access_provided: access_provided || 'None'
       }
     });
@@ -278,3 +287,148 @@ exports.deleteSocialHandle = async (req, res) => {
   }
 };
 
+// --- SEO ACCESS CONTROLLERS ---
+
+exports.getSeoAccesses = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const accesses = await prisma.seoAccess.findMany({
+      where: { client_id: id }
+    });
+    res.status(200).json({ status: 'success', data: accesses });
+  } catch (error) {
+    console.error('Error fetching SEO accesses:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to fetch SEO accesses' });
+  }
+};
+
+exports.addSeoAccess = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { platform, profile_url, access_provided, username, password } = req.body;
+    const access = await prisma.seoAccess.create({
+      data: {
+        client_id: id,
+        platform,
+        profile_url,
+        username: username || null,
+        password: password || null,
+        access_provided: access_provided || 'None'
+      }
+    });
+    res.status(201).json({ status: 'success', data: access });
+  } catch (error) {
+    console.error('Error adding SEO access:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to add SEO access' });
+  }
+};
+
+exports.deleteSeoAccess = async (req, res) => {
+  try {
+    const { accessId } = req.params;
+    await prisma.seoAccess.delete({
+      where: { id: accessId }
+    });
+    res.status(200).json({ status: 'success', message: 'SEO access deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting SEO access:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to delete SEO access' });
+  }
+};
+
+// --- PAID MEDIA ACCESS CONTROLLERS ---
+
+exports.getPaidMediaAccesses = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const accesses = await prisma.paidMediaAccess.findMany({
+      where: { client_id: id }
+    });
+    res.status(200).json({ status: 'success', data: accesses });
+  } catch (error) {
+    console.error('Error fetching Paid Media accesses:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to fetch Paid Media accesses' });
+  }
+};
+
+exports.addPaidMediaAccess = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { platform, profile_url, access_provided, username, password, ad_account_id } = req.body;
+    const access = await prisma.paidMediaAccess.create({
+      data: {
+        client_id: id,
+        platform,
+        profile_url,
+        username: username || null,
+        password: password || null,
+        ad_account_id: ad_account_id || null,
+        access_provided: access_provided || 'None'
+      }
+    });
+    res.status(201).json({ status: 'success', data: access });
+  } catch (error) {
+    console.error('Error adding Paid Media access:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to add Paid Media access' });
+  }
+};
+
+exports.deletePaidMediaAccess = async (req, res) => {
+  try {
+    const { accessId } = req.params;
+    await prisma.paidMediaAccess.delete({
+      where: { id: accessId }
+    });
+    res.status(200).json({ status: 'success', message: 'Paid Media access deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting Paid Media access:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to delete Paid Media access' });
+  }
+};
+
+// --- MONTHLY PLANS CONTROLLERS ---
+
+exports.getMonthlyPlans = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const plans = await prisma.clientMonthlyPlan.findMany({
+      where: { client_id: id }
+    });
+    res.status(200).json({ status: 'success', data: plans });
+  } catch (error) {
+    console.error('Error fetching Monthly Plans:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to fetch Monthly Plans' });
+  }
+};
+
+exports.addMonthlyPlan = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { department, month_year, document_link } = req.body;
+    const plan = await prisma.clientMonthlyPlan.create({
+      data: {
+        client_id: id,
+        department,
+        month_year,
+        document_link
+      }
+    });
+    res.status(201).json({ status: 'success', data: plan });
+  } catch (error) {
+    console.error('Error adding Monthly Plan:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to add Monthly Plan' });
+  }
+};
+
+exports.deleteMonthlyPlan = async (req, res) => {
+  try {
+    const { planId } = req.params;
+    await prisma.clientMonthlyPlan.delete({
+      where: { id: planId }
+    });
+    res.status(200).json({ status: 'success', message: 'Monthly Plan deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting Monthly Plan:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to delete Monthly Plan' });
+  }
+};

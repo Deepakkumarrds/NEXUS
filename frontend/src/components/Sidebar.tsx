@@ -31,7 +31,7 @@ export default function Sidebar() {
   return (
     <aside className="w-64 bg-white text-slate-700 h-screen sticky top-0 p-5 flex flex-col border-r border-slate-200/85">
       <div className="mb-10 px-2">
-        <h1 className="text-xl font-extrabold tracking-tight text-slate-900 font-heading">RDS Platform</h1>
+        <h1 className="text-xl font-extrabold tracking-tight text-slate-900 font-heading">Nexus</h1>
         <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-wider font-bold">Client Management</p>
       </div>
       

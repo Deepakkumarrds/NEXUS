@@ -8,6 +8,14 @@ type SowItem = {
   deliverable_name: string;
   status: string; // Pending, In Progress, Completed
   tracking_month?: string;
+  sow_month_id?: string;
+};
+
+type SowMonth = {
+  id: string;
+  month_year: string;
+  value: number;
+  items: SowItem[];
 };
 
 type Sow = {
@@ -18,6 +26,7 @@ type Sow = {
   start_date: string;
   end_date: string;
   client?: { company_name: string };
+  months?: SowMonth[];
   items?: SowItem[];
 };
 
@@ -276,10 +285,26 @@ export default function SowsPage() {
 
           <div className="flex flex-col gap-6">
           {sows.map(sow => {
-            const filteredItems = selectedMonth === 'All' 
-              ? (sow.items || [])
-              : (sow.items || []).filter(item => item.tracking_month === selectedMonth);
+            const legacyItems = sow.items || [];
+            let monthsToRender: SowMonth[] = [];
+            
+            if (sow.months && sow.months.length > 0) {
+              monthsToRender = sow.months;
+            } else if (legacyItems.length > 0) {
+              const grouped = legacyItems.reduce((acc, item) => {
+                const m = item.tracking_month || 'Unspecified Month';
+                if (!acc[m]) acc[m] = { id: m, month_year: m, value: 0, items: [] };
+                acc[m].items.push(item);
+                return acc;
+              }, {} as Record<string, SowMonth>);
+              monthsToRender = Object.values(grouped);
+            }
 
+            const displayMonths = selectedMonth === 'All' 
+              ? monthsToRender 
+              : monthsToRender.filter(m => m.month_year === selectedMonth);
+
+            const filteredItems = displayMonths.flatMap(m => m.items || []);
             const progress = calculateProgress(filteredItems);
 
             return (
@@ -342,75 +367,86 @@ export default function SowsPage() {
                   </div>
                 </div>
 
-                {/* Always Visible Deliverables List */}
-                <div className="bg-white">
-                  {filteredItems.length > 0 ? (
-                    <ul className="divide-y divide-slate-100">
-                      {filteredItems.map((item) => (
-                        <li key={item.id} className="flex items-center justify-between p-4 hover:bg-slate-50 transition-colors">
-                          <span className="text-sm font-medium text-slate-700 flex items-center gap-3">
-                            <div className={`w-2 h-2 rounded-full ${
-                              item.status === 'Completed' ? 'bg-emerald-500' :
-                              item.status === 'In Progress' ? 'bg-indigo-500' :
-                              'bg-slate-300'
-                            }`}></div>
-                            
-                            <span className={item.status === 'Completed' ? 'text-slate-400 line-through decoration-slate-300' : ''}>
-                              {item.deliverable_name}
+                {/* Deliverables List (Grouped by Month) */}
+                <div className="bg-white p-4">
+                  {displayMonths.length > 0 ? (
+                    <div className={selectedMonth === 'All' ? 'grid grid-cols-1 lg:grid-cols-2 gap-4' : 'space-y-4'}>
+                      {displayMonths.map(month => (
+                        <div key={month.id} className="bg-slate-50 rounded-lg border border-slate-200 overflow-hidden">
+                          <div className="bg-slate-100 px-4 py-2 flex justify-between items-center border-b border-slate-200">
+                            <span className="font-semibold text-slate-800 text-sm">{month.month_year}</span>
+                            <span className="font-medium text-emerald-600 text-xs">
+                              {month.value ? `₹${month.value.toLocaleString('en-IN')}` : ''}
                             </span>
-                            
-                            {selectedMonth === 'All' && item.tracking_month && (
-                              <span className="ml-2 text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded font-medium border border-slate-200">
-                                {item.tracking_month}
-                              </span>
-                            )}
-                          </span>
-                          <div className="relative w-36">
-                            <select 
-                              value={item.status}
-                              onChange={(e) => handleStatusChange(item.id, e.target.value)}
-                              className={`w-full text-xs font-medium pl-3 pr-8 py-1.5 rounded border appearance-none outline-none cursor-pointer transition-colors shadow-sm ${
-                                item.status === 'Completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                                item.status === 'In Progress' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
-                                'bg-white text-slate-600 border-slate-300 hover:border-slate-400 focus:border-indigo-500'
-                              }`}
-                            >
-                              <option value="Pending">Pending</option>
-                              <option value="In Progress">In Progress</option>
-                              <option value="Completed">Completed</option>
-                            </select>
-                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path></svg>
-                            </div>
                           </div>
-                        </li>
+                          
+                          {month.items && month.items.length > 0 ? (
+                            <ul className="divide-y divide-slate-100">
+                              {month.items.map((item) => (
+                                <li key={item.id} className="flex items-center justify-between p-3 hover:bg-white transition-colors">
+                                  <span className="text-sm font-medium text-slate-700 flex items-center gap-2">
+                                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                                      item.status === 'Completed' ? 'bg-emerald-500' :
+                                      item.status === 'In Progress' ? 'bg-indigo-500' :
+                                      'bg-slate-300'
+                                    }`}></div>
+                                    <span className={item.status === 'Completed' ? 'text-slate-400 line-through decoration-slate-300 truncate' : 'truncate'}>
+                                      {item.deliverable_name}
+                                    </span>
+                                  </span>
+                                  <div className="relative w-32 flex-shrink-0 ml-2">
+                                    <select 
+                                      value={item.status}
+                                      onChange={(e) => handleStatusChange(item.id, e.target.value)}
+                                      className={`w-full text-xs font-medium pl-2 pr-6 py-1 rounded border appearance-none outline-none cursor-pointer transition-colors shadow-sm ${
+                                        item.status === 'Completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                                        item.status === 'In Progress' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
+                                        'bg-white text-slate-600 border-slate-300 hover:border-slate-400 focus:border-indigo-500'
+                                      }`}
+                                    >
+                                      <option value="Pending">Pending</option>
+                                      <option value="In Progress">In Progress</option>
+                                      <option value="Completed">Completed</option>
+                                    </select>
+                                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1.5 text-slate-400">
+                                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path></svg>
+                                    </div>
+                                  </div>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <div className="py-4 text-center text-xs text-slate-400">No deliverables for this month.</div>
+                          )}
+                        </div>
                       ))}
-                    </ul>
+                    </div>
                   ) : (
                     <div className="py-8 px-6 text-center">
                       <p className="text-sm text-slate-500">No deliverables found for {selectedMonth}. Add one below.</p>
                     </div>
                   )}
                   
-                  {/* Add New Deliverable */}
-                  <div className="p-4 bg-slate-50 border-t border-slate-200 flex gap-3 items-center">
-                    <input 
-                      type="text" 
-                      placeholder={selectedMonth === 'All' ? "Select a specific month to add items..." : `Add deliverable for ${selectedMonth}...`}
-                      value={selectedMonth === 'All' ? '' : (newItemName[`${sow.id}_${selectedMonth}`] || '')}
-                      onChange={(e) => selectedMonth !== 'All' && setNewItemName({...newItemName, [`${sow.id}_${selectedMonth}`]: e.target.value})}
-                      onKeyDown={(e) => { if (e.key === 'Enter' && selectedMonth !== 'All') handleAddItem(sow.id, selectedMonth) }}
-                      disabled={selectedMonth === 'All'}
-                      className="flex-1 border border-slate-300 px-3 py-2 text-sm rounded-md outline-none focus:ring-1 focus:ring-indigo-500 transition-all placeholder:text-slate-400 disabled:bg-slate-100 disabled:cursor-not-allowed bg-white"
-                    />
-                    <button 
-                      onClick={() => handleAddItem(sow.id, selectedMonth)}
-                      disabled={selectedMonth === 'All' || !newItemName[`${sow.id}_${selectedMonth}`]?.trim()}
-                      className="bg-indigo-600 text-white px-4 py-2 text-sm font-medium rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
-                    >
-                      Add
-                    </button>
-                  </div>
+                  {/* Add New Deliverable - Hide in All Time Overview to prevent ambiguity unless adding to specific month */}
+                  {selectedMonth !== 'All' && (
+                    <div className="mt-4 p-4 bg-slate-50 border border-slate-200 rounded-lg flex gap-3 items-center">
+                      <input 
+                        type="text" 
+                        placeholder={`Add deliverable for ${selectedMonth}...`}
+                        value={(newItemName[`${sow.id}_${selectedMonth}`] || '')}
+                        onChange={(e) => setNewItemName({...newItemName, [`${sow.id}_${selectedMonth}`]: e.target.value})}
+                        onKeyDown={(e) => { if (e.key === 'Enter') handleAddItem(sow.id, selectedMonth) }}
+                        className="flex-1 border border-slate-300 px-3 py-2 text-sm rounded-md outline-none focus:ring-1 focus:ring-indigo-500 transition-all placeholder:text-slate-400 bg-white"
+                      />
+                      <button 
+                        onClick={() => handleAddItem(sow.id, selectedMonth)}
+                        disabled={!newItemName[`${sow.id}_${selectedMonth}`]?.trim()}
+                        className="bg-indigo-600 text-white px-4 py-2 text-sm font-medium rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+                      >
+                        Add
+                      </button>
+                    </div>
+                  )}
                 </div>
 
               </div>

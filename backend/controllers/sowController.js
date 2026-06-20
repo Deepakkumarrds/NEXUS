@@ -5,47 +5,7 @@ const { createNotification } = require('../utils/notificationHelper');
 // Create a new SOW with deliverables
 exports.createSow = async (req, res) => {
   try {
-    const { client_id, sow_name, total_value, start_date, end_date, items } = req.body;
-    
-    // Dummy user for created_by
-    let user = await prisma.user.findFirst();
-
-    // Determine the months between start_date and end_date
-    let trackingMonths = [];
-    if (start_date && end_date) {
-      let start = new Date(start_date);
-      let end = new Date(end_date);
-      
-      // Ensure start is before end
-      if (start <= end) {
-        let current = new Date(start.getFullYear(), start.getMonth(), 1);
-        while (current <= end) {
-          trackingMonths.push(
-            current.toLocaleString('en-US', { month: 'long', year: 'numeric' })
-          );
-          current.setMonth(current.getMonth() + 1);
-        }
-      }
-    }
-    
-    // If no valid dates, default to a single generic month group or none
-    if (trackingMonths.length === 0) {
-      trackingMonths.push('Unspecified Month');
-    }
-
-    // Clone base items for each tracking month
-    const sowItemsData = [];
-    if (items && Array.isArray(items)) {
-      trackingMonths.forEach(month => {
-        items.forEach(item => {
-          sowItemsData.push({
-            deliverable_name: item.deliverable_name || 'Deliverable',
-            status: 'Pending',
-            tracking_month: month
-          });
-        });
-      });
-    }
+    const { client_id, sow_name, total_value, start_date, end_date, months } = req.body;
 
     const sow = await prisma.sow.create({
       data: {
@@ -54,16 +14,33 @@ exports.createSow = async (req, res) => {
         total_value: total_value ? parseFloat(total_value) : null,
         start_date: start_date ? new Date(start_date) : null,
         end_date: end_date ? new Date(end_date) : null,
-        items: {
-          create: sowItemsData
+        months: {
+          create: (months || []).map(month => ({
+            month_year: month.month_year,
+            value: month.value ? parseFloat(month.value) : 0,
+            items: {
+              create: (month.items || []).map(item => ({
+                deliverable_name: item.deliverable_name || 'Deliverable',
+                status: 'Pending',
+                tracking_month: month.month_year
+              }))
+            }
+          }))
         }
       },
       include: {
+        months: {
+          include: { items: true }
+        },
         items: true
       }
     });
 
-    await createNotification('New Contract (SOW) Drafted', `SOW: ${sow_name} (${sowItemsData.length} Deliverables)`);
+    let totalItems = 0;
+    if (months) {
+      months.forEach(m => totalItems += (m.items || []).length);
+    }
+    await createNotification('New Contract (SOW) Drafted', `SOW: ${sow_name} (${totalItems} Deliverables)`);
 
     res.status(201).json({ status: 'success', data: sow });
   } catch (error) {
@@ -78,6 +55,9 @@ exports.getAllSows = async (req, res) => {
     let sows = await prisma.sow.findMany({
       include: {
         client: { select: { company_name: true } },
+        months: {
+          include: { items: true }
+        },
         items: true
       },
       orderBy: { created_at: 'desc' }
@@ -108,6 +88,9 @@ exports.getSowById = async (req, res) => {
       where: { id },
       include: {
         client: { select: { company_name: true } },
+        months: {
+          include: { items: true }
+        },
         items: true
       }
     });
@@ -129,8 +112,14 @@ exports.getSowById = async (req, res) => {
 exports.updateSow = async (req, res) => {
   try {
     const { id } = req.params;
-    const { client_id, sow_name, total_value, start_date, end_date } = req.body;
+    const { client_id, sow_name, total_value, start_date, end_date, months } = req.body;
     
+    // Simplest way to handle nested updates: delete old months/items and recreate
+    if (months && Array.isArray(months)) {
+      await prisma.sowItem.deleteMany({ where: { sow_id: id } });
+      await prisma.sowMonth.deleteMany({ where: { sow_id: id } });
+    }
+
     const sow = await prisma.sow.update({
       where: { id },
       data: {
@@ -139,6 +128,21 @@ exports.updateSow = async (req, res) => {
         total_value: total_value !== undefined ? parseFloat(total_value) : undefined,
         start_date: start_date ? new Date(start_date) : undefined,
         end_date: end_date ? new Date(end_date) : undefined,
+        ...(months && Array.isArray(months) ? {
+          months: {
+            create: months.map(month => ({
+              month_year: month.month_year,
+              value: month.value ? parseFloat(month.value) : 0,
+              items: {
+                create: (month.items || []).map(item => ({
+                  deliverable_name: item.deliverable_name || 'Deliverable',
+                  status: 'Pending',
+                  tracking_month: month.month_year
+                }))
+              }
+            }))
+          }
+        } : {})
       }
     });
     res.status(200).json({ status: 'success', data: sow });

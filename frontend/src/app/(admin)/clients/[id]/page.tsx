@@ -13,7 +13,7 @@ export default function ClientDetailsPage() {
   const isEditMode = searchParams.get('edit') === 'true';
   const [client, setClient] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'onboarding' | 'socials' | 'campaigns' | 'timeline'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'onboarding' | 'socials' | 'campaigns' | 'timeline' | 'monthly_plans'>('overview');
   const [timelineFilter, setTimelineFilter] = useState<'all'|'task'|'communication'|'sow'|'meeting'|'escalation'>('all');
 
   const [internalNotes, setInternalNotes] = useState('');
@@ -170,6 +170,16 @@ export default function ClientDetailsPage() {
   const [editServices, setEditServices] = useState<string[]>([]);
   const [editPrimaryContact, setEditPrimaryContact] = useState('');
   const [editSpocName, setEditSpocName] = useState('');
+  const [editBrandShortcode, setEditBrandShortcode] = useState('');
+  const [editObjective, setEditObjective] = useState('');
+  const [editFocusedArea, setEditFocusedArea] = useState('');
+  const [editCustomerMindset, setEditCustomerMindset] = useState('');
+
+  // Monthly Plans State
+  const [monthlyDepartment, setMonthlyDepartment] = useState('Social Media');
+  const [monthlyMonthYear, setMonthlyMonthYear] = useState('');
+  const [monthlyDocumentLink, setMonthlyDocumentLink] = useState('');
+  const [monthlyFilter, setMonthlyFilter] = useState('All');
 
   const SERVICES = [
     'SEO', 
@@ -194,6 +204,10 @@ export default function ClientDetailsPage() {
       setEditRetainer(client.retainer_value ? client.retainer_value.toString() : '');
       setEditPrimaryContact(client.primary_contact_name || '');
       setEditSpocName(client.spoc_name || '');
+      setEditBrandShortcode(client.brand_shortcode || '');
+      setEditObjective(client.objective || '');
+      setEditFocusedArea(client.focused_area || '');
+      setEditCustomerMindset(client.customer_mindset || '');
       
       // Parse service_type from string to array
       if (client.service_type) {
@@ -223,7 +237,11 @@ export default function ClientDetailsPage() {
           retainer_value: editRetainer ? parseFloat(editRetainer) : null,
           service_type: editServices.join(', '),
           primary_contact_name: editPrimaryContact || null,
-          spoc_name: editSpocName || null
+          spoc_name: editSpocName || null,
+          brand_shortcode: editBrandShortcode || null,
+          objective: editObjective || null,
+          focused_area: editFocusedArea || null,
+          customer_mindset: editCustomerMindset || null
         })
       });
       if (res.ok) {
@@ -256,7 +274,31 @@ export default function ClientDetailsPage() {
   // Social Handles Form State
   const [socialPlatform, setSocialPlatform] = useState('Instagram');
   const [socialUrl, setSocialUrl] = useState('');
+  const [socialUsername, setSocialUsername] = useState('');
+  const [socialPassword, setSocialPassword] = useState('');
   const [socialAccess, setSocialAccess] = useState('Analyst');
+
+  // SEO Access Form State
+  const [seoPlatform, setSeoPlatform] = useState('Google Analytics');
+  const [seoUrl, setSeoUrl] = useState('');
+  const [seoUsername, setSeoUsername] = useState('');
+  const [seoPassword, setSeoPassword] = useState('');
+  const [seoAccess, setSeoAccess] = useState('Admin');
+
+  // Paid Media Access Form State
+  const [paidPlatform, setPaidPlatform] = useState('Google Ads');
+  const [paidAccountId, setPaidAccountId] = useState('');
+  const [paidUrl, setPaidUrl] = useState('');
+  const [paidUsername, setPaidUsername] = useState('');
+  const [paidPassword, setPaidPassword] = useState('');
+  const [paidAccess, setPaidAccess] = useState('Advertiser');
+
+  // Password Visibility Toggle
+  const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({});
+
+  const togglePasswordVisibility = (id: string) => {
+    setVisiblePasswords(prev => ({ ...prev, [id]: !prev[id] }));
+  };
 
   // Campaign Performance Form State
   const [campaignName, setCampaignName] = useState('');
@@ -380,10 +422,18 @@ export default function ClientDetailsPage() {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/clients/${clientId}/socials`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ platform: socialPlatform, profile_url: socialUrl, access_provided: socialAccess })
+        body: JSON.stringify({ 
+          platform: socialPlatform, 
+          profile_url: socialUrl, 
+          username: socialUsername,
+          password: socialPassword,
+          access_provided: socialAccess 
+        })
       });
       if (res.ok) {
         setSocialUrl('');
+        setSocialUsername('');
+        setSocialPassword('');
         fetchClientDetails();
       }
     } catch (err) {
@@ -395,6 +445,85 @@ export default function ClientDetailsPage() {
   const handleDeleteSocialHandle = async (handleId: string) => {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/clients/socials/${handleId}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        fetchClientDetails();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Add SEO Access
+  const handleAddSeoAccess = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!seoUrl.trim() && !seoUsername.trim()) return;
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/clients/${clientId}/seo`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          platform: seoPlatform, 
+          profile_url: seoUrl, 
+          username: seoUsername,
+          password: seoPassword,
+          access_provided: seoAccess 
+        })
+      });
+      if (res.ok) {
+        setSeoUrl(''); setSeoUsername(''); setSeoPassword('');
+        fetchClientDetails();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Delete SEO Access
+  const handleDeleteSeoAccess = async (accessId: string) => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/clients/seo/${accessId}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        fetchClientDetails();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Add Paid Media Access
+  const handleAddPaidMediaAccess = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!paidAccountId.trim() && !paidUsername.trim()) return;
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/clients/${clientId}/paid-media`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          platform: paidPlatform, 
+          ad_account_id: paidAccountId,
+          profile_url: paidUrl, 
+          username: paidUsername,
+          password: paidPassword,
+          access_provided: paidAccess 
+        })
+      });
+      if (res.ok) {
+        setPaidAccountId(''); setPaidUrl(''); setPaidUsername(''); setPaidPassword('');
+        fetchClientDetails();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Delete Paid Media Access
+  const handleDeletePaidMediaAccess = async (accessId: string) => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/clients/paid-media/${accessId}`, {
         method: 'DELETE'
       });
       if (res.ok) {
@@ -454,6 +583,53 @@ export default function ClientDetailsPage() {
       setContactFestivals(contactFestivals.filter(f => f !== festival));
     } else {
       setContactFestivals([...contactFestivals, festival]);
+    }
+  };
+
+  // Add Monthly Plan
+  const handleAddMonthlyPlan = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!monthlyDepartment || !monthlyMonthYear || !monthlyDocumentLink) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/clients/${clientId}/monthly-plans`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          department: monthlyDepartment,
+          month_year: monthlyMonthYear,
+          document_link: monthlyDocumentLink
+        })
+      });
+      if (res.ok) {
+        toast.success('Monthly plan added');
+        setMonthlyMonthYear('');
+        setMonthlyDocumentLink('');
+        fetchClientDetails();
+      } else {
+        toast.error('Failed to add monthly plan');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Error adding monthly plan');
+    }
+  };
+
+  // Delete Monthly Plan
+  const handleDeleteMonthlyPlan = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this plan?')) return;
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/clients/monthly-plans/${id}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        toast.success('Monthly plan deleted');
+        fetchClientDetails();
+      }
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -561,7 +737,7 @@ export default function ClientDetailsPage() {
               : 'text-slate-500 hover:text-slate-800'
           }`}
         >
-          Socials Vault
+          Access Vaults
         </button>
         <button 
           onClick={() => setActiveTab('campaigns')} 
@@ -583,11 +759,107 @@ export default function ClientDetailsPage() {
         >
           Activity Timeline
         </button>
+        <button 
+          onClick={() => setActiveTab('monthly_plans')} 
+          className={`flex-1 py-2 px-3 text-center text-xs md:text-sm font-semibold rounded-lg transition-all duration-200 outline-none cursor-pointer ${
+            activeTab === 'monthly_plans' 
+              ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50' 
+              : 'text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          Monthly Plans
+        </button>
       </div>
 
       {/* Tab Contents */}
       <div className="grid grid-cols-1 gap-6">
         
+        {activeTab === 'monthly_plans' && (
+          <div className="bg-white p-6 rounded-xl border border-slate-200/60 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] space-y-6">
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">Monthly Plans & Documents</h2>
+              <p className="text-xs text-slate-500 mt-1">Store and manage department-wise monthly plans, calendars, and campaign documents.</p>
+            </div>
+
+            <form onSubmit={handleAddMonthlyPlan} className="grid grid-cols-1 md:grid-cols-4 gap-3 bg-slate-50 p-4 rounded-lg border border-slate-100 items-end">
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Department</label>
+                <select value={monthlyDepartment} onChange={e => setMonthlyDepartment(e.target.value)} className="w-full text-xs border border-slate-300 rounded p-1.5 bg-white outline-none">
+                  <option value="Social Media">Social Media</option>
+                  <option value="Paid Media">Paid Media</option>
+                  <option value="SEO">SEO</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Month & Year</label>
+                <input type="text" value={monthlyMonthYear} onChange={e => setMonthlyMonthYear(e.target.value)} placeholder="e.g. January 2026" className="w-full text-xs border border-slate-300 rounded p-1.5 outline-none focus:border-indigo-500" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Document Link</label>
+                <input type="url" value={monthlyDocumentLink} onChange={e => setMonthlyDocumentLink(e.target.value)} placeholder="https://..." className="w-full text-xs border border-slate-300 rounded p-1.5 outline-none focus:border-indigo-500" />
+              </div>
+              <div>
+                <button type="submit" className="w-full bg-indigo-600 text-white font-semibold text-xs px-4 py-1.5 rounded hover:bg-indigo-700 transition shadow-sm">Save Plan</button>
+              </div>
+            </form>
+
+            {client.monthly_plans && client.monthly_plans.length > 0 ? (
+              <div className="space-y-4">
+                <div className="flex justify-end">
+                  <select 
+                    value={monthlyFilter} 
+                    onChange={e => setMonthlyFilter(e.target.value)}
+                    className="text-xs border border-slate-300 rounded p-1.5 bg-white outline-none w-48"
+                  >
+                    <option value="All">All Months</option>
+                    {Array.from(new Set(client.monthly_plans.map((p: any) => p.month_year))).map((month: any) => (
+                      <option key={month} value={month}>{month}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {(monthlyFilter === 'All' ? client.monthly_plans : client.monthly_plans.filter((p: any) => p.month_year === monthlyFilter)).map((plan: any) => (
+                    <div key={plan.id} className="border border-slate-200 rounded-lg p-4 bg-white relative group">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-8 h-8 rounded-md bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs uppercase shadow-sm border border-indigo-100">
+                            {plan.department.substring(0,2)}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-sm text-slate-900 leading-none">{plan.department}</p>
+                            <span className="text-[10px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded font-medium mt-1 inline-block">{plan.month_year}</span>
+                          </div>
+                        </div>
+                        <button onClick={() => handleDeleteMonthlyPlan(plan.id)} className="text-slate-400 hover:text-rose-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                      </div>
+                      {plan.document_link && (
+                        <div className="mt-3">
+                          <a href={plan.document_link} target="_blank" rel="noreferrer" className="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center justify-center bg-indigo-50 py-1.5 rounded-md hover:bg-indigo-100 transition">
+                            View Document <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                {monthlyFilter !== 'All' && client.monthly_plans.filter((p: any) => p.month_year === monthlyFilter).length === 0 && (
+                  <div className="text-center py-6 border border-dashed border-slate-300 rounded-lg bg-slate-50">
+                    <p className="text-sm text-slate-500 font-medium">No plans found for {monthlyFilter}.</p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-6 border border-dashed border-slate-300 rounded-lg bg-slate-50">
+                <p className="text-sm text-slate-500 font-medium">No monthly plans saved yet.</p>
+              </div>
+            )}
+          </div>
+        )}
+
         {activeTab === 'overview' && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {/* Column 1: Profile & Notes */}
@@ -603,7 +875,14 @@ export default function ClientDetailsPage() {
                 <div className="space-y-3 text-sm">
                   <div>
                     <span className="block text-slate-500 text-[10px] uppercase tracking-wide font-bold">Brand Name</span>
-                    <span className="font-medium text-slate-800">{client.brand_name || 'N/A'}</span>
+                    <span className="font-medium text-slate-800 flex items-center gap-2">
+                      {client.brand_name || 'N/A'}
+                      {client.brand_shortcode && (
+                        <span className="bg-slate-100 text-slate-600 text-[10px] font-bold px-1.5 py-0.5 rounded border border-slate-200">
+                          {client.brand_shortcode}
+                        </span>
+                      )}
+                    </span>
                   </div>
                   <div>
                     <span className="block text-slate-500 text-[10px] uppercase tracking-wide font-bold">Industry</span>
@@ -645,6 +924,20 @@ export default function ClientDetailsPage() {
                   <div>
                     <span className="block text-slate-500 text-[10px] uppercase tracking-wide font-bold">Services</span>
                     <span className="font-medium text-slate-800 block leading-tight">{client.service_type || 'None'}</span>
+                  </div>
+                  
+                  {/* Strategic Brand Info */}
+                  <div className="pt-2 mt-2 border-t border-slate-100">
+                    <span className="block text-slate-500 text-[10px] uppercase tracking-wide font-bold text-indigo-600">Core Objective</span>
+                    <span className="font-medium text-slate-800 italic">{client.objective || 'Not defined yet.'}</span>
+                  </div>
+                  <div>
+                    <span className="block text-slate-500 text-[10px] uppercase tracking-wide font-bold text-indigo-600">Focused Area</span>
+                    <span className="font-medium text-slate-800 italic">{client.focused_area || 'Not defined yet.'}</span>
+                  </div>
+                  <div>
+                    <span className="block text-slate-500 text-[10px] uppercase tracking-wide font-bold text-indigo-600">Customer Mindset</span>
+                    <span className="font-medium text-slate-800 italic">{client.customer_mindset || 'Not defined yet.'}</span>
                   </div>
                 </div>
               </div>
@@ -783,60 +1076,359 @@ export default function ClientDetailsPage() {
           </div>
         )}
 
-        {/* Social Media Handles Tab */}
+        {/* Access Vaults Tab */}
         {activeTab === 'socials' && (
-          <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm space-y-6">
-            <div>
-              <h2 className="text-lg font-bold text-slate-900">Brand Social Media Handles</h2>
-              <p className="text-xs text-slate-500 mt-1">Authorized social profile URLs and client-provided access roles.</p>
+          <div className="space-y-6">
+            
+            {/* SOCIAL MEDIA VAULT */}
+            <div className="bg-white p-6 rounded-xl border border-slate-200/60 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] space-y-6">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900">Social Media Vault</h2>
+                <p className="text-xs text-slate-500 mt-1">Manage social media credentials, URLs, and access levels.</p>
+              </div>
+
+              <form onSubmit={handleAddSocialHandle} className="grid grid-cols-1 md:grid-cols-6 gap-3 bg-slate-50 p-4 rounded-lg border border-slate-100 items-end">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Platform</label>
+                  <select value={socialPlatform} onChange={e => setSocialPlatform(e.target.value)} className="w-full text-xs border border-slate-300 rounded p-1.5 bg-white outline-none">
+                    <option value="Instagram">Instagram</option>
+                    <option value="Meta (Facebook)">Meta (Facebook)</option>
+                    <option value="LinkedIn">LinkedIn</option>
+                    <option value="YouTube">YouTube</option>
+                    <option value="Twitter">Twitter</option>
+
+                    <option value="Pinterest">Pinterest</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Profile URL</label>
+                  <input type="url" value={socialUrl} onChange={e => setSocialUrl(e.target.value)} placeholder="https://..." className="w-full text-xs border border-slate-300 rounded p-1.5 outline-none focus:border-indigo-500" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Username / Email</label>
+                  <input type="text" value={socialUsername} onChange={e => setSocialUsername(e.target.value)} placeholder="Username" className="w-full text-xs border border-slate-300 rounded p-1.5 outline-none focus:border-indigo-500" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Password</label>
+                  <input type="text" value={socialPassword} onChange={e => setSocialPassword(e.target.value)} placeholder="Password" className="w-full text-xs border border-slate-300 rounded p-1.5 outline-none focus:border-indigo-500" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Access Role</label>
+                  <select value={socialAccess} onChange={e => setSocialAccess(e.target.value)} className="w-full text-xs border border-slate-300 rounded p-1.5 bg-white outline-none">
+                    <option value="Admin">Admin</option>
+                    <option value="Advertiser">Advertiser</option>
+                    <option value="Analyst">Analyst</option>
+                    <option value="None">None</option>
+                  </select>
+                </div>
+                <div>
+                  <button type="submit" className="w-full bg-indigo-600 text-white font-semibold text-xs px-4 py-1.5 rounded hover:bg-indigo-700 transition shadow-sm">Save</button>
+                </div>
+              </form>
+
+              {client.social_handles && client.social_handles.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {client.social_handles.map((handle: any) => (
+                    <div key={handle.id} className="border border-slate-200 rounded-lg p-4 bg-white relative group">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-8 h-8 rounded-md bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs uppercase shadow-sm border border-indigo-100">
+                            {handle.platform.substring(0,2)}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-sm text-slate-900 leading-none">{handle.platform}</p>
+                            <span className="text-[10px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded font-medium mt-1 inline-block">{handle.access_provided} Access</span>
+                          </div>
+                        </div>
+                        <button onClick={() => handleDeleteSocialHandle(handle.id)} className="text-slate-400 hover:text-rose-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                      </div>
+                      <div className="space-y-2 mt-3 text-xs bg-slate-50 p-2.5 rounded border border-slate-100">
+                        <div className="flex justify-between items-center">
+                          <span className="text-slate-500 font-medium">Username:</span>
+                          <span className="font-semibold text-slate-800 flex items-center gap-1">
+                            {handle.username || '-'}
+                            {handle.username && <button onClick={() => copyToClipboard(handle.username)} className="text-slate-400 hover:text-indigo-600"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg></button>}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-slate-500 font-medium">Password:</span>
+                          <span className="font-semibold text-slate-800 flex items-center gap-1">
+                            {handle.password ? (visiblePasswords[handle.id] ? handle.password : '••••••••') : '-'}
+                            {handle.password && (
+                              <>
+                                <button onClick={() => togglePasswordVisibility(handle.id)} className="text-slate-400 hover:text-indigo-600 ml-1">
+                                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    {visiblePasswords[handle.id] ? (
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                                    ) : (
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    )}
+                                  </svg>
+                                </button>
+                                <button onClick={() => copyToClipboard(handle.password)} className="text-slate-400 hover:text-indigo-600">
+                                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                </button>
+                              </>
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                      {handle.profile_url && (
+                        <div className="mt-3">
+                          <a href={handle.profile_url} target="_blank" rel="noreferrer" className="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center justify-center bg-indigo-50 py-1.5 rounded-md hover:bg-indigo-100 transition">
+                            Open Profile <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 border border-dashed border-slate-300 rounded-lg bg-slate-50">
+                  <p className="text-sm text-slate-500 font-medium">No social media credentials saved yet.</p>
+                </div>
+              )}
             </div>
 
-            <form onSubmit={handleAddSocialHandle} className="grid grid-cols-1 md:grid-cols-4 gap-3 bg-slate-50 p-4 rounded-lg border border-slate-100">
+            {/* SEO VAULT */}
+            <div className="bg-white p-6 rounded-xl border border-slate-200/60 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] space-y-6">
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Platform</label>
-                <select value={socialPlatform} onChange={e => setSocialPlatform(e.target.value)} className="w-full text-xs border border-slate-300 rounded p-1.5 bg-white outline-none">
-                  <option value="Instagram">Instagram</option>
-                  <option value="Meta (Facebook)">Meta (Facebook)</option>
-                  <option value="LinkedIn">LinkedIn</option>
-                  <option value="YouTube">YouTube</option>
-                  <option value="Twitter/X">Twitter/X</option>
-                </select>
+                <h2 className="text-lg font-bold text-slate-900">SEO & Web Analytics Vault</h2>
+                <p className="text-xs text-slate-500 mt-1">Manage access to Google Analytics, Search Console, Ahrefs, and other web tools.</p>
               </div>
-              <div className="md:col-span-2">
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Profile Link / Handle URL</label>
-                <input required type="url" placeholder="https://instagram.com/brandname" value={socialUrl} onChange={e => setSocialUrl(e.target.value)} className="w-full text-xs border border-slate-300 rounded p-1.5 outline-none" />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Access Type</label>
-                <div className="flex space-x-2">
-                  <select value={socialAccess} onChange={e => setSocialAccess(e.target.value)} className="flex-1 text-xs border border-slate-300 rounded p-1.5 bg-white outline-none">
-                    <option value="Admin">Admin / Owner</option>
-                    <option value="Advertiser">Advertiser / Editor</option>
-                    <option value="Analyst">Analyst / Viewer</option>
-                  </select>
-                  <button type="submit" className="bg-indigo-600 text-white font-semibold text-xs px-3 rounded hover:bg-indigo-700 transition">Save</button>
-                </div>
-              </div>
-            </form>
 
-            {client.social_handles && client.social_handles.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {client.social_handles.map((handle: any) => (
-                  <div key={handle.id} className="p-4 rounded-lg border border-slate-200 flex items-center justify-between shadow-sm hover:border-indigo-100 transition">
-                    <div>
-                      <div className="flex items-center space-x-2">
-                        <span className="font-bold text-slate-800 text-sm">{handle.platform}</span>
-                        <span className="text-[10px] bg-slate-100 border border-slate-200 text-slate-600 px-2 py-0.5 rounded-full font-bold uppercase">{handle.access_provided}</span>
+              <form onSubmit={handleAddSeoAccess} className="grid grid-cols-1 md:grid-cols-6 gap-3 bg-slate-50 p-4 rounded-lg border border-slate-100 items-end">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Platform</label>
+                  <select value={seoPlatform} onChange={e => setSeoPlatform(e.target.value)} className="w-full text-xs border border-slate-300 rounded p-1.5 bg-white outline-none">
+                    <option value="Google Analytics">Google Analytics</option>
+                    <option value="Google Search Console">Search Console</option>
+                    <option value="Ahrefs">Ahrefs</option>
+                    <option value="SEMrush">SEMrush</option>
+                    <option value="Shopify Admin">Shopify Admin</option>
+                    <option value="WordPress Admin">WordPress Admin</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Login URL</label>
+                  <input type="url" value={seoUrl} onChange={e => setSeoUrl(e.target.value)} placeholder="https://..." className="w-full text-xs border border-slate-300 rounded p-1.5 outline-none focus:border-indigo-500" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Username / Email</label>
+                  <input type="text" value={seoUsername} onChange={e => setSeoUsername(e.target.value)} placeholder="Username" className="w-full text-xs border border-slate-300 rounded p-1.5 outline-none focus:border-indigo-500" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Password</label>
+                  <input type="text" value={seoPassword} onChange={e => setSeoPassword(e.target.value)} placeholder="Password" className="w-full text-xs border border-slate-300 rounded p-1.5 outline-none focus:border-indigo-500" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Access Role</label>
+                  <select value={seoAccess} onChange={e => setSeoAccess(e.target.value)} className="w-full text-xs border border-slate-300 rounded p-1.5 bg-white outline-none">
+                    <option value="Admin">Admin</option>
+                    <option value="Editor">Editor</option>
+                    <option value="Viewer">Viewer</option>
+                    <option value="None">None</option>
+                  </select>
+                </div>
+                <div>
+                  <button type="submit" className="w-full bg-indigo-600 text-white font-semibold text-xs px-4 py-1.5 rounded hover:bg-indigo-700 transition shadow-sm">Save</button>
+                </div>
+              </form>
+
+              {client.seo_accesses && client.seo_accesses.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {client.seo_accesses.map((handle: any) => (
+                    <div key={handle.id} className="border border-slate-200 rounded-lg p-4 bg-white relative group">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-8 h-8 rounded-md bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs shadow-sm border border-indigo-100">
+                            SEO
+                          </div>
+                          <div>
+                            <p className="font-semibold text-sm text-slate-900 leading-none">{handle.platform}</p>
+                            <span className="text-[10px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded font-medium mt-1 inline-block">{handle.access_provided} Access</span>
+                          </div>
+                        </div>
+                        <button onClick={() => handleDeleteSeoAccess(handle.id)} className="text-slate-400 hover:text-rose-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
                       </div>
-                      <a href={handle.profile_url} target="_blank" rel="noreferrer" className="text-xs text-indigo-600 hover:underline block mt-1 truncate max-w-[250px]">{handle.profile_url}</a>
+                      <div className="space-y-2 mt-3 text-xs bg-slate-50 p-2.5 rounded border border-slate-100">
+                        <div className="flex justify-between items-center">
+                          <span className="text-slate-500 font-medium">Username:</span>
+                          <span className="font-semibold text-slate-800 flex items-center gap-1">
+                            {handle.username || '-'}
+                            {handle.username && <button onClick={() => copyToClipboard(handle.username)} className="text-slate-400 hover:text-indigo-600"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg></button>}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-slate-500 font-medium">Password:</span>
+                          <span className="font-semibold text-slate-800 flex items-center gap-1">
+                            {handle.password ? (visiblePasswords[handle.id] ? handle.password : '••••••••') : '-'}
+                            {handle.password && (
+                              <>
+                                <button onClick={() => togglePasswordVisibility(handle.id)} className="text-slate-400 hover:text-indigo-600 ml-1">
+                                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    {visiblePasswords[handle.id] ? (
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                                    ) : (
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    )}
+                                  </svg>
+                                </button>
+                                <button onClick={() => copyToClipboard(handle.password)} className="text-slate-400 hover:text-indigo-600">
+                                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                </button>
+                              </>
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                      {handle.profile_url && (
+                        <div className="mt-3">
+                          <a href={handle.profile_url} target="_blank" rel="noreferrer" className="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center justify-center bg-indigo-50 py-1.5 rounded-md hover:bg-indigo-100 transition">
+                            Open Dashboard <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                          </a>
+                        </div>
+                      )}
                     </div>
-                    <button onClick={() => handleDeleteSocialHandle(handle.id)} className="text-slate-400 hover:text-rose-600 text-xs">Remove</button>
-                  </div>
-                ))}
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 border border-dashed border-slate-300 rounded-lg bg-slate-50">
+                  <p className="text-sm text-slate-500 font-medium">No SEO credentials saved yet.</p>
+                </div>
+              )}
+            </div>
+
+            {/* PAID MEDIA VAULT */}
+            <div className="bg-white p-6 rounded-xl border border-slate-200/60 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] space-y-6">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900">Paid Media Vault</h2>
+                <p className="text-xs text-slate-500 mt-1">Manage access to Ad accounts and billing profiles.</p>
               </div>
-            ) : (
-              <p className="text-sm text-slate-500 italic text-center py-6">No social media handles stored for this brand.</p>
-            )}
+
+              <form onSubmit={handleAddPaidMediaAccess} className="grid grid-cols-1 md:grid-cols-7 gap-3 bg-slate-50 p-4 rounded-lg border border-slate-100 items-end">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Platform</label>
+                  <select value={paidPlatform} onChange={e => setPaidPlatform(e.target.value)} className="w-full text-xs border border-slate-300 rounded p-1.5 bg-white outline-none">
+                    <option value="Google Ads">Google Ads</option>
+                    <option value="Meta Ads Manager">Meta Ads</option>
+                    <option value="LinkedIn Ads">LinkedIn Ads</option>
+                    <option value="Amazon Ads">Amazon Ads</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Ad Account ID</label>
+                  <input type="text" value={paidAccountId} onChange={e => setPaidAccountId(e.target.value)} placeholder="e.g. 123-456-7890" className="w-full text-xs border border-slate-300 rounded p-1.5 outline-none focus:border-indigo-500" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Login URL</label>
+                  <input type="url" value={paidUrl} onChange={e => setPaidUrl(e.target.value)} placeholder="https://..." className="w-full text-xs border border-slate-300 rounded p-1.5 outline-none focus:border-indigo-500" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Username / Email</label>
+                  <input type="text" value={paidUsername} onChange={e => setPaidUsername(e.target.value)} placeholder="Username" className="w-full text-xs border border-slate-300 rounded p-1.5 outline-none focus:border-indigo-500" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Password</label>
+                  <input type="text" value={paidPassword} onChange={e => setPaidPassword(e.target.value)} placeholder="Password" className="w-full text-xs border border-slate-300 rounded p-1.5 outline-none focus:border-indigo-500" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Access Role</label>
+                  <select value={paidAccess} onChange={e => setPaidAccess(e.target.value)} className="w-full text-xs border border-slate-300 rounded p-1.5 bg-white outline-none">
+                    <option value="Admin">Admin</option>
+                    <option value="Advertiser">Advertiser</option>
+                    <option value="Billing">Billing</option>
+                    <option value="None">None</option>
+                  </select>
+                </div>
+                <div>
+                  <button type="submit" className="w-full bg-indigo-600 text-white font-semibold text-xs px-4 py-1.5 rounded hover:bg-indigo-700 transition shadow-sm">Save</button>
+                </div>
+              </form>
+
+              {client.paid_media_accesses && client.paid_media_accesses.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {client.paid_media_accesses.map((handle: any) => (
+                    <div key={handle.id} className="border border-slate-200 rounded-lg p-4 bg-white relative group">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-8 h-8 rounded-md bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs shadow-sm border border-indigo-100">
+                            ADS
+                          </div>
+                          <div>
+                            <p className="font-semibold text-sm text-slate-900 leading-none">{handle.platform}</p>
+                            <span className="text-[10px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded font-medium mt-1 inline-block">{handle.access_provided} Access</span>
+                          </div>
+                        </div>
+                        <button onClick={() => handleDeletePaidMediaAccess(handle.id)} className="text-slate-400 hover:text-rose-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                      </div>
+                      
+                      {handle.ad_account_id && (
+                        <div className="mb-2">
+                           <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 block mb-0.5">Ad Account ID</span>
+                           <span className="font-mono text-sm font-semibold text-indigo-700 flex items-center gap-2">
+                             {handle.ad_account_id}
+                             <button onClick={() => copyToClipboard(handle.ad_account_id)} className="text-slate-400 hover:text-indigo-600"><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg></button>
+                           </span>
+                        </div>
+                      )}
+                      
+                      <div className="space-y-2 mt-3 text-xs bg-slate-50 p-2.5 rounded border border-slate-100">
+                        <div className="flex justify-between items-center">
+                          <span className="text-slate-500 font-medium">Username:</span>
+                          <span className="font-semibold text-slate-800 flex items-center gap-1">
+                            {handle.username || '-'}
+                            {handle.username && <button onClick={() => copyToClipboard(handle.username)} className="text-slate-400 hover:text-indigo-600"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg></button>}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-slate-500 font-medium">Password:</span>
+                          <span className="font-semibold text-slate-800 flex items-center gap-1">
+                            {handle.password ? (visiblePasswords[handle.id] ? handle.password : '••••••••') : '-'}
+                            {handle.password && (
+                              <>
+                                <button onClick={() => togglePasswordVisibility(handle.id)} className="text-slate-400 hover:text-indigo-600 ml-1">
+                                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    {visiblePasswords[handle.id] ? (
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                                    ) : (
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    )}
+                                  </svg>
+                                </button>
+                                <button onClick={() => copyToClipboard(handle.password)} className="text-slate-400 hover:text-indigo-600">
+                                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                </button>
+                              </>
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                      {handle.profile_url && (
+                        <div className="mt-3">
+                          <a href={handle.profile_url} target="_blank" rel="noreferrer" className="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center justify-center bg-indigo-50 py-1.5 rounded-md hover:bg-indigo-100 transition">
+                            Open Manager <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 border border-dashed border-slate-300 rounded-lg bg-slate-50">
+                  <p className="text-sm text-slate-500 font-medium">No Paid Media credentials saved yet.</p>
+                </div>
+              )}
+            </div>
+
           </div>
         )}
 

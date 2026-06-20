@@ -39,6 +39,10 @@ const tools = [
           priority: {
             type: 'string',
             description: 'Optional priority filter (e.g., High, Medium, Low)'
+          },
+          searchTerm: {
+            type: 'string',
+            description: 'Optional search term to filter tasks by title or description'
           }
         }
       }
@@ -82,9 +86,24 @@ async function executeTool(toolCall) {
       const query = {};
       if (args.status) query.status = args.status;
       if (args.priority) query.priority = args.priority;
+      if (args.searchTerm) {
+        query.OR = [
+          { title: { contains: args.searchTerm, mode: 'insensitive' } },
+          { description: { contains: args.searchTerm, mode: 'insensitive' } }
+        ];
+      }
       const tasks = await prisma.task.findMany({
         where: query,
-        select: { id: true, title: true, status: true, priority: true, due_date: true },
+        select: { 
+          id: true, 
+          title: true, 
+          description: true,
+          status: true, 
+          priority: true, 
+          due_date: true,
+          client: { select: { company_name: true } },
+          assignee: { select: { name: true } }
+        },
         take: 20 // limit to avoid token overflow
       });
       return JSON.stringify(tasks);

@@ -135,9 +135,10 @@ const handleChat = async (messages) => {
 You access backend database queries via tools to answer user questions about clients, tasks, and escalations.
 CRITICAL RULES:
 1. NEVER output raw <function> tags, XML tags, or JSON syntax.
-2. NEVER output programming code snippets (like Python, JavaScript, SQL) to show the user how to query. The user is a business user, not a developer.
-3. If a tool returns an empty list [], simply tell the user "I couldn't find any results matching your request" and stop.
-4. Format lists nicely using markdown bullet points or bold text. Be concise.`
+2. NEVER output programming code snippets.
+3. If a tool returns an empty list [], simply tell the user "I couldn't find any results matching your request".
+4. ABSOLUTELY NO MARKDOWN. Do NOT use asterisks (*) or bold text (**). 
+5. When listing items (like tasks or clients), ALWAYS use a plain numbered list (e.g., "1. Task Name - Status"). Do not use markdown tables or bullet points.`
     });
   }
 

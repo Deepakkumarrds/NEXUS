@@ -34,7 +34,9 @@ whatsappClient.on('auth_failure', msg => {
 });
 
 // Initialize the client
-whatsappClient.initialize();
+whatsappClient.initialize().catch(err => {
+    console.error('❌ WhatsApp Initialization failed:', err.message);
+});
 
 /**
  * Send a WhatsApp Message

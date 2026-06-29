@@ -17,6 +17,8 @@ const reportRoutes = require('./routes/reportRoutes');
 const escalationRoutes = require('./routes/escalationRoutes');
 const authRoutes = require('./routes/authRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
+const chatRoutes = require('./routes/chatRoutes');
+const trackerRoutes = require('./routes/trackerRoutes');
 const logRoutes = require('./routes/logRoutes');
 const userRoutes = require('./routes/userRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
@@ -24,7 +26,7 @@ const holidayRoutes = require('./routes/holidayRoutes');
 const leaveRoutes = require('./routes/leaveRoutes');
 const campaignRoutes = require('./routes/campaignRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
-const chatRoutes = require('./routes/chatRoutes');
+const knowledgeRoutes = require('./routes/knowledgeRoutes');
 
 // Middlewares
 app.use(cors());
@@ -54,6 +56,7 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/escalations', escalationRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/tracker', trackerRoutes);
 app.use('/api/logs', logRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/notifications', notificationRoutes);
@@ -63,6 +66,7 @@ app.use('/api/leaves', leaveRoutes);
 app.use('/api/campaigns', campaignRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/knowledge', knowledgeRoutes);
 
 // Static uploads folder
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -74,4 +78,7 @@ app.listen(PORT, () => {
   // Initialize cron jobs
   const cronService = require('./services/cronService');
   cronService.startCronJobs();
+  
+  // Initialize WhatsApp Bot
+  require('./services/whatsappService');
 });

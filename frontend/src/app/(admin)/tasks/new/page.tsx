@@ -1,14 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 
-export default function NewTaskPage() {
+function NewTaskForm() {
+  const searchParams = useSearchParams();
   const [clients, setClients] = useState<{id: string, company_name: string}[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [holidays, setHolidays] = useState<any[]>([]);
   const [holidayWarning, setHolidayWarning] = useState<string | null>(null);
+  const [sows, setSows] = useState<any[]>([]);
+  const [filteredSows, setFilteredSows] = useState<any[]>([]);
+  const [filteredItems, setFilteredItems] = useState<any[]>([]);
   
   const [formData, setFormData] = useState({
     client_id: '',
@@ -19,8 +24,26 @@ export default function NewTaskPage() {
     due_date: '',
     is_recurring: false,
     recurrence_pattern: 'Weekly',
-    recurrence_end: ''
+    recurrence_end: '',
+    department: 'Web Development',
+    is_sow: false,
+    estimated_hours: 1.0
   });
+
+  // Prefill from URL params
+  useEffect(() => {
+    const client_id = searchParams.get('client_id');
+    const due_date = searchParams.get('due_date');
+    if (client_id || due_date) {
+      setFormData(prev => ({
+        ...prev,
+        ...(client_id ? { client_id } : {}),
+        ...(due_date ? { due_date } : {})
+      }));
+    }
+  }, [searchParams]);
+
+  // SOW logic removed as per new requirements
 
   useEffect(() => {
     // Fetch Clients
@@ -37,6 +60,11 @@ export default function NewTaskPage() {
     fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/holidays')
       .then(res => res.json())
       .then(data => { if(data && data.data) setHolidays(data.data); });
+
+    // Fetch SOWs
+    fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/sows')
+      .then(res => res.json())
+      .then(data => { if(data && data.data) setSows(data.data); });
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -51,6 +79,11 @@ export default function NewTaskPage() {
       // Perform Holiday check if due_date is changed
       if (name === 'due_date') {
         checkHoliday(value);
+      }
+      
+      // Clear specific fields if needed
+      if (name === 'client_id') {
+        // Handle client changes
       }
     }
   };
@@ -124,12 +157,44 @@ export default function NewTaskPage() {
               style={{ color: '#0f172a', backgroundColor: '#ffffff' }}
               className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow"
               onChange={handleChange}
+              value={formData.client_id}
             >
               <option value="">Select a client...</option>
               {clients.map(c => (
                 <option key={c.id} value={c.id}>{c.company_name}</option>
               ))}
             </select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-5 p-4 bg-indigo-50/50 border border-indigo-100 rounded-lg">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wider">Department</label>
+              <select 
+                name="department" 
+                style={{ color: '#0f172a', backgroundColor: '#ffffff' }}
+                className="w-full border border-indigo-200 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                onChange={handleChange}
+                value={formData.department}
+              >
+                <option value="Web Development">Web Development</option>
+                <option value="SEO">SEO</option>
+                <option value="Paid Media">Paid Media</option>
+                <option value="Social Media">Social Media</option>
+              </select>
+            </div>
+            <div className="flex items-center mt-6">
+              <input 
+                type="checkbox" 
+                id="is_sow"
+                name="is_sow" 
+                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                onChange={handleChange}
+                checked={formData.is_sow}
+              />
+              <label htmlFor="is_sow" className="ml-2 block text-sm font-medium text-slate-700">
+                Link to Scope of Work (SOW)
+              </label>
+            </div>
           </div>
 
           <div>
@@ -153,6 +218,7 @@ export default function NewTaskPage() {
             </select>
           </div>
 
+
           <div>
             <label className="block font-medium text-slate-700 mb-1.5">Description</label>
             <textarea 
@@ -164,7 +230,7 @@ export default function NewTaskPage() {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             <div>
               <label className="block font-medium text-slate-700 mb-1.5">Priority</label>
               <select 
@@ -183,6 +249,7 @@ export default function NewTaskPage() {
               <input 
                 type="date" 
                 name="due_date" 
+                value={formData.due_date}
                 style={{ color: '#0f172a', backgroundColor: '#ffffff' }}
                 className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow"
                 onChange={handleChange}
@@ -190,6 +257,19 @@ export default function NewTaskPage() {
               {holidayWarning && (
                 <p className="text-xs text-amber-600 font-bold mt-1.5">{holidayWarning}</p>
               )}
+            </div>
+            <div>
+              <label className="block font-medium text-slate-700 mb-1.5">Estimated Hours</label>
+              <input 
+                type="number" 
+                step="0.5"
+                min="0.5"
+                name="estimated_hours" 
+                value={formData.estimated_hours}
+                style={{ color: '#0f172a', backgroundColor: '#ffffff' }}
+                className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow"
+                onChange={handleChange}
+              />
             </div>
           </div>
 
@@ -236,5 +316,13 @@ export default function NewTaskPage() {
         </div>
       </form>
     </div>
+  );
+}
+
+export default function NewTaskPage() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center">Loading form...</div>}>
+      <NewTaskForm />
+    </Suspense>
   );
 }

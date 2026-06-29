@@ -5,7 +5,7 @@ const { createNotification } = require('../utils/notificationHelper');
 // Create a new task
 exports.createTask = async (req, res) => {
   try {
-    const { title, description, priority, due_date, client_id, assigned_to, is_recurring, recurrence_pattern, recurrence_end, resource_links, checklist } = req.body;
+    const { title, description, priority, due_date, client_id, assigned_to, is_recurring, recurrence_pattern, recurrence_end, resource_links, checklist, sow_id, sow_item_id, department, is_sow, estimated_hours } = req.body;
     
     // Fallback: Create a dummy user if none exist to act as creator
     let user = await prisma.user.findFirst();
@@ -34,7 +34,12 @@ exports.createTask = async (req, res) => {
         recurrence_pattern: recurrence_pattern || null,
         recurrence_end: recurrence_end ? new Date(recurrence_end) : null,
         resource_links: resource_links || [],
-        checklist: checklist || null
+        checklist: checklist || null,
+        department: department || undefined,
+        is_sow: is_sow || false,
+        sow_id: sow_id || undefined,
+        sow_item_id: sow_item_id || undefined,
+        estimated_hours: estimated_hours ? parseFloat(estimated_hours) : 1.0
       },
     });
 
@@ -50,7 +55,7 @@ exports.createTask = async (req, res) => {
 // Get all tasks (with optional client filtering)
 exports.getAllTasks = async (req, res) => {
   try {
-    const { client_id, assigned_to } = req.query;
+    const { client_id, assigned_to, is_sow, status } = req.query;
     
     let whereClause = {};
     if (client_id) {
@@ -58,6 +63,12 @@ exports.getAllTasks = async (req, res) => {
     }
     if (assigned_to) {
       whereClause.assigned_to = assigned_to;
+    }
+    if (is_sow === 'true') {
+      whereClause.is_sow = true;
+    }
+    if (status) {
+      whereClause.status = status;
     }
 
     const tasks = await prisma.task.findMany({
@@ -89,11 +100,17 @@ exports.updateTaskStatus = async (req, res) => {
     const { status, task_status } = req.body;
     const finalStatus = status || task_status;
 
+    let dateUpdate = {};
+    if (finalStatus === 'In Progress') dateUpdate.started_at = new Date();
+    if (finalStatus === 'Review') dateUpdate.review_at = new Date();
+    if (finalStatus === 'Completed') dateUpdate.completed_at = new Date();
+
     const task = await prisma.task.update({
       where: { id },
       data: { 
         status: finalStatus,
-        completion_percentage: finalStatus === 'Completed' ? 100 : undefined
+        completion_percentage: finalStatus === 'Completed' ? 100 : undefined,
+        ...dateUpdate
       },
     });
 
@@ -207,8 +224,18 @@ exports.updateTask = async (req, res) => {
       recurrence_pattern, 
       recurrence_end,
       resource_links,
-      checklist
+      checklist,
+      sow_id,
+      sow_item_id,
+      department,
+      is_sow,
+      estimated_hours
     } = req.body;
+
+    let dateUpdate = {};
+    if (status === 'In Progress') dateUpdate.started_at = new Date();
+    if (status === 'Review') dateUpdate.review_at = new Date();
+    if (status === 'Completed') dateUpdate.completed_at = new Date();
 
     const task = await prisma.task.update({
       where: { id },
@@ -219,6 +246,7 @@ exports.updateTask = async (req, res) => {
         due_date: due_date ? new Date(due_date) : undefined,
         status,
         completion_percentage: completion_percentage !== undefined ? parseInt(completion_percentage) : undefined,
+        ...dateUpdate,
         assigned_to: assigned_to || undefined,
         delay_reason: delay_reason || undefined,
         delay_notes: delay_notes || undefined,
@@ -227,7 +255,12 @@ exports.updateTask = async (req, res) => {
         recurrence_pattern,
         recurrence_end: recurrence_end ? new Date(recurrence_end) : undefined,
         resource_links: resource_links || undefined,
-        checklist: checklist || undefined
+        checklist: checklist || undefined,
+        department: department !== undefined ? department : undefined,
+        is_sow: is_sow !== undefined ? is_sow : undefined,
+        sow_id: sow_id || undefined,
+        sow_item_id: sow_item_id || undefined,
+        estimated_hours: estimated_hours !== undefined ? parseFloat(estimated_hours) : undefined
       }
     });
 

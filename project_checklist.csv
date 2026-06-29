@@ -1,0 +1,72 @@
+Phase,Phase Duration,Module,Feature/Task,Status
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 1 — Authentication & Access Control,JWT auth implementation,Completed
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 1 — Authentication & Access Control,Login / Logout flows,Completed
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 1 — Authentication & Access Control,RBAC (Role-Based Access) setup,Completed
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 1 — Authentication & Access Control,Define precise roles: Admin Manager Team Lead Employee,Pending
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 1 — Authentication & Access Control,Permissions: Manager-only AI bot,Pending
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 1 — Authentication & Access Control,Permissions: Module restrictions based on role,Pending
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 2 — Client Management,Add / Edit / Delete client,Completed
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 2 — Client Management,Client profile,Completed
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 2 — Client Management,Client status (Active Hold Lost Completed),Completed
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 2 — Client Management,Industry type field,Pending
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 2 — Client Management,Notes system for clients,Pending
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 2 — Client Management,Client documents upload,Pending
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 2 — Client Management,Client onboarding flow,Pending
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 3 — Task Management,Create / Assign task,Completed
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 3 — Task Management,Due date & Deadline,Completed
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 3 — Task Management,Priority (Low Medium High Critical),Completed
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 3 — Task Management,Status (Pending In Progress Completed Overdue),Completed
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 3 — Task Management,Task comments,Completed
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 3 — Task Management,Start date tracking,Pending
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 3 — Task Management,Subtasks,Pending
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 3 — Task Management,Attachments,Pending
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 4 — Time Tracking,Task start timer,Pending
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 4 — Time Tracking,Pause / Resume timer,Pending
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 4 — Time Tracking,Stop timer,Pending
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 4 — Time Tracking,Manual time entry,Pending
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 4 — Time Tracking,Daily work hours tracking,Pending
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 4 — Time Tracking,Metrics calculation (Actual time spent Estimated time Delay tracking),Pending
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 5 — Automation Engine,Task Automations: Auto overdue detection,Pending
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 5 — Automation Engine,Task Automations: Auto status update,Pending
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 5 — Automation Engine,Task Automations: Auto reminders (e.g. Task due in 24 hrs),Pending
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 5 — Automation Engine,Task Automations: Deadline alerts,Pending
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 5 — Automation Engine,Client Automations: Onboarding workflow,Pending
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 5 — Automation Engine,Client Automations: Follow-up reminders,Pending
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 5 — Automation Engine,Client Automations: Contract renewal reminders,Pending
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 5 — Automation Engine,Escalation Automations: Escalation alerts,Pending
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 5 — Automation Engine,Escalation Automations: Severity-based notifications,Pending
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 6 — Notification System,In-app notifications,Completed
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 6 — Notification System,Email notifications,Completed
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 6 — Notification System,Push notifications,Pending
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 6 — Notification System,WhatsApp reminders (Future),Pending
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 6 — Notification System,Event triggers: Task overdue New task assigned Escalation raised,Pending
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 7 — Escalation Management,Create escalation,Completed
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 7 — Escalation Management,Severity levels (Low Medium High Critical),Completed
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 7 — Escalation Management,Status & Resolution tracking,Completed
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 7 — Escalation Management,Manager alerts,Pending
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 8 — Reporting Dashboard,Total / Active clients metrics,Completed
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 8 — Reporting Dashboard,Pending / Completed / Overdue tasks metrics,Completed
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 8 — Reporting Dashboard,Escalations metrics,Completed
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 8 — Reporting Dashboard,Employee productivity reports,Pending
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 8 — Reporting Dashboard,Team performance reports,Pending
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 9 — Manager AI Assistant,Chat UI,Completed
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 9 — Manager AI Assistant,Groq integration,Completed
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 9 — Manager AI Assistant,Prisma DB query tools integration,Completed
+Phase 1 — Operational Dashboard + Client Management + Automation,10–12 weeks,Module 9 — Manager AI Assistant,"Refine specific queries (Active clients?, Pending tasks?, Overdue tasks?, Open escalations?)",Pending
+Phase 2 — RAG Knowledge System,3–4 weeks,General,Setup Vector DB / Embeddings architecture,Pending
+Phase 2 — RAG Knowledge System,3–4 weeks,General,SOP ingestion pipeline,Pending
+Phase 2 — RAG Knowledge System,3–4 weeks,General,Document search capability,Pending
+Phase 2 — RAG Knowledge System,3–4 weeks,General,Reports retrieval,Pending
+Phase 3 — Hybrid AI Assistant,3–4 weeks,General,Merge Structured DB Queries with Unstructured RAG Context,Pending
+Phase 3 — Hybrid AI Assistant,3–4 weeks,General,Context building logic,Pending
+Phase 3 — Hybrid AI Assistant,3–4 weeks,General,Smart retrieval agent,Pending
+Phase 4 — Modular Prompt System,4–6 weeks,General,SEO Prompt Module,Pending
+Phase 4 — Modular Prompt System,4–6 weeks,General,Paid Media Prompt Module,Pending
+Phase 4 — Modular Prompt System,4–6 weeks,General,Social Media Prompt Module,Pending
+Phase 4 — Modular Prompt System,4–6 weeks,General,Content Prompt Module,Pending
+Phase 5 — Intelligence Layer,4–6 weeks,General,Client insight generation engine,Pending
+Phase 5 — Intelligence Layer,4–6 weeks,General,Strategy recommendation system,Pending
+Phase 5 — Intelligence Layer,4–6 weeks,General,Predictive health scoring for clients,Pending
+Phase 6 — Advanced Automation + AI Agents,6–8 weeks,General,Autonomous workflows builder,Pending
+Phase 6 — Advanced Automation + AI Agents,6–8 weeks,General,AI-driven proactive task creation,Pending
+Phase 6 — Advanced Automation + AI Agents,6–8 weeks,General,Predictive risk alerts,Pending

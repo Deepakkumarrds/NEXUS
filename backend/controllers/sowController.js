@@ -13,25 +13,38 @@ exports.createSow = async (req, res) => {
         sow_name,
         total_value: total_value ? parseFloat(total_value) : null,
         start_date: start_date ? new Date(start_date) : null,
-        end_date: end_date ? new Date(end_date) : null,
-        months: {
-          create: (months || []).map(month => ({
+        end_date: end_date ? new Date(end_date) : null
+      }
+    });
+
+    if (months && months.length > 0) {
+      for (const month of months) {
+        const createdMonth = await prisma.sowMonth.create({
+          data: {
+            sow_id: sow.id,
             month_year: month.month_year,
             value: month.value ? parseFloat(month.value) : 0,
-            items: {
-              create: (month.items || []).map(item => ({
-                deliverable_name: item.deliverable_name || 'Deliverable',
-                status: 'Pending',
-                tracking_month: month.month_year
-              }))
-            }
-          }))
+          }
+        });
+
+        if (month.items && month.items.length > 0) {
+          await prisma.sowItem.createMany({
+            data: month.items.map(item => ({
+              sow_id: sow.id,
+              sow_month_id: createdMonth.id,
+              deliverable_name: item.deliverable_name || 'Deliverable',
+              status: 'Pending',
+              tracking_month: month.month_year
+            }))
+          });
         }
-      },
+      }
+    }
+
+    const createdSow = await prisma.sow.findUnique({
+      where: { id: sow.id },
       include: {
-        months: {
-          include: { items: true }
-        },
+        months: { include: { items: true } },
         items: true
       }
     });
@@ -56,9 +69,9 @@ exports.getAllSows = async (req, res) => {
       include: {
         client: { select: { company_name: true } },
         months: {
-          include: { items: true }
+          include: { items: { include: { tasks: true } } }
         },
-        items: true
+        items: { include: { tasks: true } }
       },
       orderBy: { created_at: 'desc' }
     });
@@ -89,9 +102,9 @@ exports.getSowById = async (req, res) => {
       include: {
         client: { select: { company_name: true } },
         months: {
-          include: { items: true }
+          include: { items: { include: { tasks: true } } }
         },
-        items: true
+        items: { include: { tasks: true } }
       }
     });
     if (!sow) return res.status(404).json({ status: 'error', message: 'SOW not found' });
@@ -127,24 +140,33 @@ exports.updateSow = async (req, res) => {
         sow_name,
         total_value: total_value !== undefined ? parseFloat(total_value) : undefined,
         start_date: start_date ? new Date(start_date) : undefined,
-        end_date: end_date ? new Date(end_date) : undefined,
-        ...(months && Array.isArray(months) ? {
-          months: {
-            create: months.map(month => ({
-              month_year: month.month_year,
-              value: month.value ? parseFloat(month.value) : 0,
-              items: {
-                create: (month.items || []).map(item => ({
-                  deliverable_name: item.deliverable_name || 'Deliverable',
-                  status: 'Pending',
-                  tracking_month: month.month_year
-                }))
-              }
-            }))
-          }
-        } : {})
+        end_date: end_date ? new Date(end_date) : undefined
       }
     });
+
+    if (months && Array.isArray(months)) {
+      for (const month of months) {
+        const createdMonth = await prisma.sowMonth.create({
+          data: {
+            sow_id: id,
+            month_year: month.month_year,
+            value: month.value ? parseFloat(month.value) : 0,
+          }
+        });
+
+        if (month.items && month.items.length > 0) {
+          await prisma.sowItem.createMany({
+            data: month.items.map(item => ({
+              sow_id: id,
+              sow_month_id: createdMonth.id,
+              deliverable_name: item.deliverable_name || 'Deliverable',
+              status: 'Pending',
+              tracking_month: month.month_year
+            }))
+          });
+        }
+      }
+    }
     res.status(200).json({ status: 'success', data: sow });
   } catch (error) {
     console.error('Error updating SOW:', error);

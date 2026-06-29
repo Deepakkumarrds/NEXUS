@@ -2,7 +2,6 @@
 
 import Sidebar from '@/components/Sidebar';
 import NotificationBell from '@/components/NotificationBell';
-import ChatWidget from '@/components/ChatWidget';
 import { ReactNode, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -34,7 +33,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           {children}
         </main>
       </div>
-      <ChatWidget />
     </div>
   );
 }

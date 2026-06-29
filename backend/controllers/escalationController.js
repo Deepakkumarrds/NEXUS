@@ -1,6 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const { createNotification } = require('../utils/notificationHelper');
+const { sendMessage } = require('../services/whatsappService');
 
 exports.createEscalation = async (req, res) => {
   try {
@@ -18,6 +19,20 @@ exports.createEscalation = async (req, res) => {
     });
 
     await createNotification(`Escalation: ${severity}`, `Issue: ${title}`);
+
+    if (severity === 'Critical' || severity === 'High') {
+      const client = await prisma.client.findUnique({ where: { id: client_id }, select: { company_name: true }});
+      
+      // Add as many numbers as you want here
+      const targetNumbers = ['918919907186', '916363696732', '919535305049']; 
+      
+      const message = `🚨 *${severity.toUpperCase()} ESCALATION* 🚨\n\n*Client:* ${client ? client.company_name : 'Unknown'}\n*Issue:* ${title}\n*Details:* ${issue_description || 'No details provided'}\n\nPlease check the RDS Dashboard immediately.`;
+      
+      // We don't await this so it doesn't block the API response
+      targetNumbers.forEach(num => {
+        sendMessage(num, message).catch(err => console.error(`WhatsApp Send Error for ${num}:`, err));
+      });
+    }
 
     res.status(201).json({ status: 'success', data: escalation });
   } catch (error) {

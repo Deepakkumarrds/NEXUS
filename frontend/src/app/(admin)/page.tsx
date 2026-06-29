@@ -82,31 +82,115 @@ export default function Dashboard() {
         )}
       </div>
 
-      <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
-        <div className="flex justify-between items-center mb-6 relative z-10">
-          <h2 className="text-lg font-bold text-slate-900">Recent Tasks</h2>
-          <Link href="/tasks" className="text-indigo-600 text-sm font-semibold hover:text-indigo-800 transition-colors">View All</Link>
-        </div>
-        <ul className="space-y-4 relative z-10">
-          {stats.recentTasks && stats.recentTasks.length > 0 ? (
-            stats.recentTasks.map((task: any) => (
-              <li key={task.id} className="flex justify-between items-center p-4 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-100 transition-all">
-                <div className="flex flex-col">
-                  <Link href={`/tasks/${task.id}`} className="text-slate-800 font-semibold hover:text-indigo-600 transition-colors">
-                    {task.title}
-                  </Link>
-                  <span className="text-slate-500 text-xs mt-1 font-medium">{task.client?.company_name || 'Internal'}</span>
+      {/* Main Data Widgets Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        {/* Department Task Breakdown */}
+        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-bold text-slate-900">Pending by Department</h2>
+            <Link href="/tasks" className="text-indigo-600 text-sm font-semibold hover:text-indigo-800 transition-colors">Tasks</Link>
+          </div>
+          <div className="space-y-4 mt-4">
+            {stats.departmentTasks && stats.departmentTasks.length > 0 ? (
+              stats.departmentTasks.map((dept: any, i: number) => (
+                <div key={i} className="flex justify-between items-center p-3 rounded-xl bg-slate-50 border border-slate-100">
+                  <span className="font-semibold text-slate-700">{dept.department}</span>
+                  <span className="bg-white px-3 py-1 rounded-lg text-sm font-bold text-indigo-600 shadow-sm border border-slate-200">{dept.count} pending</span>
                 </div>
-                <span className={`px-3 py-1 rounded-full text-xs font-bold border ${task.status === 'Completed' || task.status === 'Done' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-700 border-slate-200'}`}>
-                  {task.status}
-                </span>
-              </li>
-            ))
-          ) : (
-            <li className="text-sm text-slate-500 italic p-4 bg-slate-50 rounded-xl text-center">No tasks available.</li>
-          )}
-        </ul>
+              ))
+            ) : (
+              <p className="text-sm text-slate-500 italic text-center p-4">No department tasks pending.</p>
+            )}
+          </div>
+        </div>
+
+        {/* Upcoming Deadlines */}
+        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-bold text-slate-900">Upcoming Deadlines</h2>
+            <Link href="/tasks" className="text-rose-600 text-sm font-semibold hover:text-rose-800 transition-colors">View All</Link>
+          </div>
+          <ul className="space-y-3">
+            {stats.upcomingDeadlines && stats.upcomingDeadlines.length > 0 ? (
+              stats.upcomingDeadlines.map((task: any) => (
+                <li key={task.id} className="flex justify-between items-center p-3 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-100 transition-all">
+                  <div className="flex flex-col">
+                    <Link href={`/tasks/${task.id}`} className="text-slate-800 font-semibold hover:text-indigo-600 transition-colors text-sm">
+                      {task.title}
+                    </Link>
+                    <span className="text-slate-500 text-[10px] mt-0.5 font-medium">{task.client?.company_name || 'Internal'}</span>
+                  </div>
+                  <span className="text-xs font-bold text-rose-600 bg-rose-50 px-2 py-1 rounded border border-rose-100 whitespace-nowrap">
+                    {new Date(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  </span>
+                </li>
+              ))
+            ) : (
+              <li className="text-sm text-slate-500 italic p-4 text-center">No upcoming deadlines.</li>
+            )}
+          </ul>
+        </div>
+
+        {/* Team Performance */}
+        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-bold text-slate-900">Top Performers</h2>
+            <Link href="/team" className="text-indigo-600 text-sm font-semibold hover:text-indigo-800 transition-colors">Team</Link>
+          </div>
+          <div className="space-y-3">
+            {stats.teamPerformance && stats.teamPerformance.length > 0 ? (
+              stats.teamPerformance.map((user: any, i: number) => (
+                <div key={i} className="flex items-center justify-between p-3 rounded-xl border border-slate-100">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 font-bold flex items-center justify-center text-xs">
+                      {user.name.charAt(0)}
+                    </div>
+                    <span className="font-semibold text-slate-800 text-sm">{user.name}</span>
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span className="text-sm font-bold text-emerald-600">{user.points}</span>
+                    <span className="text-[10px] text-slate-400 font-medium">Est. Hours Done</span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-slate-500 italic text-center p-4">No completed tasks yet.</p>
+            )}
+          </div>
+        </div>
+
+        {/* Recent Activity Feed */}
+        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-bold text-slate-900">Recent Communications</h2>
+            <Link href="/communications" className="text-indigo-600 text-sm font-semibold hover:text-indigo-800 transition-colors">Logs</Link>
+          </div>
+          <div className="space-y-4">
+            {stats.recentActivity && stats.recentActivity.length > 0 ? (
+              stats.recentActivity.map((log: any, i: number) => (
+                <div key={i} className="flex gap-3 relative">
+                  <div className="flex flex-col items-center">
+                    <div className="w-2 h-2 rounded-full bg-indigo-500 mt-1.5"></div>
+                    {i !== stats.recentActivity.length - 1 && <div className="w-0.5 h-full bg-slate-100 my-1"></div>}
+                  </div>
+                  <div className="flex-1 pb-4">
+                    <p className="text-sm font-bold text-slate-800">{log.subject}</p>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      <span className="font-semibold text-indigo-600">{log.client?.company_name}</span> • {log.communication_type} by {log.creator?.name}
+                    </p>
+                    <p className="text-[10px] text-slate-400 mt-1">
+                      {new Date(log.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-slate-500 italic text-center p-4">No recent activity.</p>
+            )}
+          </div>
+        </div>
+
       </div>
     </div>
   );

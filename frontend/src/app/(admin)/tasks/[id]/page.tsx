@@ -18,6 +18,11 @@ export default function TaskDetailsPage() {
   const [delayNotes, setDelayNotes] = useState('');
   const [isSubmittingDelay, setIsSubmittingDelay] = useState(false);
 
+  // Editing State
+  const [isEditing, setIsEditing] = useState(false);
+  const [editDepartment, setEditDepartment] = useState('');
+  const [editIsSow, setEditIsSow] = useState(false);
+
   // New states for Checklist & Resources
   const [checklist, setChecklist] = useState<any[]>([]);
   const [newChecklistItem, setNewChecklistItem] = useState('');
@@ -31,6 +36,8 @@ export default function TaskDetailsPage() {
       .then(data => {
         if (data && data.data) {
           setTask(data.data);
+          setEditDepartment(data.data.department || 'Web Development');
+          setEditIsSow(data.data.is_sow || false);
           try {
             setChecklist(typeof data.data.checklist === 'string' ? JSON.parse(data.data.checklist) : (data.data.checklist || []));
           } catch(e) { setChecklist([]); }
@@ -164,6 +171,29 @@ export default function TaskDetailsPage() {
       toast.error('Server error');
     } finally {
       setIsSubmittingDelay(false);
+    }
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/tasks/${taskId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          department: editDepartment,
+          is_sow: editIsSow
+        })
+      });
+      if (res.ok) {
+        toast.success('Task updated successfully!');
+        setIsEditing(false);
+        fetchTaskDetails();
+      } else {
+        toast.error('Failed to update task');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Server error');
     }
   };
 
@@ -350,7 +380,17 @@ export default function TaskDetailsPage() {
         {/* Sidebar Info */}
         <div className="lg:col-span-1 space-y-6">
           <div className="bg-white p-5 rounded-lg shadow-sm border border-slate-200">
-            <h3 className="font-semibold text-slate-900 mb-4 border-b border-slate-100 pb-2">Details</h3>
+            <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
+              <h3 className="font-semibold text-slate-900">Details</h3>
+              {!isEditing ? (
+                <button onClick={() => setIsEditing(true)} className="text-xs text-indigo-600 font-semibold hover:underline">Edit</button>
+              ) : (
+                <div className="space-x-2">
+                  <button onClick={() => setIsEditing(false)} className="text-xs text-slate-500 hover:text-slate-700">Cancel</button>
+                  <button onClick={handleSaveEdit} className="text-xs bg-indigo-600 text-white px-2 py-1 rounded hover:bg-indigo-700">Save</button>
+                </div>
+              )}
+            </div>
             
             <div className="space-y-4 text-sm">
               <div>
@@ -368,6 +408,41 @@ export default function TaskDetailsPage() {
                 <span className={`font-medium ${isPastDue && task.status !== 'Completed' ? 'text-rose-600 font-bold' : 'text-slate-800'}`}>
                   {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No date set'}
                 </span>
+              </div>
+
+              <div>
+                <span className="block text-slate-500 text-xs uppercase tracking-wide">Department</span>
+                {isEditing ? (
+                  <select 
+                    value={editDepartment} 
+                    onChange={e => setEditDepartment(e.target.value)}
+                    className="w-full mt-1 border border-slate-300 rounded p-1 text-sm focus:ring-1 focus:ring-indigo-500 outline-none"
+                  >
+                    <option value="Web Development">Web Development</option>
+                    <option value="SEO">SEO</option>
+                    <option value="Paid Media">Paid Media</option>
+                    <option value="Social Media">Social Media</option>
+                  </select>
+                ) : (
+                  <span className="font-medium text-slate-800">{task.department || 'None'}</span>
+                )}
+              </div>
+
+              <div>
+                <span className="block text-slate-500 text-xs uppercase tracking-wide">SOW Linked</span>
+                {isEditing ? (
+                  <div className="flex items-center mt-1">
+                    <input 
+                      type="checkbox" 
+                      checked={editIsSow} 
+                      onChange={e => setEditIsSow(e.target.checked)}
+                      className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                    />
+                    <span className="ml-2 text-sm text-slate-700">Yes</span>
+                  </div>
+                ) : (
+                  <span className="font-medium text-slate-800">{task.is_sow ? 'Yes' : 'No'}</span>
+                )}
               </div>
 
               {/* Recurrence Details */}

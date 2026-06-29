@@ -39,6 +39,8 @@ model User {
   skills           String[]
   leave_records    LeaveRecord[]
   knowledge_articles KnowledgeArticle[]
+  work_requests_created WorkRequest[] @relation("WorkRequestCreator")
+  work_requests_assigned WorkRequest[] @relation("WorkRequestAssignee")
 }
 
 model Role {
@@ -129,6 +131,7 @@ model Client {
   report_delivery_logs ReportDeliveryLog[] @relation("ClientReportDeliveryLogs")
   monthly_plans        ClientMonthlyPlan[]
   daily_trackers       DailyTracker[]
+  work_requests        WorkRequest[]
 }
 
 model ClientUser {
@@ -572,4 +575,24 @@ model DailyTracker {
   client           Client   @relation(fields: [client_id], references: [id], onDelete: Cascade)
   
   @@unique([client_id, department, date]) // Ensures one cell per brand/dept/date
+}
+
+
+model WorkRequest {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  title           String
+  description     String
+  department      String
+  status          String   @default("Pending Acceptance")
+  estimated_hours Float?
+  due_date        DateTime?
+  requested_by    String   @db.ObjectId
+  assigned_to     String?  @db.ObjectId
+  created_at      DateTime @default(now())
+  completed_at    DateTime?
+  client_id       String?  @db.ObjectId
+
+  requester       User     @relation("WorkRequestCreator", fields: [requested_by], references: [id])
+  assignee        User?    @relation("WorkRequestAssignee", fields: [assigned_to], references: [id])
+  client          Client?  @relation(fields: [client_id], references: [id])
 }

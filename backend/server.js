@@ -27,6 +27,7 @@ const leaveRoutes = require('./routes/leaveRoutes');
 const campaignRoutes = require('./routes/campaignRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
 const knowledgeRoutes = require('./routes/knowledgeRoutes');
+const workRequestRoutes = require('./routes/workRequestRoutes');
 
 // Middlewares
 app.use(cors());
@@ -67,6 +68,7 @@ app.use('/api/campaigns', campaignRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/knowledge', knowledgeRoutes);
+app.use('/api/work-requests', workRequestRoutes);
 
 // Static uploads folder
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

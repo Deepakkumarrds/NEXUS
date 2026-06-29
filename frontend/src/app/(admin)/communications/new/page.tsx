@@ -1,219 +1,134 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
-import 'react-quill-new/dist/quill.snow.css';
 
-const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
-
-export default function NewCommunicationPage() {
-  const [clients, setClients] = useState<{id: string, company_name: string}[]>([]);
-  const [users, setUsers] = useState<{id: string, name: string}[]>([]);
+export default function NewWorkRequestPage() {
+  const router = useRouter();
+  const [submitting, setSubmitting] = useState(false);
   
   const [formData, setFormData] = useState({
-    client_id: '',
-    communication_type: 'Call',
-    subject: '',
-    summary: '',
-    next_action: '',
-    follow_up_date: ''
+    title: '',
+    description: '',
+    department: 'SEO',
+    due_date: ''
   });
-
-  const [selectedAttendees, setSelectedAttendees] = useState<string[]>([]);
-
-  useEffect(() => {
-    fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/clients?activeOnly=true')
-      .then(res => res.json())
-      .then(data => { if(data && data.data) setClients(data.data); });
-      
-    fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/users')
-      .then(res => res.json())
-      .then(data => { if(data && data.data) setUsers(data.data); });
-  }, []);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleQuillChange = (value: string) => {
-    setFormData({ ...formData, summary: value });
-  };
-
-  const toggleAttendee = (userId: string) => {
-    if (selectedAttendees.includes(userId)) {
-      setSelectedAttendees(selectedAttendees.filter(id => id !== userId));
-    } else {
-      setSelectedAttendees([...selectedAttendees, userId]);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Append attendees to summary if any
-    let finalSummary = formData.summary;
-    if (selectedAttendees.length > 0) {
-      const attendeeNames = selectedAttendees.map(id => users.find(u => u.id === id)?.name).filter(Boolean);
-      finalSummary = `<strong>Attendees:</strong> ${attendeeNames.join(', ')}<br/><br/>` + finalSummary;
+    if (!formData.title || !formData.description) {
+      toast.error('Title and description are required');
+      return;
     }
 
-    const payload = { ...formData, summary: finalSummary };
-
+    setSubmitting(true);
     try {
-      const response = await fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/communications', {
+      const token = localStorage.getItem('token');
+      const response = await fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/work-requests', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        // Hardcoded requested_by for demo since auth isn't wired up to attach headers
+        body: JSON.stringify({ ...formData, requested_by: '654321dummyid' }) 
       });
-      
+
       if (response.ok) {
-        window.location.href = '/communications';
+        toast.success('Work request raised successfully!');
+        router.push('/communications');
       } else {
-        alert('Failed to log communication.');
+        const err = await response.json();
+        toast.error(err.message || 'Failed to raise request');
       }
     } catch (error) {
-      console.error('Error:', error);
-      alert('Error connecting to backend server.');
+      toast.error('An error occurred');
+    } finally {
+      setSubmitting(false);
     }
-  };
-
-  const modules = {
-    toolbar: [
-      [{ 'header': [1, 2, 3, false] }],
-      ['bold', 'italic', 'underline', 'strike'],
-      [{'list': 'ordered'}, {'list': 'bullet'}],
-      ['link'],
-      ['clean']
-    ],
   };
 
   return (
-    <div className="max-w-3xl mx-auto pb-10">
-      <div className="mb-6">
-        <Link href="/communications" className="text-indigo-600 hover:text-indigo-800 font-medium text-sm flex items-center transition-colors">
-          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-          Back to Communications
+    <div className="max-w-2xl mx-auto">
+      <div className="mb-6 flex items-center gap-4">
+        <Link href="/communications" className="p-2 bg-white rounded-full shadow-sm hover:bg-slate-50 transition">
+          <svg className="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
         </Link>
-        <h1 className="text-2xl font-semibold text-slate-900 mt-4 tracking-tight">Log Interaction / MOM</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Raise Work Request</h1>
+          <p className="text-sm text-slate-500">Create a new ticket for another department</p>
+        </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-sm border border-slate-200">
-        <div className="space-y-6 text-sm">
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block font-medium text-slate-700 mb-1.5">Client</label>
-              <select 
-                name="client_id" 
-                required 
-                value={formData.client_id}
-                className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow bg-white"
-                onChange={handleChange}
-              >
-                <option value="">Select a client...</option>
-                {clients.map(c => (
-                  <option key={c.id} value={c.id}>{c.company_name}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block font-medium text-slate-700 mb-1.5">Type</label>
-              <select 
-                name="communication_type" 
-                value={formData.communication_type}
-                className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow bg-white"
-                onChange={handleChange}
-              >
-                <option value="Call">Phone Call</option>
-                <option value="Email">Email</option>
-                <option value="WhatsApp">WhatsApp</option>
-                <option value="Meeting">Meeting</option>
-              </select>
-            </div>
-          </div>
-
           <div>
-            <label className="block font-medium text-slate-700 mb-1.5">Subject</label>
+            <label className="block text-sm font-semibold text-slate-700 mb-1">Ticket Title *</label>
             <input 
               type="text" 
-              name="subject" 
-              required 
-              value={formData.subject}
-              placeholder="e.g. Discussed Q3 Deliverables"
-              className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow"
-              onChange={handleChange}
+              className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+              placeholder="E.g., SEO Audit for new client website"
+              value={formData.title}
+              onChange={(e) => setFormData({...formData, title: e.target.value})}
+              required
             />
           </div>
 
-          <div>
-            <label className="block font-medium text-slate-700 mb-1.5">Internal Attendees</label>
-            <div className="flex flex-wrap gap-2 p-3 border border-slate-200 rounded-md bg-slate-50">
-              {users.map(u => (
-                <label key={u.id} className="inline-flex items-center space-x-1.5 bg-white border border-slate-200 px-2 py-1 rounded cursor-pointer hover:border-indigo-300">
-                  <input 
-                    type="checkbox" 
-                    checked={selectedAttendees.includes(u.id)}
-                    onChange={() => toggleAttendee(u.id)}
-                    className="rounded text-indigo-600 focus:ring-indigo-500"
-                  />
-                  <span className="text-xs font-medium text-slate-700">{u.name}</span>
-                </label>
-              ))}
-              {users.length === 0 && <span className="text-xs text-slate-400">Loading users...</span>}
-            </div>
-          </div>
-
-          <div>
-            <label className="block font-medium text-slate-700 mb-1.5">Summary / Minutes of Meeting</label>
-            <div className="h-64 mb-12">
-              <ReactQuill 
-                theme="snow" 
-                value={formData.summary} 
-                onChange={handleQuillChange} 
-                modules={modules}
-                style={{ height: '100%' }}
-                placeholder="Write minutes, discussion points, decisions made..."
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-16 pt-8 border-t border-slate-100">
+          <div className="grid grid-cols-2 gap-6">
             <div>
-              <label className="block font-medium text-slate-700 mb-1.5">Action Item / Next Step</label>
-              <textarea 
-                name="next_action" 
-                value={formData.next_action}
-                placeholder="e.g. Send updated proposal, finalize the contract..."
-                rows={3}
-                className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow resize-y"
-                onChange={handleChange}
-              />
-              <p className="text-[10px] text-slate-400 mt-1">This can be converted to a formal Task later.</p>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Target Department *</label>
+              <select 
+                className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                value={formData.department}
+                onChange={(e) => setFormData({...formData, department: e.target.value})}
+              >
+                <option value="SEO">SEO</option>
+                <option value="Paid Media">Paid Media</option>
+                <option value="Social Media">Social Media</option>
+                <option value="Web Development">Web Development</option>
+                <option value="Design">Design</option>
+              </select>
             </div>
             <div>
-              <label className="block font-medium text-slate-700 mb-1.5">Follow Up Date</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Due Date (Optional)</label>
               <input 
                 type="date" 
-                name="follow_up_date" 
-                value={formData.follow_up_date}
-                className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow"
-                onChange={handleChange}
+                className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                value={formData.due_date}
+                onChange={(e) => setFormData({...formData, due_date: e.target.value})}
               />
             </div>
           </div>
 
-        </div>
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1">Task Details / Description *</label>
+            <textarea 
+              rows={5}
+              className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none resize-none"
+              placeholder="Provide full details of the work required..."
+              value={formData.description}
+              onChange={(e) => setFormData({...formData, description: e.target.value})}
+              required
+            ></textarea>
+          </div>
 
-        <div className="mt-8 flex justify-end space-x-3">
-          <Link href="/communications" className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 border border-slate-200 rounded-md transition-colors">
-            Cancel
-          </Link>
-          <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md shadow-sm transition-colors">
-            Save Communication
-          </button>
-        </div>
-      </form>
+          <div className="pt-4 flex justify-end gap-3 border-t border-slate-100">
+            <Link href="/communications" className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 border border-slate-200 rounded-md transition-colors">
+              Cancel
+            </Link>
+            <button 
+              type="submit" 
+              disabled={submitting}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-md text-sm font-medium transition shadow-sm disabled:opacity-70 flex items-center"
+            >
+              {submitting ? 'Raising Request...' : 'Raise Request'}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

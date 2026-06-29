@@ -25,6 +25,7 @@ export default function TasksPage() {
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('');
+  const [departmentFilter, setDepartmentFilter] = useState('All');
   const [myTasksOnly, setMyTasksOnly] = useState(false);
   const [selectedTasks, setSelectedTasks] = useState<string[]>([]);
 
@@ -115,7 +116,8 @@ export default function TasksPage() {
   const filteredTasks = tasks.filter(task => {
     const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesPriority = priorityFilter ? task.priority === priorityFilter : true;
-    return matchesSearch && matchesPriority;
+    const matchesDepartment = departmentFilter === 'All' ? true : (task as any).department === departmentFilter;
+    return matchesSearch && matchesPriority && matchesDepartment;
   });
 
   const getTasksByStatus = (status: string) => {
@@ -203,6 +205,16 @@ export default function TasksPage() {
             <option value="Low">Low</option>
             <option value="Medium">Medium</option>
             <option value="High">High</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-slate-500 mb-1">Department</label>
+          <select value={departmentFilter} onChange={(e) => setDepartmentFilter(e.target.value)} className="text-sm border border-slate-300 rounded p-1.5 focus:ring-1 focus:ring-indigo-500 outline-none min-w-[150px]">
+            <option value="All">All Departments</option>
+            <option value="Web Development">Web Development</option>
+            <option value="SEO">SEO</option>
+            <option value="Paid Media">Paid Media</option>
+            <option value="Social Media">Social Media</option>
           </select>
         </div>
         <div className="flex items-center space-x-2 h-9">
@@ -293,12 +305,34 @@ export default function TasksPage() {
                                   </div>
                                 )}
 
-                                <div className="flex justify-between items-center pt-3 border-t border-slate-100">
-                                  <div className="flex items-center gap-2">
-                                    <div className="flex items-center justify-center h-6 w-6 rounded-full bg-indigo-50 border border-indigo-100 text-[10px] font-bold text-indigo-600 shadow-sm" title={task.assignee?.name || 'Unassigned'}>
-                                      {(task.assignee?.name || 'U').charAt(0).toUpperCase()}
+                                <div className="flex flex-col gap-2 pt-3 border-t border-slate-100">
+                                  {/* Department Tag */}
+                                  {(task as any).department && (
+                                    <div className="flex items-center gap-1.5">
+                                      <svg className="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+                                        {(task as any).department}
+                                      </span>
                                     </div>
-                                    <span className="text-xs font-medium text-slate-500">{task.assignee?.name || 'Unassigned'}</span>
+                                  )}
+                                  
+                                  <div className="flex justify-between items-center mt-1">
+                                    <div className="flex items-center gap-2">
+                                      <div className="flex items-center justify-center h-6 w-6 rounded-full bg-indigo-50 border border-indigo-100 text-[10px] font-bold text-indigo-600 shadow-sm" title={`Assignee: ${task.assignee?.name || 'Unassigned'}`}>
+                                        {(task.assignee?.name || 'U').charAt(0).toUpperCase()}
+                                      </div>
+                                      <div className="flex flex-col">
+                                        <span className="text-[10px] font-medium text-slate-400 leading-none mb-0.5">Assigned to</span>
+                                        <span className="text-xs font-bold text-slate-700 leading-none">{task.assignee?.name || 'Unassigned'}</span>
+                                      </div>
+                                    </div>
+                                    
+                                    {task.creator && task.creator.name !== task.assignee?.name && (
+                                      <div className="flex flex-col items-end text-right">
+                                        <span className="text-[9px] font-medium text-slate-400 leading-none mb-0.5">Created by</span>
+                                        <span className="text-[10px] font-bold text-slate-600 leading-none">{task.creator.name}</span>
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
                               </div>

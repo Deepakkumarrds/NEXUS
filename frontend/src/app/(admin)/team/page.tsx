@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import toast from 'react-hot-toast';
 
 export default function TeamPage() {
@@ -183,6 +184,28 @@ export default function TeamPage() {
       }
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  // Delete User
+  const deleteUser = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm('Are you sure you want to remove this team member?')) return;
+    
+    try {
+      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + `/api/users/${id}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        toast.success('Team member removed');
+        if (selectedUser?.id === id) setSelectedUser(null);
+        fetchUsersAndRoles();
+      } else {
+        const data = await res.json();
+        toast.error(data.message || 'Failed to delete user');
+      }
+    } catch (err) {
+      toast.error('Server error');
     }
   };
 

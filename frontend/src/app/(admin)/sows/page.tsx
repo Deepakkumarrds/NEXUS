@@ -3,236 +3,89 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
-type SowItem = {
-  id: string;
-  deliverable_name: string;
-  status: string; // Pending, In Progress, Completed
-  tracking_month?: string;
-  sow_month_id?: string;
-};
-
-type SowMonth = {
-  id: string;
-  month_year: string;
-  value: number;
-  items: SowItem[];
-};
-
-type Sow = {
-  id: string;
-  sow_name: string;
-  total_value: number;
-  status: string;
-  start_date: string;
-  end_date: string;
-  client?: { company_name: string };
-  months?: SowMonth[];
-  items?: SowItem[];
-};
-
 export default function SowsPage() {
-  const [sows, setSows] = useState<Sow[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [newItemName, setNewItemName] = useState<{ [sowId: string]: string }>({});
+  const [sowTasks, setSowTasks] = useState<any[]>([]);
   
   const currentMonthString = new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' });
   const [selectedMonth, setSelectedMonth] = useState<string>(currentMonthString);
+  const [selectedStatus, setSelectedStatus] = useState<string>('All');
+  const [selectedBrand, setSelectedBrand] = useState<string>('All');
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
-    setIsAdmin(user?.role_name === 'Admin');
-    fetchSows(user?.role_name);
+    setIsAdmin(user?.role_name === 'Admin' || user?.role_name === 'Management');
+    fetchSowTasks();
   }, []);
 
-  const fetchSows = (roleName?: string) => {
-    const roleQuery = roleName ? `?role=${encodeURIComponent(roleName)}` : '';
-    fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/sows' + roleQuery)
+  const fetchSowTasks = () => {
+    setLoading(true);
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/tasks?is_sow=true`)
       .then(res => res.json())
-      .then(data => { 
+      .then(data => {
         if (data && data.data) {
-          setSows(data.data); 
+          setSowTasks(data.data);
         }
-        setLoading(false); 
+        setLoading(false);
       })
-      .catch(error => {
-        console.error('Error fetching SOWs:', error);
+      .catch(err => {
+        console.error('Error fetching SOW tasks:', err);
         setLoading(false);
       });
   };
 
-  const deleteSow = async (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if(!window.confirm('Are you sure you want to delete this SOW?')) return;
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/sows/${id}`, {
-        method: 'DELETE'
-      });
-      if (res.ok) {
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
-        fetchSows(user?.role_name);
-      }
-    } catch (err) { console.error(err); }
-  };
+  // Compute available filter options
+  const uniqueBrands = Array.from(new Set(sowTasks.map(t => t.client?.company_name).filter(Boolean))).sort();
+  
+  const availableMonthsRaw = Array.from(new Set(sowTasks.map(task => {
+    const d = new Date(task.updated_at);
+    return d.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+  })));
+  if (!availableMonthsRaw.includes(currentMonthString)) availableMonthsRaw.push(currentMonthString);
+  const availableMonths = availableMonthsRaw.sort((a, b) => new Date(b).getTime() - new Date(a).getTime()); // descending
 
-  const handleStatusChange = async (itemId: string, newStatus: string) => {
-    try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/sows/items/${itemId}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus }),
-      });
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
-      fetchSows(user?.role_name);
-    } catch (error) {
-      console.error('Failed to update status', error);
+  const filteredTasks = sowTasks.filter(task => {
+    // Month Match
+    let monthMatch = true;
+    if (selectedMonth !== 'All') {
+      const taskDate = new Date(task.updated_at);
+      const selDate = new Date(selectedMonth);
+      monthMatch = taskDate.getMonth() === selDate.getMonth() && taskDate.getFullYear() === selDate.getFullYear();
     }
-  };
 
-  const handleAddItem = async (sowId: string, month: string) => {
-    const key = `${sowId}_${month}`;
-    const name = newItemName[key];
-    if (!name || name.trim() === '') return;
-
-    try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/sows/${sowId}/items`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ deliverable_name: name.trim(), tracking_month: month }),
-      });
-      setNewItemName({ ...newItemName, [key]: '' });
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
-      fetchSows(user?.role_name);
-    } catch (error) {
-      console.error('Failed to add item', error);
+    // Status Match
+    let statusMatch = true;
+    if (selectedStatus !== 'All') {
+      statusMatch = task.status === selectedStatus;
     }
-  };
 
-
-
-  const calculateProgress = (items: SowItem[] = []) => {
-    if (items.length === 0) return 0;
-    const completed = items.filter(item => item.status === 'Completed').length;
-    return Math.round((completed / items.length) * 100);
-  };
-
-  const getStatusColor = (status: string) => {
-    switch(status) {
-      case 'Completed': return 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200';
-      case 'In Progress': return 'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200';
-      default: return 'bg-slate-50 text-slate-700 ring-1 ring-slate-200';
+    // Brand Match
+    let brandMatch = true;
+    if (selectedBrand !== 'All') {
+      brandMatch = task.client?.company_name === selectedBrand;
     }
-  };
 
-  // Extract all valid months from SOWs' date ranges, plus any existing item months
-  const availableMonthsRaw = Array.from(new Set(
-    sows.flatMap(sow => {
-      const months: string[] = [];
-      if (sow.start_date && sow.end_date) {
-        let start = new Date(sow.start_date);
-        let end = new Date(sow.end_date);
-        if (start <= end) {
-          let current = new Date(start.getFullYear(), start.getMonth(), 1);
-          while (current <= end) {
-            months.push(current.toLocaleString('en-US', { month: 'long', year: 'numeric' }));
-            current.setMonth(current.getMonth() + 1);
-          }
-        }
-      }
-      const itemMonths = sow.items?.map(item => item.tracking_month).filter(Boolean) || [];
-      return [...months, ...itemMonths];
-    })
-  )).filter(m => m);
-
-  // Ensure current month is an option if we want to default to it, even if no SOWs exist yet
-  if (availableMonthsRaw.length === 0) {
-    availableMonthsRaw.push(currentMonthString);
-  } else if (!availableMonthsRaw.includes(selectedMonth) && availableMonthsRaw.length > 0) {
-    // If the selected month (current month) is not in the list of SOWs, default to the most recent one
-    // But we use useEffect to fix state, so we just let it be.
-  }
-
-  const availableMonths = availableMonthsRaw.sort((a, b) => {
-    if (a === 'Unspecified Month') return 1;
-    if (b === 'Unspecified Month') return -1;
-    return new Date(a as string).getTime() - new Date(b as string).getTime();
+    return monthMatch && statusMatch && brandMatch;
   });
 
-  // Ensure selectedMonth is valid
-  useEffect(() => {
-    if (availableMonths.length > 0 && !availableMonths.includes(selectedMonth) && selectedMonth !== 'All') {
-      setSelectedMonth(availableMonths[0] as string);
+  const getStatusBadgeClass = (status: string) => {
+    switch (status) {
+      case 'Completed': return 'bg-emerald-100 text-emerald-700';
+      case 'In Progress': return 'bg-amber-100 text-amber-700';
+      case 'Review': return 'bg-blue-100 text-blue-700';
+      case 'Pending':
+      default: return 'bg-slate-100 text-slate-700';
     }
-  }, [availableMonths, selectedMonth]);
-
-  // Calculate overall statistics for the currently selected month
-  const getOverallStats = () => {
-    let totalBrands = 0;
-    let totalItems = 0;
-    let completedItems = 0;
-    let totalValue = 0;
-
-    sows.forEach(sow => {
-      const filtered = selectedMonth === 'All' 
-        ? (sow.items || [])
-        : (sow.items || []).filter(i => i.tracking_month === selectedMonth);
-      
-      const isOverlap = () => {
-        if (selectedMonth === 'All' || selectedMonth === 'Unspecified Month') return true;
-        if (filtered.length > 0) return true;
-        
-        const selDate = new Date(selectedMonth);
-        const start = sow.start_date ? new Date(sow.start_date) : null;
-        const end = sow.end_date ? new Date(sow.end_date) : null;
-        
-        if (start && end) {
-          const startMonth = new Date(start.getFullYear(), start.getMonth(), 1);
-          const endMonth = new Date(end.getFullYear(), end.getMonth() + 1, 0);
-          return selDate >= startMonth && selDate <= endMonth;
-        }
-        return false;
-      };
-
-      if (isOverlap()) {
-        totalBrands++;
-        totalItems += filtered.length;
-        completedItems += filtered.filter(i => i.status === 'Completed').length;
-        totalValue += (sow.total_value || 0);
-      }
-    });
-
-    const overallProgress = totalItems === 0 ? 0 : Math.round((completedItems / totalItems) * 100);
-    return { totalBrands, totalItems, completedItems, overallProgress, totalValue };
   };
-
-  const stats = getOverallStats();
 
   return (
     <div>
       {/* Header Section */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Monthly Brand Tracker</h1>
-          <p className="text-sm text-slate-500 mt-1">Manage and track your clients' monthly deliverables.</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <select 
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            className="border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none bg-white text-slate-700 shadow-sm"
-          >
-            <option value="All">All Time Overview</option>
-            {availableMonths.map(m => (
-              <option key={m} value={m as string}>{m}</option>
-            ))}
-          </select>
-          <Link 
-            href="/sows/new" 
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium transition shadow-sm flex items-center"
-          >
-            <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
-            Create SOW
-          </Link>
+          <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Scope of Work Tracker</h1>
+          <p className="text-sm text-slate-500 mt-1">Unified view of all active and completed SOW deliverables.</p>
         </div>
       </div>
 
@@ -243,233 +96,108 @@ export default function SowsPage() {
           ))}
         </div>
       ) : (
-        <div className="space-y-8">
-          
-          {/* Monthly Overview Dashboard */}
-          <div className="bg-white p-5 rounded-lg shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-6">
-            <div className="flex items-center gap-8 w-full sm:w-auto">
-              <div>
-                <p className="text-xs font-medium text-slate-500 mb-1">Active Brands</p>
-                <div className="text-2xl font-semibold text-slate-900">{stats.totalBrands}</div>
+        <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+          {/* Filters Bar */}
+          <div className="p-4 border-b border-slate-200 bg-slate-50/50 flex flex-wrap gap-4 items-center justify-between">
+            <div className="flex flex-wrap gap-3">
+              {/* Month Filter */}
+              <div className="flex items-center gap-2">
+                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Month</label>
+                <select 
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
+                  className="border border-slate-300 rounded-md px-3 py-1.5 text-sm focus:ring-1 focus:ring-indigo-500 outline-none bg-white text-slate-700 shadow-sm min-w-[140px]"
+                >
+                  <option value="All">All Time Overview</option>
+                  {availableMonths.map(m => (
+                    <option key={m} value={m as string}>{m}</option>
+                  ))}
+                </select>
               </div>
-              <div className="h-8 w-px bg-slate-200"></div>
-              <div>
-                <p className="text-xs font-medium text-slate-500 mb-1">Total Deliverables</p>
-                <div className="text-2xl font-semibold text-slate-900">
-                  {stats.totalItems}
-                  <span className="text-sm font-normal text-slate-500 ml-2">({stats.completedItems} done)</span>
-                </div>
+
+              {/* Status Filter */}
+              <div className="flex items-center gap-2">
+                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Status</label>
+                <select 
+                  value={selectedStatus}
+                  onChange={(e) => setSelectedStatus(e.target.value)}
+                  className="border border-slate-300 rounded-md px-3 py-1.5 text-sm focus:ring-1 focus:ring-indigo-500 outline-none bg-white text-slate-700 shadow-sm min-w-[140px]"
+                >
+                  <option value="All">All Statuses</option>
+                  <option value="Pending">Pending</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Review">Review</option>
+                  <option value="Completed">Completed</option>
+                </select>
               </div>
-              <div className="h-8 w-px bg-slate-200 hidden sm:block"></div>
-              <div>
-                <p className="text-xs font-medium text-slate-500 mb-1">Total Monthly Value</p>
-                <div className="text-2xl font-semibold text-slate-900 text-emerald-600">
-                  ₹{stats.totalValue.toLocaleString('en-IN')}
-                </div>
+
+              {/* Brand Filter */}
+              <div className="flex items-center gap-2">
+                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Brand</label>
+                <select 
+                  value={selectedBrand}
+                  onChange={(e) => setSelectedBrand(e.target.value)}
+                  className="border border-slate-300 rounded-md px-3 py-1.5 text-sm focus:ring-1 focus:ring-indigo-500 outline-none bg-white text-slate-700 shadow-sm min-w-[140px]"
+                >
+                  <option value="All">All Brands</option>
+                  {uniqueBrands.map(b => (
+                    <option key={b as string} value={b as string}>{b as string}</option>
+                  ))}
+                </select>
               </div>
             </div>
             
-            <div className="w-full sm:w-64">
-              <div className="flex justify-between text-xs font-medium text-slate-600 mb-1.5">
-                <span>Overall Progress</span>
-                <span className={stats.overallProgress === 100 ? 'text-emerald-600 font-semibold' : 'text-indigo-600 font-semibold'}>{stats.overallProgress}%</span>
-              </div>
-              <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-                <div 
-                  className={`${stats.overallProgress === 100 ? 'bg-emerald-500' : 'bg-indigo-600'} h-full rounded-full transition-all duration-700 ease-out`}
-                  style={{ width: `${stats.overallProgress}%` }}
-                ></div>
-              </div>
+            <div className="text-xs font-medium text-slate-500 bg-white px-3 py-1.5 rounded-md border border-slate-200">
+              Showing {filteredTasks.length} tasks
             </div>
           </div>
 
-          <div className="flex flex-col gap-6">
-          {sows.map(sow => {
-            const legacyItems = sow.items || [];
-            let monthsToRender: SowMonth[] = [];
-            
-            if (sow.months && sow.months.length > 0) {
-              monthsToRender = sow.months;
-            } else if (legacyItems.length > 0) {
-              const grouped = legacyItems.reduce((acc, item) => {
-                const m = item.tracking_month || 'Unspecified Month';
-                if (!acc[m]) acc[m] = { id: m, month_year: m, value: 0, items: [] };
-                acc[m].items.push(item);
-                return acc;
-              }, {} as Record<string, SowMonth>);
-              monthsToRender = Object.values(grouped);
-            }
-
-            const displayMonths = selectedMonth === 'All' 
-              ? monthsToRender 
-              : monthsToRender.filter(m => m.month_year === selectedMonth);
-
-            const filteredItems = displayMonths.flatMap(m => m.items || []);
-            const progress = calculateProgress(filteredItems);
-
-            return (
-              <div 
-                key={sow.id} 
-                className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden"
-              >
-                {/* Brand Header */}
-                <div className="p-5 border-b border-slate-200 bg-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div>
-                    <div className="flex items-center gap-3 mb-1">
-                      <h3 className="font-semibold text-slate-900 text-base">
-                        {sow.client?.company_name || 'General Brand'} - <span className="font-medium text-slate-600">{sow.sow_name}</span>
-                      </h3>
-                      
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-                        sow.status === 'Active' ? 'bg-emerald-100 text-emerald-700' :
-                        sow.status === 'Completed' ? 'bg-slate-100 text-slate-700' :
-                        'bg-amber-100 text-amber-700'
-                      }`}>
-                        {sow.status}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3 text-xs text-slate-500">
-                      <span className="font-semibold text-emerald-600">₹{sow.total_value?.toLocaleString('en-IN') || 0}</span>
-                      {sow.start_date && sow.end_date && (
-                        <>
-                          <span>•</span>
-                          <span>{new Date(sow.start_date).toLocaleDateString()} - {new Date(sow.end_date).toLocaleDateString()}</span>
-                        </>
-                      )}
-                      {isAdmin && (
-                        <>
-                          <span>•</span>
-                          <div className="flex items-center space-x-2">
-                            <Link href={`/sows/${sow.id}`} className="text-indigo-600 hover:text-indigo-800 transition-colors">Edit</Link>
-                            <span className="text-slate-300">|</span>
-                            <button onClick={() => deleteSow(sow.id)} className="text-rose-600 hover:text-rose-800 transition-colors">Delete</button>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  
-                  {/* Progress Indicator */}
-                  <div className="flex flex-col items-end min-w-[150px]">
-                    <div className="flex justify-between w-full mb-1">
-                      <span className="text-xs font-medium text-slate-500">
-                        {selectedMonth === 'All' ? 'Total Progress' : `${selectedMonth.split(' ')[0]} Progress`}
-                      </span>
-                      <span className={`text-xs font-semibold ${progress === 100 ? 'text-emerald-600' : 'text-indigo-600'}`}>{progress}%</span>
-                    </div>
-                    <div className="w-full bg-slate-200 rounded-full h-1.5 mb-1 overflow-hidden">
-                      <div 
-                        className={`${progress === 100 ? 'bg-emerald-500' : 'bg-indigo-600'} h-full rounded-full transition-all duration-500 ease-out`} 
-                        style={{ width: `${progress}%` }}
-                      ></div>
-                    </div>
-                    <span className="text-[10px] text-slate-400">{filteredItems.length} Deliverables</span>
-                  </div>
-                </div>
-
-                {/* Deliverables List (Grouped by Month) */}
-                <div className="bg-white p-4">
-                  {displayMonths.length > 0 ? (
-                    <div className={selectedMonth === 'All' ? 'grid grid-cols-1 lg:grid-cols-2 gap-4' : 'space-y-4'}>
-                      {displayMonths.map(month => (
-                        <div key={month.id} className="bg-slate-50 rounded-lg border border-slate-200 overflow-hidden">
-                          <div className="bg-slate-100 px-4 py-2 flex justify-between items-center border-b border-slate-200">
-                            <span className="font-semibold text-slate-800 text-sm">{month.month_year}</span>
-                            <span className="font-medium text-emerald-600 text-xs">
-                              {month.value ? `₹${month.value.toLocaleString('en-IN')}` : ''}
-                            </span>
-                          </div>
-                          
-                          {month.items && month.items.length > 0 ? (
-                            <ul className="divide-y divide-slate-100">
-                              {month.items.map((item) => (
-                                <li key={item.id} className="flex items-center justify-between p-3 hover:bg-white transition-colors">
-                                  <span className="text-sm font-medium text-slate-700 flex items-center gap-2">
-                                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                                      item.status === 'Completed' ? 'bg-emerald-500' :
-                                      item.status === 'In Progress' ? 'bg-indigo-500' :
-                                      'bg-slate-300'
-                                    }`}></div>
-                                    <span className={item.status === 'Completed' ? 'text-slate-400 line-through decoration-slate-300 truncate' : 'truncate'}>
-                                      {item.deliverable_name}
-                                    </span>
-                                  </span>
-                                  <div className="relative w-32 flex-shrink-0 ml-2">
-                                    <select 
-                                      value={item.status}
-                                      onChange={(e) => handleStatusChange(item.id, e.target.value)}
-                                      className={`w-full text-xs font-medium pl-2 pr-6 py-1 rounded border appearance-none outline-none cursor-pointer transition-colors shadow-sm ${
-                                        item.status === 'Completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                                        item.status === 'In Progress' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
-                                        'bg-white text-slate-600 border-slate-300 hover:border-slate-400 focus:border-indigo-500'
-                                      }`}
-                                    >
-                                      <option value="Pending">Pending</option>
-                                      <option value="In Progress">In Progress</option>
-                                      <option value="Completed">Completed</option>
-                                    </select>
-                                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1.5 text-slate-400">
-                                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path></svg>
-                                    </div>
-                                  </div>
-                                </li>
-                              ))}
-                            </ul>
-                          ) : (
-                            <div className="py-4 text-center text-xs text-slate-400">No deliverables for this month.</div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="py-8 px-6 text-center">
-                      <p className="text-sm text-slate-500">No deliverables found for {selectedMonth}. Add one below.</p>
-                    </div>
-                  )}
-                  
-                  {/* Add New Deliverable - Hide in All Time Overview to prevent ambiguity unless adding to specific month */}
-                  {selectedMonth !== 'All' && (
-                    <div className="mt-4 p-4 bg-slate-50 border border-slate-200 rounded-lg flex gap-3 items-center">
-                      <input 
-                        type="text" 
-                        placeholder={`Add deliverable for ${selectedMonth}...`}
-                        value={(newItemName[`${sow.id}_${selectedMonth}`] || '')}
-                        onChange={(e) => setNewItemName({...newItemName, [`${sow.id}_${selectedMonth}`]: e.target.value})}
-                        onKeyDown={(e) => { if (e.key === 'Enter') handleAddItem(sow.id, selectedMonth) }}
-                        className="flex-1 border border-slate-300 px-3 py-2 text-sm rounded-md outline-none focus:ring-1 focus:ring-indigo-500 transition-all placeholder:text-slate-400 bg-white"
-                      />
-                      <button 
-                        onClick={() => handleAddItem(sow.id, selectedMonth)}
-                        disabled={!newItemName[`${sow.id}_${selectedMonth}`]?.trim()}
-                        className="bg-indigo-600 text-white px-4 py-2 text-sm font-medium rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
-                      >
-                        Add
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-              </div>
-            );
-          })}
-          </div>
-        </div>
-      )}
-      
-      {!loading && sows.length === 0 && (
-        <div className="text-center py-24 bg-white rounded-2xl border border-dashed border-slate-300">
-          <div className="w-16 h-16 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-          </div>
-          <h2 className="text-xl font-bold text-slate-900 mb-2">No Contracts Found</h2>
-          <p className="text-slate-500 text-sm max-w-sm mx-auto mb-6">Draft your first Statement of Work to start tracking deliverables, contract values, and client progress.</p>
-          <Link 
-            href="/sows/new" 
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg text-sm font-bold transition shadow-sm inline-flex items-center"
-          >
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
-            Create First SOW
-          </Link>
+          {/* Master Table */}
+          {filteredTasks.length === 0 ? (
+            <div className="p-12 text-center text-slate-500 bg-white">
+              <svg className="w-12 h-12 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+              <p>No SOW tasks found matching the selected filters.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-white border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 font-semibold shadow-sm">
+                    <th className="p-4">Brand</th>
+                    <th className="p-4 w-[20%]">Task Name</th>
+                    <th className="p-4">Department</th>
+                    <th className="p-4">Status</th>
+                    <th className="p-4">Created</th>
+                    <th className="p-4">WIP</th>
+                    <th className="p-4">Review</th>
+                    <th className="p-4">Completed</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-sm bg-white">
+                  {filteredTasks.map(task => (
+                    <tr key={task.id} className="hover:bg-indigo-50/30 transition-colors">
+                      <td className="p-4 font-medium text-slate-900">{task.client?.company_name || 'N/A'}</td>
+                      <td className="p-4 text-slate-700 font-medium">
+                        <Link href={`/tasks/${task.id}`} className="hover:text-indigo-600 hover:underline line-clamp-2">
+                          {task.title}
+                        </Link>
+                      </td>
+                      <td className="p-4 text-slate-500 whitespace-nowrap">{task.department || 'N/A'}</td>
+                      <td className="p-4 whitespace-nowrap">
+                        <span className={`px-2 py-1 text-[10px] uppercase font-bold rounded-full ${getStatusBadgeClass(task.status)}`}>
+                          {task.status}
+                        </span>
+                      </td>
+                      <td className="p-4 text-slate-500 text-xs whitespace-nowrap">{new Date(task.created_at).toLocaleDateString()}</td>
+                      <td className="p-4 text-slate-500 text-xs whitespace-nowrap">{task.started_at ? new Date(task.started_at).toLocaleDateString() : '-'}</td>
+                      <td className="p-4 text-slate-500 text-xs whitespace-nowrap">{task.review_at ? new Date(task.review_at).toLocaleDateString() : '-'}</td>
+                      <td className="p-4 text-slate-500 text-xs whitespace-nowrap">{task.completed_at ? new Date(task.completed_at).toLocaleDateString() : '-'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
     </div>

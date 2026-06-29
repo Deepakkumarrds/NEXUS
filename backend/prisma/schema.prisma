@@ -15,6 +15,7 @@ model User {
   role_id          String             @db.ObjectId
   department       String?
   designation      String?
+  phone            String?
   status           String             @default("Active") // Active, Inactive
   reset_token      String?
   reset_token_expires DateTime?
@@ -37,6 +38,7 @@ model User {
   asset_annotations AssetAnnotation[]
   skills           String[]
   leave_records    LeaveRecord[]
+  knowledge_articles KnowledgeArticle[]
 }
 
 model Role {
@@ -126,6 +128,7 @@ model Client {
   campaign_performances CampaignPerformance[]
   report_delivery_logs ReportDeliveryLog[] @relation("ClientReportDeliveryLogs")
   monthly_plans        ClientMonthlyPlan[]
+  daily_trackers       DailyTracker[]
 }
 
 model ClientUser {
@@ -191,12 +194,23 @@ model Task {
   recurrence_end        DateTime?
   resource_links        String[]
   checklist             Json?
+  estimated_hours       Float    @default(1.0)
   created_at            DateTime @default(now())
   updated_at            DateTime @updatedAt
+  started_at            DateTime?
+  review_at             DateTime?
+  completed_at          DateTime?
   
+  department            String?
+  is_sow                Boolean  @default(false)
+  sow_id                String?  @db.ObjectId
+  sow_item_id           String?  @db.ObjectId
+
   client                Client   @relation(fields: [client_id], references: [id])
   assignee              User?    @relation("TaskAssignee", fields: [assigned_to], references: [id])
   creator               User     @relation("TaskCreator", fields: [assigned_by], references: [id])
+  sow                   Sow?     @relation(fields: [sow_id], references: [id])
+  sow_item              SowItem? @relation(fields: [sow_item_id], references: [id])
   
   comments              TaskComment[]
   creative_assets       CreativeAsset[]
@@ -272,6 +286,7 @@ model Sow {
   client      Client   @relation(fields: [client_id], references: [id])
   months      SowMonth[]
   items       SowItem[]
+  tasks       Task[]
 }
 
 model SowMonth {
@@ -298,6 +313,7 @@ model SowItem {
   
   sow              Sow      @relation(fields: [sow_id], references: [id])
   sow_month        SowMonth? @relation(fields: [sow_month_id], references: [id])
+  tasks            Task[]
 }
 
 model Report {
@@ -526,4 +542,34 @@ model ClientMonthlyPlan {
   created_at    DateTime @default(now())
 
   client        Client   @relation(fields: [client_id], references: [id], onDelete: Cascade)
+}
+
+model KnowledgeArticle {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  content     String
+  category    String   // SOP, Template, Framework, Playbook, Guideline, Checklist
+  department  String   // Paid Media, SEO, Social Media, Content, Client Servicing, Strategy, General
+  tags        String[]
+  embedding   Float[]  // 384-dimensional vector for RAG
+  created_by  String   @db.ObjectId
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  author      User     @relation(fields: [created_by], references: [id])
+}
+
+model DailyTracker {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  client_id        String   @db.ObjectId
+  department       String   // "Web Development", "SEO", "Paid Media", "Social Media"
+  date             DateTime // The specific day for the summary (stored at midnight UTC)
+  summary_text     String?
+  status_color     String?  // e.g. "Green", "Yellow", "Red" or "Work in Progress", "Completed"
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  client           Client   @relation(fields: [client_id], references: [id], onDelete: Cascade)
+  
+  @@unique([client_id, department, date]) // Ensures one cell per brand/dept/date
 }

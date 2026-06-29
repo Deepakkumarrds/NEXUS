@@ -7,9 +7,6 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  /* config options here */
-  // Forced cache flush for tailwind theme updates
 };
 
 export default nextConfig;
-

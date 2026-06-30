@@ -159,7 +159,7 @@ exports.forgotPassword = async (req, res) => {
     }
 
     // Determine the correct frontend URL based on user type
-    const baseUrl = 'http://localhost:3000'; // Environment variable in prod
+    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     const resetLink = isClient 
       ? `${baseUrl}/portal/reset-password?token=${resetToken}`
       : `${baseUrl}/reset-password?token=${resetToken}`;

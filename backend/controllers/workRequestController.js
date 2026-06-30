@@ -4,11 +4,12 @@ const prisma = new PrismaClient();
 // Create a new work request (ticket)
 const createWorkRequest = async (req, res) => {
   try {
-    const { title, description, department, due_date, client_id } = req.body;
+    const { title, description, department, due_date, client_id, priority, tags, notes, attachment_urls, sow_id } = req.body;
     
     // In a real app, requested_by comes from req.user (auth middleware)
     // For now, we'll extract it from the body or use a dummy
-    const requested_by = req.user ? req.user.userId : req.body.requested_by;
+    const userId = req.user ? (req.user.id || req.user.userId) : null;
+    const requested_by = userId ? userId : req.body.requested_by;
     
     if (!requested_by) {
       return res.status(400).json({ status: 'error', message: 'requested_by is required' });
@@ -19,9 +20,14 @@ const createWorkRequest = async (req, res) => {
         title,
         description,
         department,
+        priority: priority || 'Medium',
+        tags: tags || [],
+        notes: notes || null,
+        attachment_urls: attachment_urls || [],
         due_date: due_date ? new Date(due_date) : null,
         requested_by,
         client_id: client_id || null,
+        sow_id: sow_id || null,
         status: 'Pending Acceptance'
       }
     });
@@ -49,7 +55,8 @@ const getWorkRequests = async (req, res) => {
       include: {
         requester: { select: { id: true, name: true, email: true } },
         assignee: { select: { id: true, name: true, email: true } },
-        client: { select: { id: true, company_name: true } }
+        client: { select: { id: true, company_name: true } },
+        sow: { select: { id: true, sow_name: true } }
       },
       orderBy: { created_at: 'desc' }
     });
@@ -87,7 +94,8 @@ const acceptWorkRequest = async (req, res) => {
   try {
     const { id } = req.params;
     const { estimated_hours } = req.body;
-    const assigned_to = req.user ? req.user.userId : req.body.assigned_to;
+    const userId = req.user ? (req.user.id || req.user.userId) : null;
+    const assigned_to = userId ? userId : req.body.assigned_to;
 
     if (!assigned_to) {
       return res.status(400).json({ status: 'error', message: 'assigned_to is required' });
@@ -138,7 +146,7 @@ const updateWorkRequestStatus = async (req, res) => {
 const updateWorkRequest = async (req, res) => {
     try {
       const { id } = req.params;
-      const { title, description, department, due_date, client_id, estimated_hours } = req.body;
+      const { title, description, department, due_date, client_id, estimated_hours, priority, tags, notes, attachment_urls, sow_id } = req.body;
   
       const request = await prisma.workRequest.update({
         where: { id },
@@ -146,8 +154,13 @@ const updateWorkRequest = async (req, res) => {
           title,
           description,
           department,
+          priority,
+          tags,
+          notes,
+          attachment_urls,
           due_date: due_date ? new Date(due_date) : undefined,
           client_id,
+          sow_id,
           estimated_hours: estimated_hours ? parseFloat(estimated_hours) : undefined
         }
       });

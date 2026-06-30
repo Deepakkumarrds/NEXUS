@@ -13,7 +13,11 @@ export default function NewWorkRequestPage() {
     title: '',
     description: '',
     department: 'SEO',
-    due_date: ''
+    due_date: '',
+    priority: 'Medium',
+    tags: [] as string[],
+    notes: '',
+    attachment_urls: [] as string[]
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -32,8 +36,8 @@ export default function NewWorkRequestPage() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        // Hardcoded requested_by for demo since auth isn't wired up to attach headers
-        body: JSON.stringify({ ...formData, requested_by: '654321dummyid' }) 
+        // The requested_by is extracted from the JWT token in the backend
+        body: JSON.stringify(formData) 
       });
 
       if (response.ok) {
@@ -103,6 +107,32 @@ export default function NewWorkRequestPage() {
             </div>
           </div>
 
+          <div className="grid grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Priority</label>
+              <select 
+                className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                value={formData.priority}
+                onChange={(e) => setFormData({...formData, priority: e.target.value})}
+              >
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+                <option value="Critical">Critical</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Tags (comma separated)</label>
+              <input 
+                type="text" 
+                placeholder="e.g. urgent, frontend, bug"
+                className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                value={formData.tags.join(', ')}
+                onChange={(e) => setFormData({...formData, tags: e.target.value.split(',').map(t => t.trim()).filter(Boolean)})}
+              />
+            </div>
+          </div>
+
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-1">Task Details / Description *</label>
             <textarea 
@@ -112,6 +142,17 @@ export default function NewWorkRequestPage() {
               value={formData.description}
               onChange={(e) => setFormData({...formData, description: e.target.value})}
               required
+            ></textarea>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1">Internal Notes (Optional)</label>
+            <textarea 
+              rows={3}
+              className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none resize-none"
+              placeholder="Any internal context or notes..."
+              value={formData.notes}
+              onChange={(e) => setFormData({...formData, notes: e.target.value})}
             ></textarea>
           </div>
 

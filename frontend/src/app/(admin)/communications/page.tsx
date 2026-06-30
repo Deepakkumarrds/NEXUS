@@ -13,9 +13,15 @@ type WorkRequest = {
   estimated_hours: number | null;
   due_date: string | null;
   created_at: string;
+  priority: string;
+  tags: string[];
+  notes?: string;
+  attachment_urls?: string[];
+  sow_id?: string;
   requester?: { name: string };
   assignee?: { name: string };
   client?: { company_name: string };
+  sow?: { sow_name: string };
 };
 
 export default function WorkRequestsPage() {
@@ -157,8 +163,33 @@ export default function WorkRequestsPage() {
               {filteredRequests.map(req => (
                 <tr key={req.id} className="group hover:bg-slate-50/80 transition-colors">
                   <td className="py-4 px-4 align-top max-w-sm">
-                    <div className="font-semibold text-slate-900 mb-1">{req.title}</div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="font-semibold text-slate-900">{req.title}</div>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+                        req.priority === 'Critical' ? 'bg-red-100 text-red-700' :
+                        req.priority === 'High' ? 'bg-orange-100 text-orange-700' :
+                        req.priority === 'Low' ? 'bg-slate-100 text-slate-600' :
+                        'bg-blue-50 text-blue-600'
+                      }`}>
+                        {req.priority || 'Medium'}
+                      </span>
+                    </div>
                     <div className="text-xs text-slate-500 mb-2">{req.description}</div>
+                    
+                    {req.tags && req.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mb-2">
+                        {req.tags.map(tag => (
+                          <span key={tag} className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">#{tag}</span>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {req.notes && (
+                      <div className="text-[11px] text-slate-500 bg-slate-50 p-1.5 rounded border border-slate-100 mb-2 italic border-l-2 border-l-slate-300">
+                        Notes: {req.notes}
+                      </div>
+                    )}
+
                     <div className="text-[10px] text-slate-400">
                       Requested on: {new Date(req.created_at).toLocaleDateString()}
                     </div>

@@ -290,6 +290,7 @@ model Sow {
   months      SowMonth[]
   items       SowItem[]
   tasks       Task[]
+  work_requests WorkRequest[]
 }
 
 model SowMonth {
@@ -584,6 +585,7 @@ model WorkRequest {
   description     String
   department      String
   status          String   @default("Pending Acceptance")
+  priority        String   @default("Medium") // Low, Medium, High, Critical
   estimated_hours Float?
   due_date        DateTime?
   requested_by    String   @db.ObjectId
@@ -591,8 +593,13 @@ model WorkRequest {
   created_at      DateTime @default(now())
   completed_at    DateTime?
   client_id       String?  @db.ObjectId
+  sow_id          String?  @db.ObjectId
+  tags            String[]
+  notes           String?
+  attachment_urls String[]
 
   requester       User     @relation("WorkRequestCreator", fields: [requested_by], references: [id])
   assignee        User?    @relation("WorkRequestAssignee", fields: [assigned_to], references: [id])
   client          Client?  @relation(fields: [client_id], references: [id])
+  sow             Sow?     @relation(fields: [sow_id], references: [id])
 }

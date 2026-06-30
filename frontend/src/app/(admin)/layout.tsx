@@ -3,20 +3,40 @@
 import Sidebar from '@/components/Sidebar';
 import NotificationBell from '@/components/NotificationBell';
 import { ReactNode, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+    
     if (!token) {
       router.push('/login');
     } else {
-      setMounted(true);
+      let isAdmin = false;
+      if (userStr) {
+        try {
+          const user = JSON.parse(userStr);
+          if (user.role === 'Admin') isAdmin = true;
+        } catch (e) {}
+      }
+
+      // Restricted paths that only Admins should access
+      const restrictedPaths = ['/communications', '/meetings', '/sows', '/approvals', '/reports', '/intelligence', '/knowledge', '/escalations', '/team', '/settings'];
+      
+      const isRestricted = restrictedPaths.some(p => pathname?.startsWith(p));
+      
+      if (!isAdmin && isRestricted) {
+        router.push('/'); // Redirect to dashboard if unauthorized
+      } else {
+        setMounted(true);
+      }
     }
-  }, [router]);
+  }, [router, pathname]);
 
   if (!mounted) return null;
 

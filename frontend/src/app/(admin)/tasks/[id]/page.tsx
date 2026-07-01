@@ -22,6 +22,9 @@ export default function TaskDetailsPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editDepartment, setEditDepartment] = useState('');
   const [editIsSow, setEditIsSow] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editPriority, setEditPriority] = useState('');
 
   // New states for Checklist & Resources
   const [checklist, setChecklist] = useState<any[]>([]);
@@ -38,6 +41,9 @@ export default function TaskDetailsPage() {
           setTask(data.data);
           setEditDepartment(data.data.department || 'Web Development');
           setEditIsSow(data.data.is_sow || false);
+          setEditTitle(data.data.title || '');
+          setEditDescription(data.data.description || '');
+          setEditPriority(data.data.priority || 'Medium');
           try {
             setChecklist(typeof data.data.checklist === 'string' ? JSON.parse(data.data.checklist) : (data.data.checklist || []));
           } catch(e) { setChecklist([]); }
@@ -127,6 +133,23 @@ export default function TaskDetailsPage() {
     }
   };
 
+  const handleDeleteTask = async () => {
+    if (!confirm('Are you sure you want to delete this task? This cannot be undone.')) return;
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/tasks/${taskId}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        toast.success('Task deleted successfully');
+        router.push('/tasks');
+      } else {
+        toast.error('Failed to delete task');
+      }
+    } catch (e) {
+      toast.error('Error deleting task');
+    }
+  };
+
   const handlePostComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim()) return;
@@ -181,7 +204,10 @@ export default function TaskDetailsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           department: editDepartment,
-          is_sow: editIsSow
+          is_sow: editIsSow,
+          title: editTitle,
+          description: editDescription,
+          priority: editPriority
         })
       });
       if (res.ok) {
@@ -219,10 +245,16 @@ export default function TaskDetailsPage() {
           <span className="text-slate-300">/</span>
           <span className="text-slate-900 font-semibold truncate max-w-[250px]">{task.title}</span>
         </nav>
-        <button onClick={cloneTask} className="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 px-3 py-1.5 rounded text-sm font-semibold shadow-sm transition-colors flex items-center">
-          <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-          Duplicate Task
-        </button>
+        <div className="flex space-x-2">
+          <button onClick={handleDeleteTask} className="bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 px-3 py-1.5 rounded text-sm font-semibold shadow-sm transition-colors flex items-center">
+            <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            Delete Task
+          </button>
+          <button onClick={cloneTask} className="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 px-3 py-1.5 rounded text-sm font-semibold shadow-sm transition-colors flex items-center">
+            <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+            Duplicate Task
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -231,18 +263,29 @@ export default function TaskDetailsPage() {
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
             <div className="flex justify-between items-start mb-4">
-              <div>
+            <div className="flex justify-between items-start mb-4">
+              <div className="w-full">
                 <span className={`px-2 py-1 text-xs font-semibold rounded border mb-3 inline-block ${task.status === 'Completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
                   {task.status}
                 </span>
-                <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{task.title}</h1>
+                {isEditing ? (
+                  <input type="text" value={editTitle} onChange={e => setEditTitle(e.target.value)} className="w-full text-2xl font-bold text-slate-900 border border-slate-300 rounded p-1 mb-2 outline-none focus:ring-1 focus:ring-indigo-500" />
+                ) : (
+                  <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{task.title}</h1>
+                )}
               </div>
-              <span className={`px-2.5 py-1 text-xs font-semibold rounded-full border uppercase tracking-wide ${task.priority === 'High' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-slate-50 text-slate-700 border-slate-200'}`}>
-                {task.priority} Priority
-              </span>
+              {!isEditing && (
+                <span className={`px-2.5 py-1 text-xs font-semibold rounded-full border uppercase tracking-wide ml-4 whitespace-nowrap ${task.priority === 'High' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-slate-50 text-slate-700 border-slate-200'}`}>
+                  {task.priority} Priority
+                </span>
+              )}
             </div>
             
-            <p className="text-slate-700 whitespace-pre-wrap text-sm mt-4">{task.description}</p>
+            {isEditing ? (
+              <textarea value={editDescription} onChange={e => setEditDescription(e.target.value)} rows={4} className="w-full text-slate-700 text-sm border border-slate-300 rounded p-2 outline-none focus:ring-1 focus:ring-indigo-500"></textarea>
+            ) : (
+              <p className="text-slate-700 whitespace-pre-wrap text-sm mt-4">{task.description}</p>
+            )}
           </div>
 
           {/* Checklist & Resources */}
@@ -425,6 +468,23 @@ export default function TaskDetailsPage() {
                   </select>
                 ) : (
                   <span className="font-medium text-slate-800">{task.department || 'None'}</span>
+                )}
+              </div>
+
+              <div>
+                <span className="block text-slate-500 text-xs uppercase tracking-wide">Priority</span>
+                {isEditing ? (
+                  <select 
+                    value={editPriority} 
+                    onChange={e => setEditPriority(e.target.value)}
+                    className="w-full mt-1 border border-slate-300 rounded p-1 text-sm focus:ring-1 focus:ring-indigo-500 outline-none"
+                  >
+                    <option value="High">High</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Low">Low</option>
+                  </select>
+                ) : (
+                  <span className="font-medium text-slate-800">{task.priority || 'Medium'}</span>
                 )}
               </div>
 

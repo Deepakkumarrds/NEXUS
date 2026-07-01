@@ -24,6 +24,9 @@ router.put('/:id', taskController.updateTask);
 // Clone a task
 router.post('/:id/clone', taskController.cloneTask);
 
+// DELETE a task
+router.delete('/:id', taskController.deleteTask);
+
 // POST a comment to a task
 router.post('/:id/comments', taskController.addTaskComment);
 

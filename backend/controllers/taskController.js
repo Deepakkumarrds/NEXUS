@@ -353,4 +353,18 @@ exports.cloneTask = async (req, res) => {
     res.status(500).json({ status: 'error', message: 'Failed to clone task' });
   }
 };
-
+// Delete a task
+exports.deleteTask = async (req, res) => {
+  try {
+    const { id } = req.params;
+    // Prisma does not automatically cascade unless defined, so we clean up related entities
+    await prisma.taskComment.deleteMany({ where: { task_id: id } });
+    await prisma.activityLog.deleteMany({ where: { module_name: 'Task', reference_id: id } });
+    
+    await prisma.task.delete({ where: { id } });
+    res.status(200).json({ status: 'success', message: 'Task deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting task:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to delete task' });
+  }
+};

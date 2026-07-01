@@ -263,7 +263,6 @@ export default function TaskDetailsPage() {
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
             <div className="flex justify-between items-start mb-4">
-            <div className="flex justify-between items-start mb-4">
               <div className="w-full">
                 <span className={`px-2 py-1 text-xs font-semibold rounded border mb-3 inline-block ${task.status === 'Completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
                   {task.status}

@@ -5,7 +5,7 @@ const { calculateClientHealth } = require('../utils/healthScoreEngine');
 // Create a new client
 exports.createClient = async (req, res) => {
   try {
-    const { company_name, brand_name, industry, website, email, phone, client_status, service_type, retainer_value, primary_contact_name, spoc_name, brand_shortcode, objective, focused_area, customer_mindset } = req.body;
+    const { company_name, brand_name, industry, website, email, phone, client_status, service_type, retainer_value, primary_contact_name, spoc_name, brand_shortcode, logo, objective, focused_area, customer_mindset } = req.body;
     
     const client = await prisma.client.create({
       data: {
@@ -21,6 +21,7 @@ exports.createClient = async (req, res) => {
         primary_contact_name,
         spoc_name,
         brand_shortcode,
+        logo,
         objective,
         focused_area,
         customer_mindset

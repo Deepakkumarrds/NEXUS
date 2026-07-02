@@ -10,6 +10,9 @@ import * as z from 'zod';
 
 const clientSchema = z.object({
   company_name: z.string().min(2, 'Company name is required and must be at least 2 characters'),
+  brand_name: z.string().optional(),
+  brand_shortcode: z.string().optional(),
+  logo: z.string().url('Must be a valid URL (e.g. https://example.com/logo.png)').optional().or(z.literal('')),
   industry: z.string().optional(),
   email: z.string().email('Invalid email address').optional().or(z.literal('')),
   phone: z.string().optional(),
@@ -44,6 +47,9 @@ export default function NewClientPage() {
     resolver: zodResolver(clientSchema),
     defaultValues: {
       company_name: '',
+      brand_name: '',
+      brand_shortcode: '',
+      logo: '',
       industry: '',
       email: '',
       phone: '',
@@ -98,11 +104,44 @@ export default function NewClientPage() {
           <div>
             <label className="block font-medium text-slate-700 mb-1.5">Company Name <span className="text-rose-500">*</span></label>
             <input 
-              type="text" 
+              type="text"
+              placeholder="e.g. Reliance Digital Solutions Pvt Ltd"
               className={`w-full border rounded-md p-2 outline-none transition-shadow ${errors.company_name ? 'border-rose-300 focus:ring-1 focus:ring-rose-500 focus:border-rose-500 bg-rose-50' : 'border-slate-300 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500'}`}
               {...register('company_name')}
             />
             {errors.company_name && <p className="mt-1 text-xs text-rose-500">{errors.company_name.message}</p>}
+          </div>
+
+          <div className="grid grid-cols-2 gap-5">
+            <div>
+              <label className="block font-medium text-slate-700 mb-1.5">Brand Name</label>
+              <input 
+                type="text" 
+                placeholder="e.g. Reliance"
+                className="w-full border border-slate-300 rounded-md p-2 outline-none transition-shadow focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                {...register('brand_name')}
+              />
+            </div>
+            <div>
+              <label className="block font-medium text-slate-700 mb-1.5">Brand Shortcode</label>
+              <input 
+                type="text" 
+                placeholder="e.g. RIL"
+                className="w-full border border-slate-300 rounded-md p-2 outline-none transition-shadow focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 uppercase"
+                {...register('brand_shortcode')}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block font-medium text-slate-700 mb-1.5">Logo URL</label>
+            <input 
+              type="url"
+              placeholder="e.g. https://example.com/logo.png"
+              className={`w-full border rounded-md p-2 outline-none transition-shadow ${errors.logo ? 'border-rose-300 focus:ring-1 focus:ring-rose-500 focus:border-rose-500 bg-rose-50' : 'border-slate-300 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500'}`}
+              {...register('logo')}
+            />
+            {errors.logo && <p className="mt-1 text-xs text-rose-500">{errors.logo.message}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-5">

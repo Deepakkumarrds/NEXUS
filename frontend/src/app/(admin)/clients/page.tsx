@@ -8,6 +8,8 @@ type Client = {
   id: string;
   company_name: string;
   brand_name: string | null;
+  brand_shortcode: string | null;
+  logo: string | null;
   industry: string | null;
   email: string | null;
   client_status: string;
@@ -232,9 +234,13 @@ export default function ClientsPage() {
                 <tr key={client.id} className="hover:bg-slate-50 transition-colors">
                   {columns.company && <td className="px-6 py-4 whitespace-nowrap">
                     <Link href={`/clients/${client.id}`} className="font-medium text-indigo-600 hover:text-indigo-800 flex items-center transition-colors">
-                      <div className="w-8 h-8 rounded bg-indigo-50 border border-indigo-100 text-indigo-700 flex items-center justify-center font-bold mr-3 text-xs">
-                        {client.company_name.substring(0, 2).toUpperCase()}
-                      </div>
+                      {client.logo ? (
+                        <img src={client.logo} alt={client.brand_name || client.company_name} className="w-8 h-8 rounded object-cover border border-indigo-100 mr-3 shrink-0" />
+                      ) : (
+                        <div className="w-8 h-8 rounded bg-indigo-50 border border-indigo-100 text-indigo-700 flex items-center justify-center font-bold mr-3 text-xs shrink-0">
+                          {client.brand_shortcode || (client.brand_name ? client.brand_name.substring(0, 2) : client.company_name.substring(0, 2)).toUpperCase()}
+                        </div>
+                      )}
                       <div>
                         <div>{client.company_name}</div>
                         {client.email && <div className="text-xs text-slate-500 font-normal">{client.email}</div>}

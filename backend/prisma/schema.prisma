@@ -103,6 +103,7 @@ model Client {
   
   // Strategy & Brand
   brand_shortcode    String?
+  logo               String?
   objective          String?
   focused_area       String?
   customer_mindset   String?

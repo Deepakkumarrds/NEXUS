@@ -53,7 +53,7 @@ exports.createUser = async (req, res) => {
 exports.updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, email, department, designation, skills, status } = req.body;
+    const { name, email, department, designation, skills, status, role_id } = req.body;
 
     const user = await prisma.user.update({
       where: { id },
@@ -63,7 +63,8 @@ exports.updateUser = async (req, res) => {
         department,
         designation,
         skills: skills || undefined,
-        status
+        status,
+        role_id
       },
       include: { role: true }
     });

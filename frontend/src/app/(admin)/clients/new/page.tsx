@@ -18,7 +18,10 @@ const clientSchema = z.object({
   phone: z.string().optional(),
   website: z.string().url('Invalid URL format (e.g. https://example.com)').optional().or(z.literal('')),
   client_status: z.enum(['Active', 'Hold', 'Lost']),
-  retainer_value: z.string().optional()
+  retainer_value: z.string().optional(),
+  objective: z.string().optional(),
+  focused_area: z.string().optional(),
+  customer_mindset: z.string().optional()
 });
 
 type ClientFormData = z.infer<typeof clientSchema>;
@@ -42,6 +45,8 @@ export default function NewClientPage() {
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors }
   } = useForm<ClientFormData>({
     resolver: zodResolver(clientSchema),
@@ -55,7 +60,10 @@ export default function NewClientPage() {
       phone: '',
       website: '',
       client_status: 'Active',
-      retainer_value: ''
+      retainer_value: '',
+      objective: '',
+      focused_area: '',
+      customer_mindset: ''
     }
   });
 
@@ -114,16 +122,7 @@ export default function NewClientPage() {
 
           <div className="grid grid-cols-2 gap-5">
             <div>
-              <label className="block font-medium text-slate-700 mb-1.5">Brand Name</label>
-              <input 
-                type="text" 
-                placeholder="e.g. Reliance"
-                className="w-full border border-slate-300 rounded-md p-2 outline-none transition-shadow focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                {...register('brand_name')}
-              />
-            </div>
-            <div>
-              <label className="block font-medium text-slate-700 mb-1.5">Brand Shortcode</label>
+              <label className="block font-medium text-slate-700 mb-1.5">Short Code</label>
               <input 
                 type="text" 
                 placeholder="e.g. RIL"
@@ -131,17 +130,68 @@ export default function NewClientPage() {
                 {...register('brand_shortcode')}
               />
             </div>
+            <div>
+              <label className="block font-medium text-slate-700 mb-1.5">Brand Logo</label>
+              <input 
+                type="file"
+                accept="image/*"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    try {
+                      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/upload`, {
+                        method: 'POST',
+                        body: formData
+                      });
+                      const data = await res.json();
+                      if (data.url) {
+                        setValue('logo', data.url);
+                        toast.success('Logo uploaded');
+                      }
+                    } catch (err) {
+                      toast.error('Failed to upload logo');
+                    }
+                  }
+                }}
+                className={`w-full border rounded-md p-1.5 outline-none transition-shadow ${errors.logo ? 'border-rose-300 focus:ring-1 focus:ring-rose-500 focus:border-rose-500 bg-rose-50' : 'border-slate-300 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500'}`}
+              />
+              <input type="hidden" {...register('logo')} />
+              {watch('logo') && <img src={watch('logo')} alt="Logo preview" className="h-10 mt-2 object-contain bg-slate-50 p-1 rounded border border-slate-200" />}
+              {errors.logo && <p className="mt-1 text-xs text-rose-500">{errors.logo.message}</p>}
+            </div>
           </div>
 
           <div>
-            <label className="block font-medium text-slate-700 mb-1.5">Logo URL</label>
-            <input 
-              type="url"
-              placeholder="e.g. https://example.com/logo.png"
-              className={`w-full border rounded-md p-2 outline-none transition-shadow ${errors.logo ? 'border-rose-300 focus:ring-1 focus:ring-rose-500 focus:border-rose-500 bg-rose-50' : 'border-slate-300 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500'}`}
-              {...register('logo')}
-            />
-            {errors.logo && <p className="mt-1 text-xs text-rose-500">{errors.logo.message}</p>}
+            <label className="block font-medium text-slate-700 mb-1.5">Core Objective</label>
+            <textarea 
+              placeholder="Client's core objective..."
+              className="w-full border border-slate-300 rounded-md p-2 outline-none transition-shadow focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+              rows={2}
+              {...register('objective')}
+            ></textarea>
+          </div>
+
+          <div className="grid grid-cols-2 gap-5">
+            <div>
+              <label className="block font-medium text-slate-700 mb-1.5">Focused Area</label>
+              <input 
+                type="text" 
+                placeholder="e.g. B2B Leads"
+                className="w-full border border-slate-300 rounded-md p-2 outline-none transition-shadow focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                {...register('focused_area')}
+              />
+            </div>
+            <div>
+              <label className="block font-medium text-slate-700 mb-1.5">Customer Mindset</label>
+              <input 
+                type="text" 
+                placeholder="e.g. Value-driven"
+                className="w-full border border-slate-300 rounded-md p-2 outline-none transition-shadow focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                {...register('customer_mindset')}
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-5">

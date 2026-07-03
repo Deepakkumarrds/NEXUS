@@ -174,6 +174,7 @@ export default function ClientDetailsPage() {
   const [editObjective, setEditObjective] = useState('');
   const [editFocusedArea, setEditFocusedArea] = useState('');
   const [editCustomerMindset, setEditCustomerMindset] = useState('');
+  const [editLogo, setEditLogo] = useState('');
 
   // Monthly Plans State
   const [monthlyDepartment, setMonthlyDepartment] = useState('Social Media');
@@ -208,6 +209,7 @@ export default function ClientDetailsPage() {
       setEditObjective(client.objective || '');
       setEditFocusedArea(client.focused_area || '');
       setEditCustomerMindset(client.customer_mindset || '');
+      setEditLogo(client.logo || '');
       
       // Parse service_type from string to array
       if (client.service_type) {
@@ -241,7 +243,8 @@ export default function ClientDetailsPage() {
           brand_shortcode: editBrandShortcode || null,
           objective: editObjective || null,
           focused_area: editFocusedArea || null,
-          customer_mindset: editCustomerMindset || null
+          customer_mindset: editCustomerMindset || null,
+          logo: editLogo || null
         })
       });
       if (res.ok) {
@@ -1724,8 +1727,8 @@ export default function ClientDetailsPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block mb-1">Brand Name</label>
-                  <input type="text" value={editBrandName} onChange={e => setEditBrandName(e.target.value)} className="w-full border border-slate-300 rounded p-2 outline-none font-normal text-slate-800" />
+                  <label className="block mb-1">Short Code</label>
+                  <input type="text" value={editBrandShortcode} onChange={e => setEditBrandShortcode(e.target.value)} className="w-full border border-slate-300 rounded p-2 outline-none font-normal text-slate-800 uppercase" placeholder="e.g. RIL" />
                 </div>
                 <div>
                   <label className="block mb-1">Industry</label>
@@ -1769,6 +1772,52 @@ export default function ClientDetailsPage() {
               <div>
                 <label className="block mb-1">Website URL</label>
                 <input type="url" value={editWebsite} onChange={e => setEditWebsite(e.target.value)} className="w-full border border-slate-300 rounded p-2 outline-none font-normal text-slate-800" placeholder="https://example.com" />
+              </div>
+
+              <div>
+                <label className="block mb-1">Brand Logo</label>
+                <input 
+                  type="file" 
+                  accept="image/*"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const formData = new FormData();
+                      formData.append('file', file);
+                      try {
+                        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/upload`, {
+                          method: 'POST',
+                          body: formData
+                        });
+                        const data = await res.json();
+                        if (data.url) {
+                          setEditLogo(data.url);
+                          toast.success('Logo uploaded');
+                        }
+                      } catch (err) {
+                        toast.error('Failed to upload logo');
+                      }
+                    }
+                  }} 
+                  className="w-full border border-slate-300 rounded p-1.5 outline-none font-normal text-slate-800" 
+                />
+                {editLogo && <img src={editLogo} alt="Logo preview" className="h-10 mt-2 object-contain bg-slate-50 p-1 rounded border border-slate-200" />}
+              </div>
+
+              <div>
+                <label className="block mb-1">Core Objective</label>
+                <textarea value={editObjective} onChange={e => setEditObjective(e.target.value)} className="w-full border border-slate-300 rounded p-2 outline-none font-normal text-slate-800" rows={2} placeholder="Client's core objective..."></textarea>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block mb-1">Focused Area</label>
+                  <input type="text" value={editFocusedArea} onChange={e => setEditFocusedArea(e.target.value)} className="w-full border border-slate-300 rounded p-2 outline-none font-normal text-slate-800" placeholder="e.g. B2B Leads" />
+                </div>
+                <div>
+                  <label className="block mb-1">Customer Mindset</label>
+                  <input type="text" value={editCustomerMindset} onChange={e => setEditCustomerMindset(e.target.value)} className="w-full border border-slate-300 rounded p-2 outline-none font-normal text-slate-800" placeholder="e.g. Value-driven" />
+                </div>
               </div>
 
               <div>

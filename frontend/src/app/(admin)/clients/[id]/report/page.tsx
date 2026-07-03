@@ -21,9 +21,9 @@ export default function ClientReportPage() {
     const fetchData = async () => {
       try {
         const [clientRes, tasksRes, commsRes] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com'}/api/clients/${clientId}`),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com'}/api/tasks?client_id=${clientId}`),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com'}/api/communications`)
+          fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com'}/api/clients/${clientId}`),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com'}/api/tasks?client_id=${clientId}`),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com'}/api/communications`)
         ]);
         
         const clientData = await clientRes.json();

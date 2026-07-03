@@ -26,8 +26,8 @@ export default function EditSowPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch((process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com') + '/api/clients?activeOnly=true').then(res => res.json()),
-      fetch((process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com') + `/api/sows/${id}`).then(res => res.json())
+      fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + '/api/clients?activeOnly=true').then(res => res.json()),
+      fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + `/api/sows/${id}`).then(res => res.json())
     ]).then(([clientsData, sowData]) => {
       if (clientsData && clientsData.data) setClients(clientsData.data);
       if (sowData && sowData.data) {
@@ -107,7 +107,7 @@ export default function EditSowPage() {
         }))
       };
 
-      const response = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com') + `/api/sows/${id}`, {
+      const response = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + `/api/sows/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

@@ -26,7 +26,7 @@ export default function ClientReportsPage() {
 
   const fetchReports = async (clientId: string) => {
     try {
-      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com') + '/api/reports');
+      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + '/api/reports');
       const data = await res.json();
       if (data && data.data) {
         // Filter by client_id to ensure they only see their own reports

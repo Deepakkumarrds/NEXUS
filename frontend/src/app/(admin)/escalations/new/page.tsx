@@ -13,7 +13,7 @@ export default function RaiseEscalationPage() {
   });
 
   useEffect(() => {
-    fetch((process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com') + '/api/clients?activeOnly=true')
+    fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + '/api/clients?activeOnly=true')
       .then(res => res.json())
       .then(data => { 
         if (data && data.data) {
@@ -29,7 +29,7 @@ export default function RaiseEscalationPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com') + '/api/escalations', {
+      const response = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + '/api/escalations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),

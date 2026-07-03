@@ -44,7 +44,7 @@ export default function ClientsPage() {
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
   const fetchClients = () => {
-    fetch((process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com') + '/api/clients')
+    fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + '/api/clients')
       .then(res => res.json())
       .then(data => {
         if (data && data.data) {
@@ -109,7 +109,7 @@ export default function ClientsPage() {
   const archiveClient = async (id: string) => {
     if(!confirm('Are you sure you want to archive this client?')) return;
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com'}/api/clients/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com'}/api/clients/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ client_status: 'Archived' })
@@ -128,7 +128,7 @@ export default function ClientsPage() {
   const deleteClient = async (id: string) => {
     if(!window.confirm('Are you sure you want to completely DELETE this client? This cannot be undone.')) return;
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com'}/api/clients/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com'}/api/clients/${id}`, {
         method: 'DELETE'
       });
       if (res.ok) {

@@ -28,7 +28,7 @@ export default function MeetingsPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch((process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com') + '/api/meetings')
+    fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + '/api/meetings')
       .then(res => res.json())
       .then(data => { 
         if (data && data.data) {
@@ -44,7 +44,7 @@ export default function MeetingsPage() {
   }, []);
 
   const fetchMeetings = () => {
-    fetch((process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com') + '/api/meetings')
+    fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + '/api/meetings')
       .then(res => res.json())
       .then(data => { 
         if (data && data.data) {
@@ -62,7 +62,7 @@ export default function MeetingsPage() {
     e.stopPropagation();
     if(!window.confirm('Are you sure you want to delete this meeting?')) return;
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com'}/api/meetings/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com'}/api/meetings/${id}`, {
         method: 'DELETE'
       });
       if (res.ok) fetchMeetings();
@@ -161,7 +161,7 @@ export default function MeetingsPage() {
                                 onChange={async (e) => {
                                   const newStatus = e.target.checked ? 'Completed' : 'Pending';
                                   try {
-                                    const res = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com') + `/api/meetings/action-items/${item.id}/status`, {
+                                    const res = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + `/api/meetings/action-items/${item.id}/status`, {
                                       method: 'PATCH',
                                       headers: { 'Content-Type': 'application/json' },
                                       body: JSON.stringify({ status: newStatus })

@@ -29,9 +29,9 @@ export default function EditCommunicationPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch((process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com') + '/api/clients?activeOnly=true').then(res => res.json()),
-      fetch((process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com') + '/api/users').then(res => res.json()),
-      fetch((process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com') + `/api/communications/${id}`).then(res => res.json())
+      fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + '/api/clients?activeOnly=true').then(res => res.json()),
+      fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + '/api/users').then(res => res.json()),
+      fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + `/api/communications/${id}`).then(res => res.json())
     ]).then(([clientsData, usersData, logData]) => {
       if (clientsData && clientsData.data) setClients(clientsData.data);
       if (usersData && usersData.data) setUsers(usersData.data);
@@ -66,7 +66,7 @@ export default function EditCommunicationPage() {
     e.preventDefault();
 
     try {
-      const response = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com') + `/api/communications/${id}`, {
+      const response = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + `/api/communications/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),

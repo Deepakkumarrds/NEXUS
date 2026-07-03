@@ -51,7 +51,7 @@ export default function ClientApprovalsPage() {
   }, []);
 
   const fetchAssets = (clientId: string) => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com'}/api/assets/client/${clientId}`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com'}/api/assets/client/${clientId}`)
       .then(res => res.json())
       .then(data => {
         if (data && data.data) setAssets(data.data);
@@ -80,7 +80,7 @@ export default function ClientApprovalsPage() {
     const user = userStr ? JSON.parse(userStr) : { name: 'Client' };
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com'}/api/assets/versions/${activeVersion.id}/annotations`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com'}/api/assets/versions/${activeVersion.id}/annotations`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -111,7 +111,7 @@ export default function ClientApprovalsPage() {
     if (!selectedAsset) return;
     setIsSubmitting(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com'}/api/assets/${selectedAsset.id}/client-status`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com'}/api/assets/${selectedAsset.id}/client-status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ client_status: status })
@@ -163,7 +163,7 @@ export default function ClientApprovalsPage() {
             <div key={asset.id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col">
               <div className="h-56 bg-slate-100 relative flex items-center justify-center border-b border-slate-200 group">
                 {latestVersion && isImage(latestVersion.file_type) ? (
-                  <img src={(process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com') + latestVersion.file_url} alt={asset.title} className="object-cover w-full h-full" />
+                  <img src={(process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + latestVersion.file_url} alt={asset.title} className="object-cover w-full h-full" />
                 ) : (
                   <svg className="w-16 h-16 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                 )}
@@ -171,7 +171,7 @@ export default function ClientApprovalsPage() {
                 <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
                   <button 
                     onClick={() => {
-                      fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com'}/api/assets/${asset.id}`)
+                      fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com'}/api/assets/${asset.id}`)
                         .then(res => res.json())
                         .then(data => {
                           setSelectedAsset(data.data);
@@ -232,7 +232,7 @@ export default function ClientApprovalsPage() {
                   <div className="relative inline-block shadow-md cursor-crosshair">
                     <img 
                       ref={imageRef}
-                      src={(process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com') + activeVersion.file_url} 
+                      src={(process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + activeVersion.file_url} 
                       alt="Asset" 
                       onClick={handleImageClick}
                       className="max-h-[600px] object-contain block"
@@ -280,7 +280,7 @@ export default function ClientApprovalsPage() {
                 ) : (
                   <div className="text-center text-slate-500">
                     <p>This file type does not support visual annotations.</p>
-                    <a href={(process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com') + activeVersion.file_url} target="_blank" className="text-indigo-600 underline mt-2 inline-block">Download File</a>
+                    <a href={(process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + activeVersion.file_url} target="_blank" className="text-indigo-600 underline mt-2 inline-block">Download File</a>
                   </div>
                 )}
               </div>

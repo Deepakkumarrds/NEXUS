@@ -21,7 +21,7 @@ export default function SowsPage() {
 
   const fetchSowTasks = () => {
     setLoading(true);
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/tasks?is_sow=true`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com'}/api/tasks?is_sow=true`)
       .then(res => res.json())
       .then(data => {
         if (data && data.data) {

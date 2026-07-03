@@ -20,7 +20,7 @@ export default function ReportsPage() {
 
   const fetchReports = () => {
     setLoading(true);
-    fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/reports')
+    fetch((process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com') + '/api/reports')
       .then(res => res.json())
       .then(data => { 
         if (data && data.data) {
@@ -41,7 +41,7 @@ export default function ReportsPage() {
   const handleDelete = async (id: string) => {
     if (!window.confirm('Are you sure you want to delete this report?')) return;
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/reports/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com'}/api/reports/${id}`, {
         method: 'DELETE'
       });
       if (res.ok) fetchReports();

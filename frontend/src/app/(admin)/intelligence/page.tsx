@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const API = process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com';
 
 interface Message {
   role: 'user' | 'assistant';

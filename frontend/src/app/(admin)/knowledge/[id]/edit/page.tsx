@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const API = process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com';
 
 const DEPARTMENTS = ['Paid Media', 'SEO', 'Social Media', 'Content', 'Client Servicing', 'Strategy', 'General'];
 const CATEGORIES  = ['SOP', 'Template', 'Framework', 'Playbook', 'Guideline', 'Checklist'];

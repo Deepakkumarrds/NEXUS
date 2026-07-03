@@ -3,356 +3,357 @@ generator client {
 }
 
 datasource db {
-  provider = "mongodb"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
-  id               String             @id @default(auto()) @map("_id") @db.ObjectId
-  name             String
-  email            String             @unique
-  password_hash    String
-  role_id          String             @db.ObjectId
-  department       String?
-  designation      String?
-  phone            String?
-  status           String             @default("Active") // Active, Inactive
-  reset_token      String?
+  id                  String    @id @default(uuid()) @db.Uuid
+  name                String
+  email               String    @unique
+  password_hash       String
+  role_id             String    @db.Uuid
+  department          String?
+  designation         String?
+  phone               String?
+  status              String    @default("Active") // Active, Inactive
+  reset_token         String?
   reset_token_expires DateTime?
-  created_at       DateTime           @default(now())
-  
-  role             Role               @relation(fields: [role_id], references: [id])
-  
-  login_logs       LoginLog[]
-  client_spocs     ClientSpoc[]
-  tasks_assigned   Task[]             @relation("TaskAssignee")
-  tasks_created    Task[]             @relation("TaskCreator")
-  task_comments    TaskComment[]
-  communications   CommunicationLog[] @relation("CommunicationCreator")
-  meetings_created Meeting[]          @relation("MeetingCreator")
-  action_items     MeetingActionItem[]
-  reports_uploaded Report[]
-  notifications    Notification[]
-  activity_logs    ActivityLog[]
-  asset_versions   CreativeAssetVersion[]
-  asset_annotations AssetAnnotation[]
-  skills           String[]
-  leave_records    LeaveRecord[]
-  knowledge_articles KnowledgeArticle[]
-  work_requests_created WorkRequest[] @relation("WorkRequestCreator")
-  work_requests_assigned WorkRequest[] @relation("WorkRequestAssignee")
+  created_at          DateTime  @default(now())
+
+  role Role @relation(fields: [role_id], references: [id])
+
+  login_logs             LoginLog[]
+  client_spocs           ClientSpoc[]
+  tasks_assigned         Task[]                 @relation("TaskAssignee")
+  tasks_created          Task[]                 @relation("TaskCreator")
+  task_comments          TaskComment[]
+  communications         CommunicationLog[]     @relation("CommunicationCreator")
+  meetings_created       Meeting[]              @relation("MeetingCreator")
+  action_items           MeetingActionItem[]
+  reports_uploaded       Report[]
+  notifications          Notification[]
+  activity_logs          ActivityLog[]
+  asset_versions         CreativeAssetVersion[]
+  asset_annotations      AssetAnnotation[]
+  skills                 String[]
+  leave_records          LeaveRecord[]
+  knowledge_articles     KnowledgeArticle[]
+  work_requests_created  WorkRequest[]          @relation("WorkRequestCreator")
+  work_requests_assigned WorkRequest[]          @relation("WorkRequestAssignee")
 }
 
 model Role {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  role_name   String   @unique
+  id          String  @id @default(uuid()) @db.Uuid
+  role_name   String  @unique
   description String?
-  
+
   users       User[]
   permissions RolePermission[]
 }
 
 model Permission {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
-  permission_name String   @unique
+  id              String @id @default(uuid()) @db.Uuid
+  permission_name String @unique
   module_name     String
-  
+
   role_permissions RolePermission[]
 }
 
 model RolePermission {
-  id            String @id @default(auto()) @map("_id") @db.ObjectId
-  role_id       String @db.ObjectId
-  permission_id String @db.ObjectId
-  
-  role          Role       @relation(fields: [role_id], references: [id])
-  permission    Permission @relation(fields: [permission_id], references: [id])
+  id            String @id @default(uuid()) @db.Uuid
+  role_id       String @db.Uuid
+  permission_id String @db.Uuid
+
+  role       Role       @relation(fields: [role_id], references: [id])
+  permission Permission @relation(fields: [permission_id], references: [id])
 }
 
 model LoginLog {
-  id         String    @id @default(auto()) @map("_id") @db.ObjectId
-  user_id    String    @db.ObjectId
-  login_time DateTime  @default(now())
+  id          String    @id @default(uuid()) @db.Uuid
+  user_id     String    @db.Uuid
+  login_time  DateTime  @default(now())
   logout_time DateTime?
-  ip_address String?
+  ip_address  String?
   device_info String?
-  
-  user       User      @relation(fields: [user_id], references: [id])
+
+  user User @relation(fields: [user_id], references: [id])
 }
 
 model Client {
-  id                 String   @id @default(auto()) @map("_id") @db.ObjectId
-  company_name       String
-  brand_name         String?
-  industry           String?
-  website            String?
-  email              String?
-  phone              String?
-  address            String?
-  country            String?
-  timezone           String?
-  client_status      String   @default("Active") // Active, Hold, Lost
-  onboarding_date    DateTime?
-  renewal_date       DateTime?
-  retainer_value     Float?
-  service_type       String?
-  account_manager_id String?  @db.ObjectId
+  id                   String    @id @default(uuid()) @db.Uuid
+  company_name         String
+  brand_name           String?
+  industry             String?
+  website              String?
+  email                String?
+  phone                String?
+  address              String?
+  country              String?
+  timezone             String?
+  client_status        String    @default("Active") // Active, Hold, Lost
+  onboarding_date      DateTime?
+  renewal_date         DateTime?
+  retainer_value       Float?
+  service_type         String?
+  account_manager_id   String?   @db.Uuid
   primary_contact_name String?
-  spoc_name          String?
-  internal_notes     String?
-  
-  // Strategy & Brand
-  brand_shortcode    String?
-  logo               String?
-  objective          String?
-  focused_area       String?
-  customer_mindset   String?
-  
-  created_at         DateTime @default(now())
-  updated_at         DateTime @updatedAt
+  spoc_name            String?
+  internal_notes       String?
 
-  contacts           ClientContact[]
-  spocs              ClientSpoc[]
-  tasks              Task[]
-  communications     CommunicationLog[]
-  meetings           Meeting[]
-  sows               Sow[]
-  reports            Report[]
-  escalations        Escalation[]
-  health_scores      ClientHealthScore[]
-  creative_assets    CreativeAsset[]
-  
-  client_users       ClientUser[]
+  // Strategy & Brand
+  brand_shortcode  String?
+  logo             String?
+  objective        String?
+  focused_area     String?
+  customer_mindset String?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  contacts        ClientContact[]
+  spocs           ClientSpoc[]
+  tasks           Task[]
+  communications  CommunicationLog[]
+  meetings        Meeting[]
+  sows            Sow[]
+  reports         Report[]
+  escalations     Escalation[]
+  health_scores   ClientHealthScore[]
+  creative_assets CreativeAsset[]
+
+  client_users         ClientUser[]
   onboarding_checklist OnboardingChecklist[]
   social_handles       SocialHandle[]
   seo_accesses         SeoAccess[]
   paid_media_accesses  PaidMediaAccess[]
-  
+
   campaign_performances CampaignPerformance[]
-  report_delivery_logs ReportDeliveryLog[] @relation("ClientReportDeliveryLogs")
-  monthly_plans        ClientMonthlyPlan[]
-  daily_trackers       DailyTracker[]
-  work_requests        WorkRequest[]
+  report_delivery_logs  ReportDeliveryLog[]   @relation("ClientReportDeliveryLogs")
+  monthly_plans         ClientMonthlyPlan[]
+  daily_trackers        DailyTracker[]
+  work_requests         WorkRequest[]
 }
 
 model ClientUser {
-  id               String   @id @default(auto()) @map("_id") @db.ObjectId
-  client_id        String   @db.ObjectId
-  name             String
-  email            String   @unique
-  password_hash    String
-  status           String   @default("Active")
-  reset_token      String?
+  id                  String    @id @default(uuid()) @db.Uuid
+  client_id           String    @db.Uuid
+  name                String
+  email               String    @unique
+  password_hash       String
+  status              String    @default("Active")
+  reset_token         String?
   reset_token_expires DateTime?
-  created_at       DateTime @default(now())
-  
-  client           Client   @relation(fields: [client_id], references: [id])
-  
+  created_at          DateTime  @default(now())
+
+  client Client @relation(fields: [client_id], references: [id])
+
   asset_annotations AssetAnnotation[]
 }
 
 model ClientContact {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  client_id   String   @db.ObjectId
-  name        String
-  designation String?
-  department  String?
-  email       String?
-  phone       String?
-  is_primary  Boolean  @default(false)
+  id                 String    @id @default(uuid()) @db.Uuid
+  client_id          String    @db.Uuid
+  name               String
+  designation        String?
+  department         String?
+  email              String?
+  phone              String?
+  is_primary         Boolean   @default(false)
   birth_date         DateTime?
   anniversary_date   DateTime?
   festival_greetings String[]
-  created_at  DateTime @default(now())
-  
-  client      Client   @relation(fields: [client_id], references: [id])
+  created_at         DateTime  @default(now())
+
+  client Client @relation(fields: [client_id], references: [id])
 }
 
 model ClientSpoc {
-  id            String   @id @default(auto()) @map("_id") @db.ObjectId
-  client_id     String   @db.ObjectId
+  id            String   @id @default(uuid()) @db.Uuid
+  client_id     String   @db.Uuid
   role_type     String
-  user_id       String   @db.ObjectId
+  user_id       String   @db.Uuid
   assigned_date DateTime @default(now())
-  
-  client        Client   @relation(fields: [client_id], references: [id])
-  user          User     @relation(fields: [user_id], references: [id])
+
+  client Client @relation(fields: [client_id], references: [id])
+  user   User   @relation(fields: [user_id], references: [id])
 }
 
 model Task {
-  id                    String   @id @default(auto()) @map("_id") @db.ObjectId
-  client_id             String   @db.ObjectId
+  id                    String    @id @default(uuid()) @db.Uuid
+  client_id             String    @db.Uuid
   title                 String
   description           String?
-  assigned_to           String?  @db.ObjectId
-  assigned_by           String   @db.ObjectId
-  priority              String   @default("Medium") // Low, Medium, High
-  status                String   @default("Pending") // Pending, In Progress, Review, Completed
+  assigned_to           String?   @db.Uuid
+  assigned_by           String    @db.Uuid
+  priority              String    @default("Medium") // Low, Medium, High
+  status                String    @default("Pending") // Pending, In Progress, Review, Completed
   due_date              DateTime?
-  completion_percentage Int      @default(0)
+  completion_percentage Int       @default(0)
   delay_reason          String?
   delay_notes           String?
   original_due_date     DateTime?
-  is_recurring          Boolean            @default(false)
+  is_recurring          Boolean   @default(false)
   recurrence_pattern    String?
   recurrence_end        DateTime?
   resource_links        String[]
   checklist             Json?
-  estimated_hours       Float    @default(1.0)
-  created_at            DateTime @default(now())
-  updated_at            DateTime @updatedAt
+  estimated_hours       Float     @default(1.0)
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @updatedAt
   started_at            DateTime?
   review_at             DateTime?
   completed_at          DateTime?
-  
-  department            String?
-  is_sow                Boolean  @default(false)
-  sow_id                String?  @db.ObjectId
-  sow_item_id           String?  @db.ObjectId
 
-  client                Client   @relation(fields: [client_id], references: [id])
-  assignee              User?    @relation("TaskAssignee", fields: [assigned_to], references: [id])
-  creator               User     @relation("TaskCreator", fields: [assigned_by], references: [id])
-  sow                   Sow?     @relation(fields: [sow_id], references: [id])
-  sow_item              SowItem? @relation(fields: [sow_item_id], references: [id])
-  
-  comments              TaskComment[]
-  creative_assets       CreativeAsset[]
+  department  String?
+  is_sow      Boolean @default(false)
+  sow_id      String? @db.Uuid
+  sow_item_id String? @db.Uuid
+
+  client   Client   @relation(fields: [client_id], references: [id])
+  assignee User?    @relation("TaskAssignee", fields: [assigned_to], references: [id])
+  creator  User     @relation("TaskCreator", fields: [assigned_by], references: [id])
+  sow      Sow?     @relation(fields: [sow_id], references: [id])
+  sow_item SowItem? @relation(fields: [sow_item_id], references: [id])
+
+  comments        TaskComment[]
+  creative_assets CreativeAsset[]
 }
 
 model TaskComment {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  task_id    String   @db.ObjectId
-  user_id    String   @db.ObjectId
+  id         String   @id @default(uuid()) @db.Uuid
+  task_id    String   @db.Uuid
+  user_id    String   @db.Uuid
   comment    String
   created_at DateTime @default(now())
-  
-  task       Task     @relation(fields: [task_id], references: [id])
-  user       User     @relation(fields: [user_id], references: [id])
+
+  task Task @relation(fields: [task_id], references: [id])
+  user User @relation(fields: [user_id], references: [id])
 }
 
 model CommunicationLog {
-  id                 String   @id @default(auto()) @map("_id") @db.ObjectId
-  client_id          String   @db.ObjectId
+  id                 String    @id @default(uuid()) @db.Uuid
+  client_id          String    @db.Uuid
   communication_type String // Call, Email, WhatsApp, Meeting
   subject            String
   summary            String?
   next_action        String?
   follow_up_date     DateTime?
-  owner_id           String?  @db.ObjectId
-  is_pinned          Boolean  @default(false)
-  created_by         String   @db.ObjectId
-  created_at         DateTime @default(now())
-  
-  client             Client   @relation(fields: [client_id], references: [id])
-  creator            User     @relation("CommunicationCreator", fields: [created_by], references: [id])
+  owner_id           String?   @db.Uuid
+  is_pinned          Boolean   @default(false)
+  created_by         String    @db.Uuid
+  created_at         DateTime  @default(now())
+
+  client  Client @relation(fields: [client_id], references: [id])
+  creator User   @relation("CommunicationCreator", fields: [created_by], references: [id])
 }
 
 model Meeting {
-  id                String   @id @default(auto()) @map("_id") @db.ObjectId
-  client_id         String   @db.ObjectId
+  id                String   @id @default(uuid()) @db.Uuid
+  client_id         String   @db.Uuid
   meeting_title     String
   meeting_date      DateTime
   attendees         String?
   agenda            String?
   discussion_points String?
-  created_by        String   @db.ObjectId
+  created_by        String   @db.Uuid
   created_at        DateTime @default(now())
-  
-  client            Client   @relation(fields: [client_id], references: [id])
-  creator           User     @relation("MeetingCreator", fields: [created_by], references: [id])
-  
-  action_items      MeetingActionItem[]
+
+  client  Client @relation(fields: [client_id], references: [id])
+  creator User   @relation("MeetingCreator", fields: [created_by], references: [id])
+
+  action_items MeetingActionItem[]
 }
 
 model MeetingActionItem {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  meeting_id  String   @db.ObjectId
+  id          String    @id @default(uuid()) @db.Uuid
+  meeting_id  String    @db.Uuid
   action_item String
-  assigned_to String?  @db.ObjectId
+  assigned_to String?   @db.Uuid
   deadline    DateTime?
-  status      String   @default("Pending") // Pending, Completed
-  
-  meeting     Meeting  @relation(fields: [meeting_id], references: [id])
-  assignee    User?    @relation(fields: [assigned_to], references: [id])
+  status      String    @default("Pending") // Pending, Completed
+
+  meeting  Meeting @relation(fields: [meeting_id], references: [id])
+  assignee User?   @relation(fields: [assigned_to], references: [id])
 }
 
 model Sow {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  client_id   String   @db.ObjectId
+  id          String    @id @default(uuid()) @db.Uuid
+  client_id   String    @db.Uuid
   sow_name    String
   start_date  DateTime?
   end_date    DateTime?
   total_value Float?
-  status      String   @default("Active") // Active, Completed
-  created_at  DateTime @default(now())
-  
-  client      Client   @relation(fields: [client_id], references: [id])
-  months      SowMonth[]
-  items       SowItem[]
-  tasks       Task[]
+  status      String    @default("Active") // Active, Completed
+  created_at  DateTime  @default(now())
+
+  client        Client        @relation(fields: [client_id], references: [id])
+  months        SowMonth[]
+  items         SowItem[]
+  tasks         Task[]
   work_requests WorkRequest[]
 }
 
 model SowMonth {
-  id             String   @id @default(auto()) @map("_id") @db.ObjectId
-  sow_id         String   @db.ObjectId
-  month_year     String   // e.g. "January 2026"
-  value          Float    @default(0)
-  
-  sow            Sow      @relation(fields: [sow_id], references: [id], onDelete: Cascade)
-  items          SowItem[]
+  id         String @id @default(uuid()) @db.Uuid
+  sow_id     String @db.Uuid
+  month_year String // e.g. "January 2026"
+  value      Float  @default(0)
+
+  sow   Sow       @relation(fields: [sow_id], references: [id], onDelete: Cascade)
+  items SowItem[]
 }
 
 model SowItem {
-  id               String   @id @default(auto()) @map("_id") @db.ObjectId
-  sow_id           String   @db.ObjectId
-  sow_month_id     String?  @db.ObjectId
+  id               String    @id @default(uuid()) @db.Uuid
+  sow_id           String    @db.Uuid
+  sow_month_id     String?   @db.Uuid
   deliverable_name String
-  frequency        String?  // Weekly, Monthly
-  owner_id         String?  @db.ObjectId
+  frequency        String? // Weekly, Monthly
+  owner_id         String?   @db.Uuid
   due_date         DateTime?
-  status           String   @default("Pending") // Pending, In Progress, Completed
+  status           String    @default("Pending") // Pending, In Progress, Completed
   remarks          String?
-  tracking_month   String?  // e.g., "January 2026"
-  
-  sow              Sow      @relation(fields: [sow_id], references: [id])
-  sow_month        SowMonth? @relation(fields: [sow_month_id], references: [id])
-  tasks            Task[]
+  tracking_month   String? // e.g., "January 2026"
+
+  sow       Sow       @relation(fields: [sow_id], references: [id])
+  sow_month SowMonth? @relation(fields: [sow_month_id], references: [id])
+  tasks     Task[]
 }
 
 model Report {
-  id           String   @id @default(auto()) @map("_id") @db.ObjectId
-  client_id    String   @db.ObjectId
+  id           String   @id @default(uuid()) @db.Uuid
+  client_id    String   @db.Uuid
   report_name  String
   report_type  String // SEO, Ads, Social
   file_path    String
-  uploaded_by  String   @db.ObjectId
+  uploaded_by  String   @db.Uuid
   report_month String?
   created_at   DateTime @default(now())
-  
-  client       Client   @relation(fields: [client_id], references: [id])
-  uploader     User     @relation(fields: [uploaded_by], references: [id])
+
+  client   Client @relation(fields: [client_id], references: [id])
+  uploader User   @relation(fields: [uploaded_by], references: [id])
 }
 
 model Escalation {
-  id               String   @id @default(auto()) @map("_id") @db.ObjectId
-  client_id        String   @db.ObjectId
-  title            String
+  id                String    @id @default(uuid()) @db.Uuid
+  client_id         String    @db.Uuid
+  title             String
   issue_description String?
-  severity         String   @default("Medium") // Low, Medium, High, Critical
-  assigned_to      String?  @db.ObjectId
-  status           String   @default("Open") // Open, In Progress, Resolved
-  resolution_notes String?
-  created_at       DateTime @default(now())
-  resolved_at      DateTime?
-  
-  client           Client   @relation(fields: [client_id], references: [id])
+  severity          String    @default("Medium") // Low, Medium, High, Critical
+  assigned_to       String?   @db.Uuid
+  status            String    @default("Open") // Open, In Progress, Resolved
+  resolution_notes  String?
+  created_at        DateTime  @default(now())
+  resolved_at       DateTime?
+
+  client Client @relation(fields: [client_id], references: [id])
 }
 
 model ClientHealthScore {
-  id                      String   @id @default(auto()) @map("_id") @db.ObjectId
-  client_id               String   @db.ObjectId
+  id                      String   @id @default(uuid()) @db.Uuid
+  client_id               String   @db.Uuid
   communication_score     Int      @default(0)
   task_completion_score   Int      @default(0)
   escalation_score        Int      @default(0)
@@ -360,150 +361,150 @@ model ClientHealthScore {
   overall_score           Int      @default(0)
   risk_level              String   @default("Stable") // Excellent, Stable, Risk, Critical
   calculated_at           DateTime @default(now())
-  
-  client                  Client   @relation(fields: [client_id], references: [id])
+
+  client Client @relation(fields: [client_id], references: [id])
 }
 
 model Notification {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  user_id    String   @db.ObjectId
+  id         String   @id @default(uuid()) @db.Uuid
+  user_id    String   @db.Uuid
   title      String
   message    String?
   is_read    Boolean  @default(false)
   created_at DateTime @default(now())
-  
-  user       User     @relation(fields: [user_id], references: [id])
+
+  user User @relation(fields: [user_id], references: [id])
 }
 
 model ActivityLog {
-  id           String   @id @default(auto()) @map("_id") @db.ObjectId
-  user_id      String   @db.ObjectId
+  id           String   @id @default(uuid()) @db.Uuid
+  user_id      String   @db.Uuid
   module_name  String
   action_type  String // Create, Update, Delete
-  reference_id String?  @db.ObjectId
+  reference_id String?  @db.Uuid
   description  String?
   created_at   DateTime @default(now())
-  
-  user         User     @relation(fields: [user_id], references: [id])
+
+  user User @relation(fields: [user_id], references: [id])
 }
 
 model CreativeAsset {
-  id               String   @id @default(auto()) @map("_id") @db.ObjectId
-  client_id        String   @db.ObjectId
-  task_id          String?  @db.ObjectId
-  title            String
-  description      String?
-  internal_status  String   @default("Draft") // Draft, Internal Review, Client Review, Completed
-  client_status    String   @default("Pending") // Pending, Approved, Rejected
-  due_date         DateTime?
-  created_at       DateTime @default(now())
-  updated_at       DateTime @updatedAt
-  
-  client           Client   @relation(fields: [client_id], references: [id])
-  task             Task?    @relation(fields: [task_id], references: [id])
-  
-  versions         CreativeAssetVersion[]
+  id              String    @id @default(uuid()) @db.Uuid
+  client_id       String    @db.Uuid
+  task_id         String?   @db.Uuid
+  title           String
+  description     String?
+  internal_status String    @default("Draft") // Draft, Internal Review, Client Review, Completed
+  client_status   String    @default("Pending") // Pending, Approved, Rejected
+  due_date        DateTime?
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  client Client @relation(fields: [client_id], references: [id])
+  task   Task?  @relation(fields: [task_id], references: [id])
+
+  versions CreativeAssetVersion[]
 }
 
 model CreativeAssetVersion {
-  id               String   @id @default(auto()) @map("_id") @db.ObjectId
-  asset_id         String   @db.ObjectId
-  version_number   Int      @default(1)
-  file_url         String
-  file_type        String
-  uploaded_by      String   @db.ObjectId
-  created_at       DateTime @default(now())
-  
-  asset            CreativeAsset @relation(fields: [asset_id], references: [id], onDelete: Cascade)
-  uploader         User          @relation(fields: [uploaded_by], references: [id])
-  
-  annotations      AssetAnnotation[]
+  id             String   @id @default(uuid()) @db.Uuid
+  asset_id       String   @db.Uuid
+  version_number Int      @default(1)
+  file_url       String
+  file_type      String
+  uploaded_by    String   @db.Uuid
+  created_at     DateTime @default(now())
+
+  asset    CreativeAsset @relation(fields: [asset_id], references: [id], onDelete: Cascade)
+  uploader User          @relation(fields: [uploaded_by], references: [id])
+
+  annotations AssetAnnotation[]
 }
 
 model AssetAnnotation {
-  id               String   @id @default(auto()) @map("_id") @db.ObjectId
-  version_id       String   @db.ObjectId
-  x_percent        Float
-  y_percent        Float
-  comment          String
-  user_id          String?  @db.ObjectId
-  client_user_id   String?  @db.ObjectId
-  created_by_name  String
-  created_at       DateTime @default(now())
-  
-  version          CreativeAssetVersion @relation(fields: [version_id], references: [id], onDelete: Cascade)
-  user             User?                @relation(fields: [user_id], references: [id])
-  client_user      ClientUser?          @relation(fields: [client_user_id], references: [id])
+  id              String   @id @default(uuid()) @db.Uuid
+  version_id      String   @db.Uuid
+  x_percent       Float
+  y_percent       Float
+  comment         String
+  user_id         String?  @db.Uuid
+  client_user_id  String?  @db.Uuid
+  created_by_name String
+  created_at      DateTime @default(now())
+
+  version     CreativeAssetVersion @relation(fields: [version_id], references: [id], onDelete: Cascade)
+  user        User?                @relation(fields: [user_id], references: [id])
+  client_user ClientUser?          @relation(fields: [client_user_id], references: [id])
 }
 
 model OnboardingChecklist {
-  id           String    @id @default(auto()) @map("_id") @db.ObjectId
-  client_id    String    @db.ObjectId
+  id           String    @id @default(uuid()) @db.Uuid
+  client_id    String    @db.Uuid
   step_name    String
   is_completed Boolean   @default(false)
   completed_at DateTime?
-  
-  client       Client    @relation(fields: [client_id], references: [id], onDelete: Cascade)
+
+  client Client @relation(fields: [client_id], references: [id], onDelete: Cascade)
 }
 
 model SocialHandle {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
-  client_id       String   @db.ObjectId
-  platform        String   // Instagram, Meta, YouTube, LinkedIn, Twitter
+  id              String  @id @default(uuid()) @db.Uuid
+  client_id       String  @db.Uuid
+  platform        String // Instagram, Meta, YouTube, LinkedIn, Twitter
   profile_url     String
   username        String?
   password        String?
-  access_provided String   // Admin, Advertiser, Analyst, None
-  
-  client          Client   @relation(fields: [client_id], references: [id], onDelete: Cascade)
+  access_provided String // Admin, Advertiser, Analyst, None
+
+  client Client @relation(fields: [client_id], references: [id], onDelete: Cascade)
 }
 
 model SeoAccess {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
-  client_id       String   @db.ObjectId
-  platform        String   // Google Analytics, Search Console, etc.
+  id              String  @id @default(uuid()) @db.Uuid
+  client_id       String  @db.Uuid
+  platform        String // Google Analytics, Search Console, etc.
   profile_url     String
   username        String?
   password        String?
   access_provided String
-  
-  client          Client   @relation(fields: [client_id], references: [id], onDelete: Cascade)
+
+  client Client @relation(fields: [client_id], references: [id], onDelete: Cascade)
 }
 
 model PaidMediaAccess {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
-  client_id       String   @db.ObjectId
-  platform        String   // Google Ads, Meta Ads
+  id              String  @id @default(uuid()) @db.Uuid
+  client_id       String  @db.Uuid
+  platform        String // Google Ads, Meta Ads
   ad_account_id   String?
   profile_url     String
   username        String?
   password        String?
   access_provided String
-  
-  client          Client   @relation(fields: [client_id], references: [id], onDelete: Cascade)
+
+  client Client @relation(fields: [client_id], references: [id], onDelete: Cascade)
 }
 
 model Holiday {
-  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  id           String   @id @default(uuid()) @db.Uuid
   holiday_name String
   holiday_date DateTime
   is_national  Boolean  @default(true)
 }
 
 model LeaveRecord {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  user_id    String   @db.ObjectId
+  id         String   @id @default(uuid()) @db.Uuid
+  user_id    String   @db.Uuid
   start_date DateTime
   end_date   DateTime
-  leave_type String   // Sick, Casual, Earned
+  leave_type String // Sick, Casual, Earned
   status     String   @default("Pending") // Pending, Approved, Rejected
-  
-  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
 
 model CampaignPerformance {
-  id                String   @id @default(auto()) @map("_id") @db.ObjectId
-  client_id         String   @db.ObjectId
+  id                String   @id @default(uuid()) @db.Uuid
+  client_id         String   @db.Uuid
   campaign_name     String
   impressions       Int      @default(0)
   clicks            Int      @default(0)
@@ -511,96 +512,95 @@ model CampaignPerformance {
   cost_per_lead_inr Float    @default(0.0)
   spend_inr         Float    @default(0.0)
   start_date        DateTime
-  
-  client            Client   @relation(fields: [client_id], references: [id], onDelete: Cascade)
+
+  client Client @relation(fields: [client_id], references: [id], onDelete: Cascade)
 }
 
 model GlobalSettings {
-  id                      String   @id @default(auto()) @map("_id") @db.ObjectId
-  weekly_report_day       Int      @default(5)
-  weekly_report_time      String   @default("17:00")
-  email_subject_template  String   @default("Weekly Activity Report: {company_name}")
-  email_intro_message     String?
-  include_campaigns       Boolean  @default(true)
-  include_tasks           Boolean  @default(true)
-  include_communications  Boolean  @default(true)
-  created_at              DateTime @default(now())
-  updated_at              DateTime @updatedAt
+  id                     String   @id @default(uuid()) @db.Uuid
+  weekly_report_day      Int      @default(5)
+  weekly_report_time     String   @default("17:00")
+  email_subject_template String   @default("Weekly Activity Report: {company_name}")
+  email_intro_message    String?
+  include_campaigns      Boolean  @default(true)
+  include_tasks          Boolean  @default(true)
+  include_communications Boolean  @default(true)
+  created_at             DateTime @default(now())
+  updated_at             DateTime @updatedAt
 }
 
 model ReportDeliveryLog {
-  id            String   @id @default(auto()) @map("_id") @db.ObjectId
-  client_id     String   @db.ObjectId
+  id            String   @id @default(uuid()) @db.Uuid
+  client_id     String   @db.Uuid
   sent_at       DateTime @default(now())
-  status        String   // "Success" or "Failed"
+  status        String // "Success" or "Failed"
   error_message String?
-  
-  client        Client   @relation("ClientReportDeliveryLogs", fields: [client_id], references: [id], onDelete: Cascade)
+
+  client Client @relation("ClientReportDeliveryLogs", fields: [client_id], references: [id], onDelete: Cascade)
 }
 
 model ClientMonthlyPlan {
-  id            String   @id @default(auto()) @map("_id") @db.ObjectId
-  client_id     String   @db.ObjectId
-  department    String   // Social Media, Paid Media, SEO
-  month_year    String   // e.g., "January 2026"
+  id            String   @id @default(uuid()) @db.Uuid
+  client_id     String   @db.Uuid
+  department    String // Social Media, Paid Media, SEO
+  month_year    String // e.g., "January 2026"
   document_link String
   created_at    DateTime @default(now())
 
-  client        Client   @relation(fields: [client_id], references: [id], onDelete: Cascade)
+  client Client @relation(fields: [client_id], references: [id], onDelete: Cascade)
 }
 
 model KnowledgeArticle {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  title       String
-  content     String
-  category    String   // SOP, Template, Framework, Playbook, Guideline, Checklist
-  department  String   // Paid Media, SEO, Social Media, Content, Client Servicing, Strategy, General
-  tags        String[]
-  embedding   Float[]  // 384-dimensional vector for RAG
-  created_by  String   @db.ObjectId
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
+  id         String   @id @default(uuid()) @db.Uuid
+  title      String
+  content    String
+  category   String // SOP, Template, Framework, Playbook, Guideline, Checklist
+  department String // Paid Media, SEO, Social Media, Content, Client Servicing, Strategy, General
+  tags       String[]
+  embedding  Float[] // 384-dimensional vector for RAG
+  created_by String   @db.Uuid
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
-  author      User     @relation(fields: [created_by], references: [id])
+  author User @relation(fields: [created_by], references: [id])
 }
 
 model DailyTracker {
-  id               String   @id @default(auto()) @map("_id") @db.ObjectId
-  client_id        String   @db.ObjectId
-  department       String   // "Web Development", "SEO", "Paid Media", "Social Media"
-  date             DateTime // The specific day for the summary (stored at midnight UTC)
-  summary_text     String?
-  status_color     String?  // e.g. "Green", "Yellow", "Red" or "Work in Progress", "Completed"
-  created_at       DateTime @default(now())
-  updated_at       DateTime @updatedAt
+  id           String   @id @default(uuid()) @db.Uuid
+  client_id    String   @db.Uuid
+  department   String // "Web Development", "SEO", "Paid Media", "Social Media"
+  date         DateTime // The specific day for the summary (stored at midnight UTC)
+  summary_text String?
+  status_color String? // e.g. "Green", "Yellow", "Red" or "Work in Progress", "Completed"
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
 
-  client           Client   @relation(fields: [client_id], references: [id], onDelete: Cascade)
-  
+  client Client @relation(fields: [client_id], references: [id], onDelete: Cascade)
+
   @@unique([client_id, department, date]) // Ensures one cell per brand/dept/date
 }
 
-
 model WorkRequest {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  id              String    @id @default(uuid()) @db.Uuid
   title           String
   description     String
   department      String
-  status          String   @default("Pending Acceptance")
-  priority        String   @default("Medium") // Low, Medium, High, Critical
+  status          String    @default("Pending Acceptance")
+  priority        String    @default("Medium") // Low, Medium, High, Critical
   estimated_hours Float?
   due_date        DateTime?
-  requested_by    String   @db.ObjectId
-  assigned_to     String?  @db.ObjectId
-  created_at      DateTime @default(now())
+  requested_by    String    @db.Uuid
+  assigned_to     String?   @db.Uuid
+  created_at      DateTime  @default(now())
   completed_at    DateTime?
-  client_id       String?  @db.ObjectId
-  sow_id          String?  @db.ObjectId
+  client_id       String?   @db.Uuid
+  sow_id          String?   @db.Uuid
   tags            String[]
   notes           String?
   attachment_urls String[]
 
-  requester       User     @relation("WorkRequestCreator", fields: [requested_by], references: [id])
-  assignee        User?    @relation("WorkRequestAssignee", fields: [assigned_to], references: [id])
-  client          Client?  @relation(fields: [client_id], references: [id])
-  sow             Sow?     @relation(fields: [sow_id], references: [id])
+  requester User    @relation("WorkRequestCreator", fields: [requested_by], references: [id])
+  assignee  User?   @relation("WorkRequestAssignee", fields: [assigned_to], references: [id])
+  client    Client? @relation(fields: [client_id], references: [id])
+  sow       Sow?    @relation(fields: [sow_id], references: [id])
 }

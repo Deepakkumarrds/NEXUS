@@ -30,7 +30,7 @@ export default function NewWorkRequestPage() {
     setSubmitting(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/work-requests', {
+      const response = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com') + '/api/work-requests', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

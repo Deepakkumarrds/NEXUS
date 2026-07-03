@@ -26,7 +26,7 @@ export default function SettingsPage() {
   const [deliveryLogs, setDeliveryLogs] = useState<any[]>([]);
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/settings`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com'}/api/settings`)
       .then(res => res.json())
       .then(data => {
         if (data && data.data) {
@@ -43,7 +43,7 @@ export default function SettingsPage() {
         setLoading(false);
       });
 
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/clients`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com'}/api/clients`)
       .then(res => res.json())
       .then(data => {
         if (data && data.data) {
@@ -56,7 +56,7 @@ export default function SettingsPage() {
       })
       .catch(e => console.error('Failed to fetch clients', e));
 
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/settings/delivery-logs`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com'}/api/settings/delivery-logs`)
       .then(res => res.json())
       .then(data => {
         if (data && data.data) setDeliveryLogs(data.data);
@@ -70,7 +70,7 @@ export default function SettingsPage() {
     setSuccess(false);
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/settings`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com'}/api/settings`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -103,7 +103,7 @@ export default function SettingsPage() {
     setTriggerSuccess('');
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/settings/trigger-report`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com'}/api/settings/trigger-report`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ clientIds: selectedClients })
@@ -129,7 +129,7 @@ export default function SettingsPage() {
     setPreviewHtml(null); // open modal with loading state
     
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/settings/preview-report/${clientId}`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com'}/api/settings/preview-report/${clientId}`);
       if (res.ok) {
         const html = await res.text();
         setPreviewHtml(html);

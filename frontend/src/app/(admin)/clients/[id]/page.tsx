@@ -658,6 +658,9 @@ export default function ClientDetailsPage() {
           </nav>
           
           <h1 className="text-3xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
+            {client.logo && (
+              <img src={client.logo} alt={client.company_name} className="w-10 h-10 rounded-lg object-cover border border-slate-200 shadow-sm shrink-0" />
+            )}
             {client.company_name}
             <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
               client.client_status === 'Active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
@@ -877,13 +880,14 @@ export default function ClientDetailsPage() {
                 </div>
                 <div className="space-y-3 text-sm">
                   <div>
-                    <span className="block text-slate-500 text-[10px] uppercase tracking-wide font-bold">Brand Name</span>
+                    <span className="block text-slate-500 text-[10px] uppercase tracking-wide font-bold">Brand Code</span>
                     <span className="font-medium text-slate-800 flex items-center gap-2">
-                      {client.brand_name || 'N/A'}
-                      {client.brand_shortcode && (
+                      {client.brand_shortcode ? (
                         <span className="bg-slate-100 text-slate-600 text-[10px] font-bold px-1.5 py-0.5 rounded border border-slate-200">
                           {client.brand_shortcode}
                         </span>
+                      ) : (
+                        <span className="text-slate-400">N/A</span>
                       )}
                     </span>
                   </div>

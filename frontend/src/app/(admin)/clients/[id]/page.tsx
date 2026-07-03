@@ -59,8 +59,8 @@ export default function ClientDetailsPage() {
       toast.loading('Generating report...', { id: 'export' });
       
       const [tasksRes, commsRes] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/tasks?client_id=${clientId}`),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/communications`)
+        fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com'}/api/tasks?client_id=${clientId}`),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com'}/api/communications`)
       ]);
       
       const tasksData = await tasksRes.json();
@@ -145,7 +145,7 @@ export default function ClientDetailsPage() {
   const handleSaveNotes = async () => {
     setSavingNotes(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/clients/${clientId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com'}/api/clients/${clientId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ internal_notes: internalNotes })
@@ -225,7 +225,7 @@ export default function ClientDetailsPage() {
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/clients/${clientId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com'}/api/clients/${clientId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -312,7 +312,7 @@ export default function ClientDetailsPage() {
   const [campStartDate, setCampStartDate] = useState('');
 
   const fetchClientDetails = () => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/clients/${clientId}`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com'}/api/clients/${clientId}`)
       .then(res => res.json())
       .then(data => {
         if (data && data.data) {
@@ -340,7 +340,7 @@ export default function ClientDetailsPage() {
   const handleAddContact = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/clients/${clientId}/contacts`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com'}/api/clients/${clientId}/contacts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -371,7 +371,7 @@ export default function ClientDetailsPage() {
   // Handle Onboarding Item toggle
   const toggleOnboardingItem = async (itemId: string, currentStatus: boolean) => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/clients/onboarding/${itemId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com'}/api/clients/onboarding/${itemId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ is_completed: !currentStatus })
@@ -389,7 +389,7 @@ export default function ClientDetailsPage() {
     e.preventDefault();
     if (!newStepName.trim()) return;
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/clients/${clientId}/onboarding`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com'}/api/clients/${clientId}/onboarding`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ step_name: newStepName })
@@ -406,7 +406,7 @@ export default function ClientDetailsPage() {
   // Delete Onboarding Item
   const handleDeleteOnboardingItem = async (itemId: string) => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/clients/onboarding/${itemId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com'}/api/clients/onboarding/${itemId}`, {
         method: 'DELETE'
       });
       if (res.ok) {
@@ -422,7 +422,7 @@ export default function ClientDetailsPage() {
     e.preventDefault();
     if (!socialUrl.trim()) return;
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/clients/${clientId}/socials`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com'}/api/clients/${clientId}/socials`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -447,7 +447,7 @@ export default function ClientDetailsPage() {
   // Delete Social Handle
   const handleDeleteSocialHandle = async (handleId: string) => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/clients/socials/${handleId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com'}/api/clients/socials/${handleId}`, {
         method: 'DELETE'
       });
       if (res.ok) {
@@ -463,7 +463,7 @@ export default function ClientDetailsPage() {
     e.preventDefault();
     if (!seoUrl.trim() && !seoUsername.trim()) return;
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/clients/${clientId}/seo`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com'}/api/clients/${clientId}/seo`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -486,7 +486,7 @@ export default function ClientDetailsPage() {
   // Delete SEO Access
   const handleDeleteSeoAccess = async (accessId: string) => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/clients/seo/${accessId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com'}/api/clients/seo/${accessId}`, {
         method: 'DELETE'
       });
       if (res.ok) {
@@ -502,7 +502,7 @@ export default function ClientDetailsPage() {
     e.preventDefault();
     if (!paidAccountId.trim() && !paidUsername.trim()) return;
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/clients/${clientId}/paid-media`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com'}/api/clients/${clientId}/paid-media`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -526,7 +526,7 @@ export default function ClientDetailsPage() {
   // Delete Paid Media Access
   const handleDeletePaidMediaAccess = async (accessId: string) => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/clients/paid-media/${accessId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com'}/api/clients/paid-media/${accessId}`, {
         method: 'DELETE'
       });
       if (res.ok) {
@@ -542,7 +542,7 @@ export default function ClientDetailsPage() {
     e.preventDefault();
     if (!campaignName.trim() || !campStartDate) return;
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/campaigns`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com'}/api/campaigns`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -570,7 +570,7 @@ export default function ClientDetailsPage() {
   // Delete Campaign Log
   const handleDeleteCampaign = async (id: string) => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/campaigns/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com'}/api/campaigns/${id}`, {
         method: 'DELETE'
       });
       if (res.ok) {
@@ -597,7 +597,7 @@ export default function ClientDetailsPage() {
       return;
     }
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/clients/${clientId}/monthly-plans`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com'}/api/clients/${clientId}/monthly-plans`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -624,7 +624,7 @@ export default function ClientDetailsPage() {
   const handleDeleteMonthlyPlan = async (id: string) => {
     if (!confirm('Are you sure you want to delete this plan?')) return;
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/clients/monthly-plans/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com'}/api/clients/monthly-plans/${id}`, {
         method: 'DELETE'
       });
       if (res.ok) {
@@ -1785,7 +1785,7 @@ export default function ClientDetailsPage() {
                       const formData = new FormData();
                       formData.append('file', file);
                       try {
-                        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/upload`, {
+                        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com'}/api/upload`, {
                           method: 'POST',
                           body: formData
                         });

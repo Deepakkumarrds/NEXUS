@@ -17,7 +17,7 @@ export default function ClientPortalLogin() {
     setLoading(true);
 
     try {
-      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/auth/client-login', {
+      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com') + '/api/auth/client-login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

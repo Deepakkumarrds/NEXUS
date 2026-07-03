@@ -26,8 +26,8 @@ export default function ClientDashboard() {
       // Since it's MVP, we just fetch all and filter client side, or better, the backend should be updated to only return data for this client_id.
       // For now, let's fetch all and filter since it's a quick prototype, but a production app MUST filter backend side.
       const [sowRes, reportRes] = await Promise.all([
-        fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/sows'),
-        fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/reports')
+        fetch((process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com') + '/api/sows'),
+        fetch((process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com') + '/api/reports')
       ]);
 
       const sowData = await sowRes.json();

@@ -43,7 +43,7 @@ export default function ApprovalsPage() {
   }, []);
 
   const fetchAssets = () => {
-    fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/assets')
+    fetch((process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com') + '/api/assets')
       .then(res => res.json())
       .then(data => {
         if (data && data.data) setAssets(data.data);
@@ -56,7 +56,7 @@ export default function ApprovalsPage() {
   };
 
   const fetchClients = () => {
-    fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/clients?activeOnly=true')
+    fetch((process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com') + '/api/clients?activeOnly=true')
       .then(res => res.json())
       .then(data => {
         if (data && data.data) setClients(data.data);
@@ -72,7 +72,7 @@ export default function ApprovalsPage() {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     
     try {
-      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + '/api/assets', {
+      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com') + '/api/assets', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

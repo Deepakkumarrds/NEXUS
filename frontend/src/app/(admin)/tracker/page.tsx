@@ -53,7 +53,7 @@ export default function TrackerPage() {
       const startDate = dates[0].toISOString();
       const endDate = dates[dates.length - 1].toISOString();
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/tracker?department=${encodeURIComponent(department)}&startDate=${startDate}&endDate=${endDate}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com'}/api/tracker?department=${encodeURIComponent(department)}&startDate=${startDate}&endDate=${endDate}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
@@ -86,7 +86,7 @@ export default function TrackerPage() {
     if (!selectedCell) return;
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/tracker/cell`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com'}/api/tracker/cell`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -6,7 +6,8 @@ async function main() {
 
   const roles = [
     { role_name: 'Admin', description: 'Full access to the platform' },
-    { role_name: 'Department Manager', description: 'Can view and update tasks, MOM, SOW tracking, and daily summaries' }
+    { role_name: 'Department Manager', description: 'Can view and update tasks, MOM, SOW tracking, and daily summaries' },
+    { role_name: 'Team Member', description: 'General access for team members' }
   ];
 
   for (const role of roles) {

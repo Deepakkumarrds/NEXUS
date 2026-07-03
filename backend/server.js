@@ -75,6 +75,22 @@ app.use('/api/upload', uploadRoutes);
 // Static uploads folder
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// TEMPORARY ROUTE TO FIX ROLES
+app.get('/api/setup-roles', async (req, res) => {
+  try {
+    const { PrismaClient } = require('@prisma/client');
+    const prisma = new PrismaClient();
+    await prisma.role.upsert({
+      where: { role_name: 'Team Member' },
+      update: {},
+      create: { role_name: 'Team Member', description: 'General access for team members' }
+    });
+    res.send('Team Member role has been successfully added to your database! You can now close this tab and refresh your dashboard.');
+  } catch (err) {
+    res.send('Error: ' + err.message);
+  }
+});
+
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

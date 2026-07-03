@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com';
+const API = process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com';
 
 const DEPT_COLORS: Record<string, string> = {
   'Paid Media':       'bg-blue-50 text-blue-700 border-blue-100',

@@ -51,7 +51,7 @@ export default function AssetDetailPage() {
   }, [params.id]);
 
   const fetchAssetDetails = () => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com'}/api/assets/${params.id}`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com'}/api/assets/${params.id}`)
       .then(res => res.json())
       .then(data => {
         if (data && data.data) {
@@ -71,7 +71,7 @@ export default function AssetDetailPage() {
   const handleStatusUpdate = async (status: string) => {
     if (!asset) return;
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com'}/api/assets/${asset.id}/internal-status`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com'}/api/assets/${asset.id}/internal-status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ internal_status: status })
@@ -91,7 +91,7 @@ export default function AssetDetailPage() {
 
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com'}/api/assets/${asset.id}/versions`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com'}/api/assets/${asset.id}/versions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

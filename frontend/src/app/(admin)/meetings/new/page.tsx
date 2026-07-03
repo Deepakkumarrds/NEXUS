@@ -17,7 +17,7 @@ export default function NewMeetingPage() {
   const [actionItems, setActionItems] = useState([{ action_item: '', deadline: '' }]);
 
   useEffect(() => {
-    fetch((process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com') + '/api/clients?activeOnly=true').then(res => res.json()).then(data => { if(data && data.data) setClients(data.data); });
+    fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + '/api/clients?activeOnly=true').then(res => res.json()).then(data => { if(data && data.data) setClients(data.data); });
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -46,7 +46,7 @@ export default function NewMeetingPage() {
         actionItems: actionItems.filter(ai => ai.action_item.trim() !== '') // only send filled ones
       };
 
-      const response = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com') + '/api/meetings', {
+      const response = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + '/api/meetings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

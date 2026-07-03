@@ -30,8 +30,8 @@ export default function TeamPage() {
   const fetchUsersAndRoles = async () => {
     try {
       const [usersRes, rolesRes] = await Promise.all([
-        fetch((process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com') + '/api/users'),
-        fetch((process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com') + '/api/users/roles')
+        fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + '/api/users'),
+        fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + '/api/users/roles')
       ]);
       const usersData = await usersRes.json();
       const rolesData = await rolesRes.json();
@@ -58,7 +58,7 @@ export default function TeamPage() {
 
   const fetchLeaves = async () => {
     try {
-      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com') + '/api/leaves');
+      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + '/api/leaves');
       const data = await res.json();
       if (data && data.data) {
         setLeaves(data.data);
@@ -79,7 +79,7 @@ export default function TeamPage() {
     const loadingToast = toast.loading('Inviting team member...');
 
     try {
-      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com') + '/api/users', {
+      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + '/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, role_id: roleId, department, designation })
@@ -107,7 +107,7 @@ export default function TeamPage() {
     const updatedSkills = [...(selectedUser.skills || []), newSkill.trim()];
     
     try {
-      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com') + `/api/users/${selectedUser.id}`, {
+      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + `/api/users/${selectedUser.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ skills: updatedSkills })
@@ -127,7 +127,7 @@ export default function TeamPage() {
     if (!selectedUser) return;
     const updatedSkills = selectedUser.skills.filter((s: string) => s !== skillToDelete);
     try {
-      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com') + `/api/users/${selectedUser.id}`, {
+      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + `/api/users/${selectedUser.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ skills: updatedSkills })
@@ -146,7 +146,7 @@ export default function TeamPage() {
     e.preventDefault();
     if (!leaveStart || !leaveEnd || !selectedUser) return;
     try {
-      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com') + '/api/leaves', {
+      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + '/api/leaves', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -172,7 +172,7 @@ export default function TeamPage() {
   // Update Leave Status
   const handleUpdateLeaveStatus = async (leaveId: string, status: 'Approved' | 'Rejected') => {
     try {
-      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com') + `/api/leaves/${leaveId}/status`, {
+      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + `/api/leaves/${leaveId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status })
@@ -193,7 +193,7 @@ export default function TeamPage() {
     if (!confirm('Are you sure you want to remove this team member?')) return;
     
     try {
-      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com') + `/api/users/${id}`, {
+      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + `/api/users/${id}`, {
         method: 'DELETE',
       });
       if (res.ok) {

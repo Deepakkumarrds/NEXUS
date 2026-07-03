@@ -19,7 +19,7 @@ export default function NewSowPage() {
 
 
   useEffect(() => {
-    fetch((process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com') + '/api/clients?activeOnly=true').then(res => res.json()).then(data => { if(data && data.data) setClients(data.data); });
+    fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + '/api/clients?activeOnly=true').then(res => res.json()).then(data => { if(data && data.data) setClients(data.data); });
   }, []);
 
   useEffect(() => {
@@ -81,7 +81,7 @@ export default function NewSowPage() {
         }))
       };
 
-      const response = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://rds-db.onrender.com') + '/api/sows', {
+      const response = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + '/api/sows', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

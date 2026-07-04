@@ -30,7 +30,7 @@ export default function NewWorkRequestPage() {
     setSubmitting(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + '/api/work-requests', {
+      const response = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com') + '/api/work-requests', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

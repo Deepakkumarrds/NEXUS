@@ -35,7 +35,7 @@ export default function WorkRequestsPage() {
 
   const fetchRequests = () => {
     const token = localStorage.getItem('token');
-    fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + '/api/work-requests', {
+    fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com') + '/api/work-requests', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -66,7 +66,7 @@ export default function WorkRequestsPage() {
     // We will pass assigned_to in body since we don't have proper auth headers attached yet
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com'}/api/work-requests/${id}/accept`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com'}/api/work-requests/${id}/accept`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
@@ -84,7 +84,7 @@ export default function WorkRequestsPage() {
   const handleStatusUpdate = async (id: string, newStatus: string) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com'}/api/work-requests/${id}/status`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com'}/api/work-requests/${id}/status`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
@@ -103,7 +103,7 @@ export default function WorkRequestsPage() {
     if(!window.confirm('Are you sure you want to delete this request?')) return;
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com'}/api/work-requests/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com'}/api/work-requests/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });

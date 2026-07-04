@@ -27,7 +27,7 @@ export default function NotificationBell() {
 
   const fetchNotifications = async () => {
     try {
-      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + '/api/notifications');
+      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com') + '/api/notifications');
       const data = await res.json();
       if (data && data.data) {
         setNotifications(data.data);
@@ -39,7 +39,7 @@ export default function NotificationBell() {
 
   const markAllAsRead = async () => {
     try {
-      await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + '/api/notifications/mark-all-read', {
+      await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com') + '/api/notifications/mark-all-read', {
         method: 'PATCH'
       });
       fetchNotifications();

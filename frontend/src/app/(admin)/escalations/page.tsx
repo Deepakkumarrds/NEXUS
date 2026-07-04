@@ -29,7 +29,7 @@ export default function EscalationsPage() {
   }, []);
 
   const fetchEscalations = () => {
-    fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + '/api/escalations')
+    fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com') + '/api/escalations')
       .then(res => res.json())
       .then(data => { 
         if (data && data.data) {
@@ -62,7 +62,7 @@ export default function EscalationsPage() {
 
   const handleStatusChange = async (id: string, newStatus: string) => {
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com'}/api/escalations/${id}/status`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com'}/api/escalations/${id}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus }),
@@ -76,7 +76,7 @@ export default function EscalationsPage() {
   const deleteEscalation = async (id: string) => {
     if(!window.confirm('Are you sure you want to delete this escalation?')) return;
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com'}/api/escalations/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com'}/api/escalations/${id}`, {
         method: 'DELETE'
       });
       if (res.ok) fetchEscalations();

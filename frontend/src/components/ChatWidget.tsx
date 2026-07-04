@@ -42,7 +42,7 @@ export default function ChatWidget() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + '/api/chat', {
+      const response = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com') + '/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

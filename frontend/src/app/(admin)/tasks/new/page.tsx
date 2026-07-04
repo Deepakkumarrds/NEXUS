@@ -47,22 +47,22 @@ function NewTaskForm() {
 
   useEffect(() => {
     // Fetch Clients
-    fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + '/api/clients?activeOnly=true')
+    fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com') + '/api/clients?activeOnly=true')
       .then(res => res.json())
       .then(data => { if(data && data.data) setClients(data.data); });
 
     // Fetch Users (for assignment and skill tags)
-    fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + '/api/users')
+    fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com') + '/api/users')
       .then(res => res.json())
       .then(data => { if(data && data.data) setUsers(data.data); });
 
     // Fetch Holidays (for holiday-aware warning checks)
-    fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + '/api/holidays')
+    fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com') + '/api/holidays')
       .then(res => res.json())
       .then(data => { if(data && data.data) setHolidays(data.data); });
 
     // Fetch SOWs
-    fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + '/api/sows')
+    fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com') + '/api/sows')
       .then(res => res.json())
       .then(data => { if(data && data.data) setSows(data.data); });
   }, []);
@@ -106,7 +106,7 @@ function NewTaskForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + '/api/tasks', {
+      const response = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com') + '/api/tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),

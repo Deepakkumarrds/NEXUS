@@ -77,7 +77,7 @@ export default function NewClientPage() {
         retainer_value: data.retainer_value ? parseFloat(data.retainer_value) : null
       };
 
-      const response = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + '/api/clients?activeOnly=true', {
+      const response = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com') + '/api/clients?activeOnly=true', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -141,7 +141,7 @@ export default function NewClientPage() {
                     const formData = new FormData();
                     formData.append('file', file);
                     try {
-                      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com'}/api/upload`, {
+                      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com'}/api/upload`, {
                         method: 'POST',
                         body: formData
                       });

@@ -27,7 +27,7 @@ export default function ClientSOWsPage() {
 
   const fetchSOWs = async (clientId: string) => {
     try {
-      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + '/api/sows');
+      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com') + '/api/sows');
       const data = await res.json();
       if (data && data.data) {
         // Filter by client_id to ensure they only see their own SOWs

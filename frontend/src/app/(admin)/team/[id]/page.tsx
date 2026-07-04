@@ -25,7 +25,7 @@ export default function EditTeamMemberPage({ params }: { params: Promise<{ id: s
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com';
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com';
         
         // Fetch users to find the specific user, and fetch roles
         const [usersRes, rolesRes] = await Promise.all([
@@ -75,7 +75,7 @@ export default function EditTeamMemberPage({ params }: { params: Promise<{ id: s
     const loadingToast = toast.loading('Saving changes...');
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com';
       const res = await fetch(`${apiUrl}/api/users/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },

@@ -12,7 +12,7 @@ export default function Dashboard() {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     setIsAdmin(user?.role === 'Admin');
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com';
     fetch(`${apiUrl}/api/dashboard/stats?role=${encodeURIComponent(user?.role || '')}`)
       .then(res => res.json())
       .then(data => {

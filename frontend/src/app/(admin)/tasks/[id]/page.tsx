@@ -34,7 +34,7 @@ export default function TaskDetailsPage() {
   const [newResourceTitle, setNewResourceTitle] = useState('');
 
   const fetchTaskDetails = () => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com'}/api/tasks/${taskId}`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com'}/api/tasks/${taskId}`)
       .then(res => res.json())
       .then(data => {
         if (data && data.data) {
@@ -65,7 +65,7 @@ export default function TaskDetailsPage() {
 
   const updateTaskData = async (updates: any) => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com'}/api/tasks/${taskId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com'}/api/tasks/${taskId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates)
@@ -116,7 +116,7 @@ export default function TaskDetailsPage() {
   const cloneTask = async () => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com'}/api/tasks/${taskId}/clone`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com'}/api/tasks/${taskId}/clone`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: user.id || '' })
@@ -136,7 +136,7 @@ export default function TaskDetailsPage() {
   const handleDeleteTask = async () => {
     if (!confirm('Are you sure you want to delete this task? This cannot be undone.')) return;
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com'}/api/tasks/${taskId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com'}/api/tasks/${taskId}`, {
         method: 'DELETE'
       });
       if (res.ok) {
@@ -155,7 +155,7 @@ export default function TaskDetailsPage() {
     if (!newComment.trim()) return;
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com'}/api/tasks/${taskId}/comments`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com'}/api/tasks/${taskId}/comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ comment: newComment, user_id: user.id }),
@@ -173,7 +173,7 @@ export default function TaskDetailsPage() {
     e.preventDefault();
     setIsSubmittingDelay(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com'}/api/tasks/${taskId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com'}/api/tasks/${taskId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -199,7 +199,7 @@ export default function TaskDetailsPage() {
 
   const handleSaveEdit = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com'}/api/tasks/${taskId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com'}/api/tasks/${taskId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

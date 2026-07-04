@@ -32,8 +32,8 @@ export default function TasksPage() {
   const fetchTasks = () => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const url = myTasksOnly 
-      ? `${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com'}/api/tasks?my_tasks=true&user_id=${user.id}`
-      : `${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com'}/api/tasks`;
+      ? `${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com'}/api/tasks?my_tasks=true&user_id=${user.id}`
+      : `${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com'}/api/tasks`;
       
     fetch(url)
       .then(res => res.json())
@@ -56,7 +56,7 @@ export default function TasksPage() {
   const handleBulkComplete = async () => {
     if(selectedTasks.length === 0) return;
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com'}/api/tasks/bulk-status`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com'}/api/tasks/bulk-status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ taskIds: selectedTasks, status: 'Completed' })
@@ -148,7 +148,7 @@ export default function TasksPage() {
     setTasks(updatedTasks);
 
     try {
-      await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-kofj.onrender.com') + `/api/tasks/${draggableId}/status`, {
+      await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com') + `/api/tasks/${draggableId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })

@@ -3,11 +3,21 @@ const prisma = new PrismaClient();
 const Groq = require('groq-sdk');
 const { HfInference } = require('@huggingface/inference');
 
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY
-});
+let groq = null;
+if (process.env.GROQ_API_KEY) {
+  groq = new Groq({
+    apiKey: process.env.GROQ_API_KEY
+  });
+} else {
+  console.warn("WARNING: GROQ_API_KEY is not set. Chat features will be disabled.");
+}
 
-const hf = new HfInference(process.env.HF_TOKEN);
+let hf = null;
+if (process.env.HF_TOKEN) {
+  hf = new HfInference(process.env.HF_TOKEN);
+} else {
+  console.warn("WARNING: HF_TOKEN is not set. Vector search features will be disabled.");
+}
 
 // ─────────────────────────────────────────
 // TOOL DEFINITIONS
@@ -513,9 +523,11 @@ async function executeTool(toolCall) {
       });
     }
 
-    // ── searchKnowledgeBase (RAG) ──
     if (functionName === 'searchKnowledgeBase') {
       try {
+        if (!hf) {
+          return JSON.stringify({ message: 'Vector search is currently disabled because the HF_TOKEN is not configured on the server.' });
+        }
         // 1. Generate embedding for the search query
         const queryEmbedding = await hf.featureExtraction({
           model: 'sentence-transformers/all-MiniLM-L6-v2',
@@ -611,6 +623,10 @@ const handleChat = async (messages) => {
   }
 
   try {
+    if (!groq) {
+      return { role: 'assistant', content: 'AI Chat is currently disabled because the GROQ_API_KEY is not configured on the server.' };
+    }
+
     const response = await groq.chat.completions.create({
       model: 'llama-3.3-70b-versatile',
       messages: messages,

@@ -256,7 +256,7 @@ export default function ClientsPage() {
                     </span>
                   </td>}
                   {columns.service && <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-slate-900 font-medium">{client.retainer_value ? `₹${client.retainer_value.toLocaleString('en-IN')}/mo` : '-'}</div>
+                    {client.retainer_value && <div className="text-slate-900 font-medium">{`₹${client.retainer_value.toLocaleString('en-IN')}/mo`}</div>}
                     <div className="text-slate-500 text-xs">{client.service_type || 'General'}</div>
                   </td>}
                   {columns.industry && <td className="px-6 py-4 whitespace-nowrap text-slate-600">

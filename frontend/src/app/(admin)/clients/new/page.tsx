@@ -41,7 +41,8 @@ export default function NewClientPage() {
     'Content Marketing', 
     'Branding & Design', 
     'Email Marketing', 
-    'WhatsApp Marketing'
+    'WhatsApp Marketing',
+    'Paid Media'
   ];
 
   const {

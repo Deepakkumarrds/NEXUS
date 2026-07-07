@@ -190,7 +190,8 @@ export default function ClientDetailsPage() {
     'Content Marketing', 
     'Branding & Design', 
     'Email Marketing', 
-    'WhatsApp Marketing'
+    'WhatsApp Marketing',
+    'Paid Media'
   ];
 
   const openEditModal = () => {

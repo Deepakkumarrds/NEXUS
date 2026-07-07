@@ -21,7 +21,9 @@ const clientSchema = z.object({
   retainer_value: z.string().optional(),
   objective: z.string().optional(),
   focused_area: z.string().optional(),
-  customer_mindset: z.string().optional()
+  customer_mindset: z.string().optional(),
+  primary_contact_name: z.string().optional(),
+  spoc_name: z.string().optional()
 });
 
 type ClientFormData = z.infer<typeof clientSchema>;

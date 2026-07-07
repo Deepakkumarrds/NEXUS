@@ -147,7 +147,7 @@ model ClientUser {
   reset_token_expires DateTime?
   created_at          DateTime  @default(now())
 
-  client Client @relation(fields: [client_id], references: [id])
+  client Client @relation(fields: [client_id], references: [id], onDelete: Cascade)
 
   asset_annotations AssetAnnotation[]
 }
@@ -166,7 +166,7 @@ model ClientContact {
   festival_greetings String[]
   created_at         DateTime  @default(now())
 
-  client Client @relation(fields: [client_id], references: [id])
+  client Client @relation(fields: [client_id], references: [id], onDelete: Cascade)
 }
 
 model ClientSpoc {
@@ -176,7 +176,7 @@ model ClientSpoc {
   user_id       String   @db.Uuid
   assigned_date DateTime @default(now())
 
-  client Client @relation(fields: [client_id], references: [id])
+  client Client @relation(fields: [client_id], references: [id], onDelete: Cascade)
   user   User   @relation(fields: [user_id], references: [id])
 }
 
@@ -211,7 +211,7 @@ model Task {
   sow_id      String? @db.Uuid
   sow_item_id String? @db.Uuid
 
-  client   Client   @relation(fields: [client_id], references: [id])
+  client   Client   @relation(fields: [client_id], references: [id], onDelete: Cascade)
   assignee User?    @relation("TaskAssignee", fields: [assigned_to], references: [id])
   creator  User     @relation("TaskCreator", fields: [assigned_by], references: [id])
   sow      Sow?     @relation(fields: [sow_id], references: [id])
@@ -245,7 +245,7 @@ model CommunicationLog {
   created_by         String    @db.Uuid
   created_at         DateTime  @default(now())
 
-  client  Client @relation(fields: [client_id], references: [id])
+  client  Client @relation(fields: [client_id], references: [id], onDelete: Cascade)
   creator User   @relation("CommunicationCreator", fields: [created_by], references: [id])
 }
 
@@ -260,7 +260,7 @@ model Meeting {
   created_by        String   @db.Uuid
   created_at        DateTime @default(now())
 
-  client  Client @relation(fields: [client_id], references: [id])
+  client  Client @relation(fields: [client_id], references: [id], onDelete: Cascade)
   creator User   @relation("MeetingCreator", fields: [created_by], references: [id])
 
   action_items MeetingActionItem[]
@@ -288,7 +288,7 @@ model Sow {
   status      String    @default("Active") // Active, Completed
   created_at  DateTime  @default(now())
 
-  client        Client        @relation(fields: [client_id], references: [id])
+  client        Client        @relation(fields: [client_id], references: [id], onDelete: Cascade)
   months        SowMonth[]
   items         SowItem[]
   tasks         Task[]
@@ -332,7 +332,7 @@ model Report {
   report_month String?
   created_at   DateTime @default(now())
 
-  client   Client @relation(fields: [client_id], references: [id])
+  client   Client @relation(fields: [client_id], references: [id], onDelete: Cascade)
   uploader User   @relation(fields: [uploaded_by], references: [id])
 }
 
@@ -348,7 +348,7 @@ model Escalation {
   created_at        DateTime  @default(now())
   resolved_at       DateTime?
 
-  client Client @relation(fields: [client_id], references: [id])
+  client Client @relation(fields: [client_id], references: [id], onDelete: Cascade)
 }
 
 model ClientHealthScore {
@@ -362,7 +362,7 @@ model ClientHealthScore {
   risk_level              String   @default("Stable") // Excellent, Stable, Risk, Critical
   calculated_at           DateTime @default(now())
 
-  client Client @relation(fields: [client_id], references: [id])
+  client Client @relation(fields: [client_id], references: [id], onDelete: Cascade)
 }
 
 model Notification {
@@ -400,7 +400,7 @@ model CreativeAsset {
   created_at      DateTime  @default(now())
   updated_at      DateTime  @updatedAt
 
-  client Client @relation(fields: [client_id], references: [id])
+  client Client @relation(fields: [client_id], references: [id], onDelete: Cascade)
   task   Task?  @relation(fields: [task_id], references: [id])
 
   versions CreativeAssetVersion[]
@@ -601,6 +601,6 @@ model WorkRequest {
 
   requester User    @relation("WorkRequestCreator", fields: [requested_by], references: [id])
   assignee  User?   @relation("WorkRequestAssignee", fields: [assigned_to], references: [id])
-  client    Client? @relation(fields: [client_id], references: [id])
+  client    Client? @relation(fields: [client_id], references: [id], onDelete: Cascade)
   sow       Sow?    @relation(fields: [sow_id], references: [id])
 }

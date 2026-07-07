@@ -24,6 +24,7 @@ export default function TrackerPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [trackerMap, setTrackerMap] = useState<Record<string, Record<string, TrackerCell>>>({});
   const [loading, setLoading] = useState(true);
+  const [hideEmpty, setHideEmpty] = useState(false);
 
   // Modal State
   const [selectedCell, setSelectedCell] = useState<{ client_id: string, clientName: string, dateStr: string, text: string, color: string, tasks: any[], modalDepartment: string } | null>(null);
@@ -135,6 +136,15 @@ export default function TrackerPage() {
     return 'bg-white hover:bg-slate-50';
   };
 
+  const filteredClients = clients.filter(client => {
+    if (!hideEmpty) return true;
+    return dates.some(date => {
+      const dateStr = date.toISOString().split('T')[0];
+      const cell = trackerMap[client.id]?.[dateStr];
+      return cell && (cell.summary_text || cell.status_color || (cell.tasks && cell.tasks.length > 0));
+    });
+  });
+
   return (
     <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
       <div className="flex justify-between items-center mb-6">
@@ -143,6 +153,15 @@ export default function TrackerPage() {
           <p className="text-sm text-slate-500 mt-1">Grid view of daily updates per client.</p>
         </div>
         <div className="flex items-center gap-4">
+          <label className="flex items-center space-x-2 text-sm text-slate-700 cursor-pointer">
+            <input 
+              type="checkbox" 
+              checked={hideEmpty}
+              onChange={(e) => setHideEmpty(e.target.checked)}
+              className="rounded border-slate-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+            />
+            <span>Hide Empty</span>
+          </label>
           <div className="flex bg-slate-100 p-1 rounded-md">
             <button
               onClick={() => setViewMode('Day')}
@@ -191,7 +210,7 @@ export default function TrackerPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 bg-white">
-              {clients.map(client => (
+              {filteredClients.map(client => (
                 <tr key={client.id}>
                   <td className="sticky left-0 bg-white px-6 py-4 text-sm font-medium text-slate-900 border-r border-slate-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] truncate">
                     {client.company_name}

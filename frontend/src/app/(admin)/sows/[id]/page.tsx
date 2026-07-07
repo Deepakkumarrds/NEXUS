@@ -37,6 +37,7 @@ export default function EditSowPage() {
           sow_name: d.sow_name || '',
           start_date: d.start_date ? new Date(d.start_date).toISOString().split('T')[0] : '',
           end_date: d.end_date ? new Date(d.end_date).toISOString().split('T')[0] : '',
+          total_value: d.total_value ? d.total_value.toString() : ''
         });
         
         if (d.months && d.months.length > 0) {

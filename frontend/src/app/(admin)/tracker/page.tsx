@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 type TrackerCell = {
   id?: string;
   summary_text: string | null;
+  summaries?: { department: string; text: string; color: string | null }[];
   status_color: string | null;
   tasks?: any[];
 };
@@ -71,15 +72,41 @@ export default function TrackerPage() {
 
   const openCellModal = (client: Client, date: Date) => {
     const dateStr = date.toISOString().split('T')[0];
-    const cellData = trackerMap[client.id]?.[dateStr] || { summary_text: '', status_color: '', tasks: [] };
+    const cellData = trackerMap[client.id]?.[dateStr] || { summary_text: '', status_color: '', tasks: [], summaries: [] };
+    
+    let initialModalDepartment = department;
+    
+    if (department === 'All Departments') {
+      // Find the first department that actually has data in this cell
+      if (cellData.summaries && cellData.summaries.length > 0) {
+        initialModalDepartment = cellData.summaries[0].department;
+      } else {
+        initialModalDepartment = 'Web Development';
+      }
+    }
+    
+    let initialText = '';
+    let initialColor = '';
+    
+    if (department === 'All Departments') {
+      const existingSummary = cellData.summaries?.find(s => s.department === initialModalDepartment);
+      if (existingSummary) {
+        initialText = existingSummary.text || '';
+        initialColor = existingSummary.color || '';
+      }
+    } else {
+      initialText = cellData.summary_text || '';
+      initialColor = cellData.status_color || '';
+    }
+
     setSelectedCell({
       client_id: client.id,
       clientName: client.company_name,
       dateStr,
-      text: cellData.summary_text || '',
-      color: cellData.status_color || '',
+      text: initialText,
+      color: initialColor,
       tasks: cellData.tasks || [],
-      modalDepartment: department === 'All Departments' ? 'Web Development' : department
+      modalDepartment: initialModalDepartment
     });
   };
 
@@ -103,23 +130,7 @@ export default function TrackerPage() {
       });
 
       if (res.ok) {
-        // Optimistically update UI
-        setTrackerMap(prev => {
-          const clientData = prev[selectedCell.client_id] || {};
-          const existingCell = clientData[selectedCell.dateStr] || {};
-          
-          return {
-            ...prev,
-            [selectedCell.client_id]: {
-              ...clientData,
-              [selectedCell.dateStr]: {
-                ...existingCell,
-                summary_text: selectedCell.text,
-                status_color: selectedCell.color
-              }
-            }
-          };
-        });
+        // Refetch to get updated structured data for All Departments correctly
         setSelectedCell(null);
         fetchTrackerData(); // Refresh to ensure data sync
       }
@@ -226,8 +237,22 @@ export default function TrackerPage() {
                         onClick={() => openCellModal(client, date)}
                         className={`px-3 py-2 border-r border-slate-200 last:border-r-0 text-xs text-slate-700 cursor-pointer transition-colors align-top ${colorClass}`}
                       >
-                        <div className="w-full min-h-[4rem] max-h-32 overflow-y-auto flex flex-col gap-1">
-                          {cell?.summary_text ? (
+                        <div className="w-full min-h-[4rem] flex flex-col gap-1">
+                          {cell?.summaries && cell.summaries.length > 0 ? (
+                            <div className="flex flex-col gap-2 pb-1.5 border-b border-slate-200">
+                              {cell.summaries.map((s, idx) => (
+                                <div key={idx} className="flex flex-col gap-0.5">
+                                  <div className="flex items-center gap-1.5">
+                                    {s.color && (
+                                      <span className={`w-2 h-2 rounded-full ${s.color === 'Green' ? 'bg-green-500' : s.color === 'Yellow' ? 'bg-yellow-500' : s.color === 'Red' ? 'bg-red-500' : 'bg-slate-300'}`}></span>
+                                    )}
+                                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{s.department}</span>
+                                  </div>
+                                  <span className="text-slate-600">{s.text}</span>
+                                </div>
+                              ))}
+                            </div>
+                          ) : cell?.summary_text ? (
                             <div className="text-slate-600 pb-1.5 border-b border-slate-200">
                               {cell.summary_text}
                             </div>
@@ -239,6 +264,9 @@ export default function TrackerPage() {
                               <ol className="list-decimal list-inside space-y-1">
                                 {cell.tasks.map((task: any, idx: number) => (
                                   <li key={task.id} className="text-[10px] leading-tight">
+                                    {department === 'All Departments' && task.department && (
+                                      <span className="font-bold text-slate-500 mr-1">[{task.department}]</span>
+                                    )}
                                     <span className={task.status === 'Completed' ? 'line-through text-slate-400' : 'text-slate-700'}>
                                       {task.title}
                                     </span>
@@ -248,7 +276,7 @@ export default function TrackerPage() {
                               </ol>
                             </div>
                           ) : (
-                            !cell?.summary_text && <span className="text-slate-300 italic">--</span>
+                            (!cell?.summary_text && (!cell?.summaries || cell.summaries.length === 0)) && <span className="text-slate-300 italic">--</span>
                           )}
                         </div>
                       </td>
@@ -278,7 +306,17 @@ export default function TrackerPage() {
                   <label className="block text-sm font-medium text-slate-700 mb-1">Select Department</label>
                   <select 
                     value={selectedCell.modalDepartment}
-                    onChange={e => setSelectedCell({...selectedCell, modalDepartment: e.target.value})}
+                    onChange={e => {
+                      const newDept = e.target.value;
+                      const cellData = trackerMap[selectedCell.client_id]?.[selectedCell.dateStr] || { summaries: [] };
+                      const existingSummary = cellData.summaries?.find((s: any) => s.department === newDept);
+                      setSelectedCell({
+                        ...selectedCell, 
+                        modalDepartment: newDept,
+                        text: existingSummary ? existingSummary.text || '' : '',
+                        color: existingSummary ? existingSummary.color || '' : ''
+                      });
+                    }}
                     className="w-full border-slate-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-slate-900 text-sm py-2 px-3"
                   >
                     {DEPARTMENTS.filter(d => d !== 'All Departments').map(d => (

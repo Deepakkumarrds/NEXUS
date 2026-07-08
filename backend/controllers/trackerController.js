@@ -66,7 +66,8 @@ exports.getTrackerData = async (req, res) => {
         client_id: true,
         title: true,
         status: true,
-        due_date: true
+        due_date: true,
+        department: true
       }
     });
 
@@ -83,6 +84,7 @@ exports.getTrackerData = async (req, res) => {
         trackerMap[t.client_id][dateKey] = {
           id: t.id,
           summary_text: '',
+          summaries: [],
           status_color: null,
           tasks: []
         };
@@ -90,6 +92,9 @@ exports.getTrackerData = async (req, res) => {
       
       const cell = trackerMap[t.client_id][dateKey];
       if (t.summary_text) {
+        if (department === 'All Departments') {
+          cell.summaries.push({ department: t.department, text: t.summary_text, color: t.status_color });
+        }
         const prefix = department === 'All Departments' ? `[${t.department}]\n` : '';
         cell.summary_text += (cell.summary_text ? '\n\n' : '') + prefix + t.summary_text;
       }

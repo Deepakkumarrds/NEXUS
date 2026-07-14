@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 
 export default function ClientActivityPage() {
   const [clients, setClients] = useState<any[]>([]);
@@ -70,6 +70,44 @@ export default function ClientActivityPage() {
     }
   };
 
+  const groupedData = useMemo(() => {
+    const map: Record<string, Record<string, { summary: any, tasks: any[] }>> = {};
+
+    // Group summaries by Date -> Department
+    activityData.summaries.forEach(s => {
+      const dateStr = new Date(s.date).toISOString().split('T')[0];
+      const dept = s.department || 'General';
+      if (!map[dateStr]) map[dateStr] = {};
+      if (!map[dateStr][dept]) map[dateStr][dept] = { summary: null, tasks: [] };
+      map[dateStr][dept].summary = s;
+    });
+
+    // Group tasks by Date -> Department
+    activityData.tasks.forEach(t => {
+      // Use completed_at if it exists, else updated_at
+      const dateVal = t.completed_at || t.updated_at;
+      const dateStr = new Date(dateVal).toISOString().split('T')[0];
+      const dept = t.department || 'General';
+      if (!map[dateStr]) map[dateStr] = {};
+      if (!map[dateStr][dept]) map[dateStr][dept] = { summary: null, tasks: [] };
+      map[dateStr][dept].tasks.push(t);
+    });
+
+    // Convert map to sorted array (descending by date)
+    const sortedDates = Object.keys(map).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+    return sortedDates.map(dateStr => {
+      const depts = Object.keys(map[dateStr]).sort();
+      return {
+        date: dateStr,
+        departments: depts.map(dept => ({
+          name: dept,
+          summary: map[dateStr][dept].summary,
+          tasks: map[dateStr][dept].tasks
+        }))
+      };
+    });
+  }, [activityData]);
+
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case 'Completed': return 'bg-emerald-100 text-emerald-700';
@@ -81,96 +119,118 @@ export default function ClientActivityPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-      <div className="flex justify-between items-center mb-6">
+    <div className="max-w-5xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+      <div className="flex justify-between items-center mb-8 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Client Activity</h1>
-          <p className="text-sm text-slate-500 mt-1">Unified view of all daily summaries and tasks for manual review.</p>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Client Activity</h1>
+          <p className="text-sm text-slate-500 mt-1">Unified day-by-day view grouped by service department.</p>
         </div>
         <div className="flex items-center gap-4">
-          <select 
-            value={selectedClient}
-            onChange={(e) => setSelectedClient(e.target.value)}
-            className="border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-slate-700 py-2 pl-3 pr-10"
-          >
-            {clients.map(c => <option key={c.id} value={c.id}>{c.company_name}</option>)}
-          </select>
-          <select 
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            className="border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-slate-700 py-2 pl-3 pr-10"
-          >
-            {availableMonths.map(m => <option key={m} value={m}>{m}</option>)}
-          </select>
+          <div>
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Brand</label>
+            <select 
+              value={selectedClient}
+              onChange={(e) => setSelectedClient(e.target.value)}
+              className="border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-slate-700 py-2 pl-3 pr-10 outline-none"
+            >
+              {clients.map(c => <option key={c.id} value={c.id}>{c.company_name}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Month</label>
+            <select 
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              className="border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-slate-700 py-2 pl-3 pr-10 outline-none"
+            >
+              {availableMonths.map(m => <option key={m} value={m}>{m}</option>)}
+            </select>
+          </div>
         </div>
       </div>
 
       {loading ? (
-        <div className="p-12 text-center text-slate-500 bg-white rounded-xl shadow-sm border border-slate-200">
-          Loading activity data...
+        <div className="p-12 text-center text-slate-500 bg-white rounded-xl shadow-sm border border-slate-200 animate-pulse">
+          Loading activity timeline...
+        </div>
+      ) : groupedData.length === 0 ? (
+        <div className="p-16 text-center text-slate-500 bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col items-center">
+          <svg className="w-12 h-12 text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+          <p className="text-lg font-medium text-slate-700">No activity logged.</p>
+          <p className="text-sm mt-1">There are no tasks or summaries recorded for {selectedMonth}.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Summaries Column */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
-            <div className="p-4 border-b border-slate-200 bg-slate-50">
-              <h2 className="text-lg font-semibold text-slate-800">Daily Summaries</h2>
-              <p className="text-xs text-slate-500">Logs from the Daily Tracker</p>
-            </div>
-            <div className="p-4 flex-1 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 250px)' }}>
-              {activityData.summaries.length === 0 ? (
-                <div className="text-center text-slate-400 py-8 text-sm">No summaries found for this month.</div>
-              ) : (
-                <div className="space-y-4">
-                  {activityData.summaries.map((summary, idx) => (
-                    <div key={idx} className="p-4 border border-slate-100 rounded-lg hover:bg-slate-50 transition-colors">
-                      <div className="flex justify-between items-start mb-2">
-                        <span className="text-xs font-bold uppercase tracking-wider text-slate-500">{summary.department}</span>
-                        <span className="text-xs text-slate-400">{new Date(summary.date).toLocaleDateString()}</span>
-                      </div>
-                      <p className="text-sm text-slate-700 whitespace-pre-wrap">{summary.summary_text || '--'}</p>
-                      {summary.status_color && (
-                        <div className="mt-2 flex items-center">
-                          <span className={`w-2 h-2 rounded-full mr-1.5 ${summary.status_color === 'Green' ? 'bg-green-500' : summary.status_color === 'Yellow' ? 'bg-yellow-500' : 'bg-red-500'}`}></span>
-                          <span className="text-xs text-slate-500">{summary.status_color}</span>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+        <div className="space-y-8">
+          {groupedData.map((dayData, dayIdx) => (
+            <div key={dayIdx} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+              <div className="bg-slate-50 border-b border-slate-200 px-6 py-4 flex items-center">
+                <div className="bg-indigo-100 text-indigo-700 p-2 rounded-lg mr-4">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                 </div>
-              )}
-            </div>
-          </div>
+                <h2 className="text-lg font-bold text-slate-900 tracking-tight">
+                  {new Date(dayData.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                </h2>
+              </div>
+              
+              <div className="divide-y divide-slate-100">
+                {dayData.departments.map((deptData, deptIdx) => (
+                  <div key={deptIdx} className="p-6">
+                    <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4 flex items-center">
+                      <span className="bg-slate-200 w-2 h-2 rounded-full mr-2"></span>
+                      {deptData.name}
+                    </h3>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 ml-4 border-l-2 border-slate-100 pl-6">
+                      
+                      {/* Left: Summary */}
+                      <div>
+                        <h4 className="text-xs font-semibold text-slate-500 mb-3 flex items-center">
+                          <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h7"></path></svg>
+                          Daily Summary
+                        </h4>
+                        {deptData.summary ? (
+                          <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                            <p className="text-sm text-slate-700 whitespace-pre-wrap">{deptData.summary.summary_text || '--'}</p>
+                            {deptData.summary.status_color && (
+                              <div className="mt-3 flex items-center">
+                                <span className={`w-2 h-2 rounded-full mr-1.5 ${deptData.summary.status_color === 'Green' ? 'bg-green-500' : deptData.summary.status_color === 'Yellow' ? 'bg-yellow-500' : 'bg-red-500'}`}></span>
+                                <span className="text-xs font-medium text-slate-600">{deptData.summary.status_color}</span>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="text-sm text-slate-400 italic">No summary logged for this service.</div>
+                        )}
+                      </div>
 
-          {/* Tasks Column */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
-            <div className="p-4 border-b border-slate-200 bg-slate-50">
-              <h2 className="text-lg font-semibold text-slate-800">Completed & Active Tasks</h2>
-              <p className="text-xs text-slate-500">Tasks updated in this period</p>
-            </div>
-            <div className="p-4 flex-1 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 250px)' }}>
-              {activityData.tasks.length === 0 ? (
-                <div className="text-center text-slate-400 py-8 text-sm">No tasks found for this month.</div>
-              ) : (
-                <div className="space-y-4">
-                  {activityData.tasks.map((task, idx) => (
-                    <div key={idx} className="p-4 border border-slate-100 rounded-lg hover:bg-slate-50 transition-colors flex flex-col">
-                      <div className="flex justify-between items-start mb-1">
-                        <h3 className="text-sm font-medium text-slate-900">{task.title}</h3>
-                        <span className={`px-2 py-0.5 ml-2 text-[10px] uppercase font-bold rounded-full ${getStatusBadgeClass(task.status)}`}>
-                          {task.status}
-                        </span>
+                      {/* Right: Tasks */}
+                      <div>
+                        <h4 className="text-xs font-semibold text-slate-500 mb-3 flex items-center">
+                          <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                          Tasks Completed/Updated
+                        </h4>
+                        {deptData.tasks.length > 0 ? (
+                          <ul className="space-y-3">
+                            {deptData.tasks.map((task: any) => (
+                              <li key={task.id} className="bg-white rounded-lg p-3 border border-slate-200 shadow-sm flex items-start justify-between">
+                                <span className="text-sm text-slate-800 font-medium">{task.title}</span>
+                                <span className={`shrink-0 ml-3 px-2 py-0.5 text-[10px] uppercase font-bold rounded-full ${getStatusBadgeClass(task.status)}`}>
+                                  {task.status}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <div className="text-sm text-slate-400 italic">No tasks logged for this service.</div>
+                        )}
                       </div>
-                      <div className="flex justify-between items-center mt-2">
-                        <span className="text-xs font-bold text-slate-400 uppercase">{task.department || 'General'}</span>
-                        <span className="text-xs text-slate-500">Last updated: {new Date(task.updated_at).toLocaleDateString()}</span>
-                      </div>
+
                     </div>
-                  ))}
-                </div>
-              )}
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          ))}
         </div>
       )}
     </div>

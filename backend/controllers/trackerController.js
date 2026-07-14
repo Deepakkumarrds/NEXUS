@@ -60,7 +60,6 @@ exports.getTrackerData = async (req, res) => {
     
     // Fetch all tasks within the date range
     const tasks = await prisma.task.findMany({
-      include: { assignee: { select: { name: true } } },
       where: taskWhere,
       select: {
         id: true,
@@ -68,7 +67,8 @@ exports.getTrackerData = async (req, res) => {
         title: true,
         status: true,
         due_date: true,
-        department: true
+        department: true,
+        assignee: { select: { name: true } }
       }
     });
 

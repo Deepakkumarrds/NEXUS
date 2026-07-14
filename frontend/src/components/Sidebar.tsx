@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import TrackerDropdown from './TrackerDropdown';
 
 export default function Sidebar() {
   const pathname = usePathname() || '';
@@ -30,9 +31,13 @@ export default function Sidebar() {
 
   return (
     <aside className="w-64 bg-white text-slate-700 h-screen sticky top-0 p-5 flex flex-col border-r border-slate-200/85">
-      <div className="mb-10 px-2">
+      <div className="mb-6 px-2">
         <h1 className="text-xl font-extrabold tracking-tight text-slate-900 font-heading">Nexus</h1>
         <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-wider font-bold">Client Management</p>
+      </div>
+
+      <div className="mb-6">
+        <TrackerDropdown />
       </div>
       
       <nav className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
@@ -157,6 +162,32 @@ export default function Sidebar() {
             >
               <svg className={`w-4 h-4 mr-3 transition-colors ${isActive('/tracker') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
               Daily Tracker
+            </Link>
+          </li>
+          <li>
+            <Link 
+              href="/attendance" 
+              className={`flex items-center px-3 py-2.5 rounded-lg transition-all duration-200 outline-none group ${
+                isActive('/attendance') 
+                  ? 'bg-indigo-50/70 text-indigo-600 font-semibold' 
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+              }`}
+            >
+              <svg className={`w-4 h-4 mr-3 transition-colors ${isActive('/attendance') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              My Attendance
+            </Link>
+          </li>
+          <li>
+            <Link 
+              href="/leaves" 
+              className={`flex items-center px-3 py-2.5 rounded-lg transition-all duration-200 outline-none group ${
+                isActive('/leaves') 
+                  ? 'bg-indigo-50/70 text-indigo-600 font-semibold' 
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+              }`}
+            >
+              <svg className={`w-4 h-4 mr-3 transition-colors ${isActive('/leaves') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+              Leave Tracker
             </Link>
           </li>
 

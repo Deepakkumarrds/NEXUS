@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import TeamAvailabilityWidget from '../../components/TeamAvailabilityWidget';
 
 export default function Dashboard() {
   const [stats, setStats] = useState<any>(null);
@@ -159,6 +160,9 @@ export default function Dashboard() {
             )}
           </div>
         </div>
+
+        {/* Team Availability Feed */}
+        <TeamAvailabilityWidget />
 
         {/* Recent Activity Feed */}
         <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">

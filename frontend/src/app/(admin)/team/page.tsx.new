@@ -21,7 +21,11 @@ export default function TeamPage() {
   // User Skill State
   const [newSkill, setNewSkill] = useState('');
 
-
+  // User Leave State
+  const [leaves, setLeaves] = useState<any[]>([]);
+  const [leaveStart, setLeaveStart] = useState('');
+  const [leaveEnd, setLeaveEnd] = useState('');
+  const [leaveType, setLeaveType] = useState('Casual');
 
   const fetchUsersAndRoles = async () => {
     try {
@@ -52,8 +56,21 @@ export default function TeamPage() {
     }
   };
 
+  const fetchLeaves = async () => {
+    try {
+      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com') + '/api/leaves');
+      const data = await res.json();
+      if (data && data.data) {
+        setLeaves(data.data);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     fetchUsersAndRoles();
+    fetchLeaves();
   }, []);
 
   const handleCreateUser = async (e: React.FormEvent) => {
@@ -124,7 +141,51 @@ export default function TeamPage() {
     }
   };
 
+  // Log Leave Request
+  const handleLogLeave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!leaveStart || !leaveEnd || !selectedUser) return;
+    try {
+      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com') + '/api/leaves', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: selectedUser.id,
+          start_date: leaveStart,
+          end_date: leaveEnd,
+          leave_type: leaveType
+        })
+      });
+      if (res.ok) {
+        toast.success('Leave requested!');
+        setLeaveStart(''); setLeaveEnd('');
+        fetchLeaves();
+        fetchUsersAndRoles();
+      } else {
+        toast.error('Failed to log leave request');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
+  // Update Leave Status
+  const handleUpdateLeaveStatus = async (leaveId: string, status: 'Approved' | 'Rejected') => {
+    try {
+      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com') + `/api/leaves/${leaveId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+      if (res.ok) {
+        toast.success(`Leave request ${status.toLowerCase()}`);
+        fetchLeaves();
+        fetchUsersAndRoles();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   // Delete User
   const deleteUser = async (id: string, e: React.MouseEvent) => {
@@ -227,6 +288,33 @@ export default function TeamPage() {
             </table>
           </div>
 
+          {/* Leave Log Board */}
+          <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm space-y-4">
+            <h2 className="text-sm font-bold text-slate-900">Active Leave Calendar</h2>
+            {leaves.length > 0 ? (
+              <div className="space-y-2 text-xs">
+                {leaves.map((leave: any) => (
+                  <div key={leave.id} className="p-3 border border-slate-100 rounded-lg flex items-center justify-between hover:bg-slate-50 transition">
+                    <div>
+                      <p className="font-bold text-slate-800">{leave.user?.name || 'Employee'} ({leave.leave_type})</p>
+                      <p className="text-slate-500 mt-0.5">{new Date(leave.start_date).toLocaleDateString()} to {new Date(leave.end_date).toLocaleDateString()}</p>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className={`px-2 py-0.5 rounded border font-semibold ${leave.status === 'Approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : leave.status === 'Rejected' ? 'bg-rose-50 text-rose-700 border-rose-100' : 'bg-amber-50 text-amber-700 border-amber-100'}`}>{leave.status}</span>
+                      {leave.status === 'Pending' && (
+                        <div className="flex space-x-1">
+                          <button onClick={() => handleUpdateLeaveStatus(leave.id, 'Approved')} className="bg-emerald-600 text-white px-2 py-0.5 rounded font-bold hover:bg-emerald-700 transition">Approve</button>
+                          <button onClick={() => handleUpdateLeaveStatus(leave.id, 'Rejected')} className="bg-rose-600 text-white px-2 py-0.5 rounded font-bold hover:bg-rose-700 transition">Reject</button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-slate-500 italic">No leaves requested yet.</p>
+            )}
+          </div>
         </div>
 
         {/* Right Column: Invite Form OR Member Operations */}
@@ -268,6 +356,31 @@ export default function TeamPage() {
                 </form>
               </div>
 
+              {/* Log Leaves for selected user */}
+              <div className="space-y-3 pt-4 border-t border-slate-100">
+                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wide">Log Leave / Shift</h3>
+                <form onSubmit={handleLogLeave} className="space-y-3 text-xs font-semibold text-slate-600">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block mb-1">Start Date</label>
+                      <input required type="date" value={leaveStart} onChange={e => setLeaveStart(e.target.value)} className="w-full border border-slate-300 rounded p-2 outline-none bg-white" />
+                    </div>
+                    <div>
+                      <label className="block mb-1">End Date</label>
+                      <input required type="date" value={leaveEnd} onChange={e => setLeaveEnd(e.target.value)} className="w-full border border-slate-300 rounded p-2 outline-none bg-white" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block mb-1">Leave Type</label>
+                    <select value={leaveType} onChange={e => setLeaveType(e.target.value)} className="w-full border border-slate-300 rounded p-2 outline-none bg-white">
+                      <option value="Casual">Casual Leave</option>
+                      <option value="Sick">Sick Leave</option>
+                      <option value="Earned">Earned Leave</option>
+                    </select>
+                  </div>
+                  <button type="submit" className="w-full bg-slate-800 hover:bg-slate-950 text-white font-bold py-2 rounded transition-colors">Request Leave Record</button>
+                </form>
+              </div>
             </div>
           ) : (
             <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">

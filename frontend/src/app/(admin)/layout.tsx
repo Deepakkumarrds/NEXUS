@@ -14,6 +14,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     const token = localStorage.getItem('token');
     const userStr = localStorage.getItem('user');
     
+    // Always mount after first render to prevent infinite spinner
+    setMounted(true);
+    
     if (!token) {
       router.push('/login');
     } else {
@@ -25,20 +28,22 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         } catch (e) {}
       }
 
-      // Restricted paths that only Admins should access
       const restrictedPaths = ['/communications', '/meetings', '/sows', '/approvals', '/reports', '/intelligence', '/knowledge', '/escalations', '/team', '/settings'];
-      
       const isRestricted = restrictedPaths.some(p => pathname?.startsWith(p));
       
       if (!isAdmin && isRestricted) {
-        router.push('/'); // Redirect to dashboard if unauthorized
-      } else {
-        setMounted(true);
+        router.push('/');
       }
     }
   }, [router, pathname]);
 
-  if (!mounted) return null;
+  if (!mounted) {
+    return (
+      <div className="flex min-h-screen bg-slate-50 items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-slate-50 transition-colors duration-300 print:bg-white">

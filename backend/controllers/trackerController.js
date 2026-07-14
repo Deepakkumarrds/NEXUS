@@ -201,7 +201,6 @@ exports.getClientActivity = async (req, res) => {
 
     // Fetch DailyTracker summaries for the client in range
     const summaries = await prisma.dailyTracker.findMany({
-      include: { updater: { select: { name: true } } },
       where: {
         client_id,
         date: {

@@ -54,6 +54,8 @@ export default function TeamPage() {
 
   useEffect(() => {
     fetchUsersAndRoles();
+    const interval = setInterval(fetchUsersAndRoles, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleCreateUser = async (e: React.FormEvent) => {

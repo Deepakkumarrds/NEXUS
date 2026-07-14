@@ -36,6 +36,7 @@ export default function TrackerDropdown() {
 
   useEffect(() => {
     fetchStatus();
+    const interval = setInterval(fetchStatus, 10000);
 
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -43,7 +44,10 @@ export default function TrackerDropdown() {
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      clearInterval(interval);
+    };
   }, []);
 
   const handleAction = async (actionUrl: string, newStatus?: string) => {

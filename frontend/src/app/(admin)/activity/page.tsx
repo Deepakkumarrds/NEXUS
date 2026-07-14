@@ -264,8 +264,8 @@ export default function ClientActivityPage() {
                           <div className="text-sm text-slate-400 italic">No tasks logged for this service.</div>
                         )}
                       </div>
-
                     </div>
+                  </div>
                   ))}
                 </div>
               )}

@@ -191,12 +191,20 @@ export default function ClientActivityPage() {
                         {deptData.summary ? (
                           <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
                             <p className="text-sm text-slate-700 whitespace-pre-wrap">{deptData.summary.summary_text || '--'}</p>
-                            {deptData.summary.status_color && (
-                              <div className="mt-3 flex items-center">
-                                <span className={`w-2 h-2 rounded-full mr-1.5 ${deptData.summary.status_color === 'Green' ? 'bg-green-500' : deptData.summary.status_color === 'Yellow' ? 'bg-yellow-500' : 'bg-red-500'}`}></span>
-                                <span className="text-xs font-medium text-slate-600">{deptData.summary.status_color}</span>
-                              </div>
-                            )}
+                            <div className="mt-3 flex items-center justify-between">
+                              {deptData.summary.status_color && (
+                                <div className="flex items-center">
+                                  <span className={`w-2 h-2 rounded-full mr-1.5 ${deptData.summary.status_color === 'Green' ? 'bg-green-500' : deptData.summary.status_color === 'Yellow' ? 'bg-yellow-500' : 'bg-red-500'}`}></span>
+                                  <span className="text-xs font-medium text-slate-600">{deptData.summary.status_color}</span>
+                                </div>
+                              )}
+                              {deptData.summary.updater?.name && (
+                                <div className="flex items-center text-xs text-slate-500">
+                                  <svg className="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                  {deptData.summary.updater.name}
+                                </div>
+                              )}
+                            </div>
                           </div>
                         ) : (
                           <div className="text-sm text-slate-400 italic">No summary logged for this service.</div>
@@ -212,9 +220,17 @@ export default function ClientActivityPage() {
                         {deptData.tasks.length > 0 ? (
                           <ul className="space-y-3">
                             {deptData.tasks.map((task: any) => (
-                              <li key={task.id} className="bg-white rounded-lg p-3 border border-slate-200 shadow-sm flex items-start justify-between">
-                                <span className="text-sm text-slate-800 font-medium">{task.title}</span>
-                                <span className={`shrink-0 ml-3 px-2 py-0.5 text-[10px] uppercase font-bold rounded-full ${getStatusBadgeClass(task.status)}`}>
+                              <li key={task.id} className="bg-white rounded-lg p-3 border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+                                <div>
+                                  <span className="text-sm text-slate-800 font-medium block">{task.title}</span>
+                                  {task.assignee?.name && (
+                                    <span className="text-xs text-slate-500 mt-1 flex items-center">
+                                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                      {task.assignee.name}
+                                    </span>
+                                  )}
+                                </div>
+                                <span className={`shrink-0 px-2 py-0.5 text-[10px] uppercase font-bold rounded-full ${getStatusBadgeClass(task.status)}`}>
                                   {task.status}
                                 </span>
                               </li>

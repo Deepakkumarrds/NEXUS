@@ -124,6 +124,19 @@ export default function Sidebar() {
               </li>
               <li>
                 <Link 
+                  href="/activity" 
+                  className={`flex items-center px-3 py-2.5 rounded-lg transition-all duration-200 outline-none group ${
+                    isActive('/activity') 
+                      ? 'bg-indigo-50/70 text-indigo-600 font-semibold' 
+                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  }`}
+                >
+                  <svg className={`w-4 h-4 mr-3 transition-colors ${isActive('/activity') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                  Client Activity
+                </Link>
+              </li>
+              <li>
+                <Link 
                   href="/approvals" 
                   className={`flex items-center px-3 py-2.5 rounded-lg transition-all duration-200 outline-none group ${
                     isActive('/approvals') 

@@ -183,3 +183,53 @@ exports.updateTrackerCell = async (req, res) => {
     res.status(500).json({ error: 'Server error updating tracker cell' });
   }
 };
+
+// Get unified client activity (tasks + daily summaries)
+exports.getClientActivity = async (req, res) => {
+  try {
+    const { client_id, startDate, endDate } = req.query;
+
+    if (!client_id || !startDate || !endDate) {
+      return res.status(400).json({ error: 'Missing required parameters: client_id, startDate, endDate' });
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    start.setUTCHours(0, 0, 0, 0);
+    end.setUTCHours(23, 59, 59, 999);
+
+    // Fetch DailyTracker summaries for the client in range
+    const summaries = await prisma.dailyTracker.findMany({
+      where: {
+        client_id,
+        date: {
+          gte: start,
+          lte: end
+        }
+      },
+      orderBy: { date: 'asc' }
+    });
+
+    // Fetch Tasks for the client in range
+    // We'll pull tasks that are either completed in this range or updated in this range
+    const tasks = await prisma.task.findMany({
+      where: {
+        client_id,
+        updated_at: {
+          gte: start,
+          lte: end
+        }
+      },
+      orderBy: { updated_at: 'desc' }
+    });
+
+    res.json({
+      success: true,
+      summaries,
+      tasks
+    });
+  } catch (error) {
+    console.error('Error fetching client activity:', error);
+    res.status(500).json({ error: 'Server error fetching client activity' });
+  }
+};

@@ -7,18 +7,8 @@ exports.createTask = async (req, res) => {
   try {
     const { title, description, priority, due_date, client_id, assigned_to, is_recurring, recurrence_pattern, recurrence_end, resource_links, checklist, sow_id, sow_item_id, department, is_sow, estimated_hours } = req.body;
     
-    // Fallback: Create a dummy user if none exist to act as creator
-    let user = await prisma.user.findFirst();
-    if (!user) {
-      const role = await prisma.role.upsert({
-        where: { role_name: 'Admin' },
-        update: {},
-        create: { role_name: 'Admin' }
-      });
-      user = await prisma.user.create({
-        data: { name: 'Admin', email: 'admin@test.com', password_hash: '123', role_id: role.id }
-      });
-    }
+    // Use the logged-in user as the creator
+    const creatorId = req.user && req.user.id ? req.user.id : (await prisma.user.findFirst()).id;
 
     const task = await prisma.task.create({
       data: {
@@ -28,7 +18,7 @@ exports.createTask = async (req, res) => {
         due_date: due_date ? new Date(due_date) : null,
         client_id,
         assigned_to: assigned_to || null,
-        assigned_by: user.id, // Required field
+        assigned_by: creatorId, // Required field
         status: 'Pending',
         is_recurring: is_recurring || false,
         recurrence_pattern: recurrence_pattern || null,

@@ -222,6 +222,7 @@ exports.getClientActivity = async (req, res) => {
           lte: end
         }
       },
+      include: { assignee: { select: { name: true } } },
       orderBy: { updated_at: 'desc' }
     });
 

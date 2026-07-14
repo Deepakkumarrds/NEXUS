@@ -42,6 +42,11 @@ model User {
   knowledge_articles     KnowledgeArticle[]
   work_requests_created  WorkRequest[]          @relation("WorkRequestCreator")
   work_requests_assigned WorkRequest[]          @relation("WorkRequestAssignee")
+  
+  current_status         String    @default("Offline") // Offline, Available, Tea Break, Lunch Break, Meeting
+  attendances            Attendance[]
+  approved_leaves        LeaveRecord[]          @relation("LeaveApprover")
+  leave_balances         LeaveBalance[]
 }
 
 model Role {
@@ -492,14 +497,34 @@ model Holiday {
 }
 
 model LeaveRecord {
-  id         String   @id @default(uuid()) @db.Uuid
-  user_id    String   @db.Uuid
-  start_date DateTime
-  end_date   DateTime
-  leave_type String // Sick, Casual, Earned
-  status     String   @default("Pending") // Pending, Approved, Rejected
+  id          String   @id @default(uuid()) @db.Uuid
+  user_id     String   @db.Uuid
+  start_date  DateTime
+  end_date    DateTime
+  leave_type  String // Sick, Casual, Earned
+  reason      String?
+  status      String   @default("Pending") // Pending, Approved, Rejected
+  approved_by String?  @db.Uuid
+  created_at  DateTime @default(now())
+
+  user     User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  approver User? @relation("LeaveApprover", fields: [approved_by], references: [id])
+}
+
+model LeaveBalance {
+  id                  String @id @default(uuid()) @db.Uuid
+  user_id             String @db.Uuid
+  year                Int
+  sick_leaves_total   Int    @default(12)
+  sick_leaves_used    Int    @default(0)
+  casual_leaves_total Int    @default(12)
+  casual_leaves_used  Int    @default(0)
+  earned_leaves_total Int    @default(0)
+  earned_leaves_used  Int    @default(0)
 
   user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, year])
 }
 
 model CampaignPerformance {
@@ -603,4 +628,29 @@ model WorkRequest {
   assignee  User?   @relation("WorkRequestAssignee", fields: [assigned_to], references: [id])
   client    Client? @relation(fields: [client_id], references: [id], onDelete: Cascade)
   sow       Sow?    @relation(fields: [sow_id], references: [id])
+}
+
+model Attendance {
+  id                  String    @id @default(uuid()) @db.Uuid
+  user_id             String    @db.Uuid
+  date                DateTime  @db.Date
+  login_time          DateTime  @default(now())
+  logout_time         DateTime?
+  total_working_hours Float     @default(0)
+  created_at          DateTime  @default(now())
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  status_logs StatusLog[]
+}
+
+model StatusLog {
+  id               String    @id @default(uuid()) @db.Uuid
+  attendance_id    String    @db.Uuid
+  status           String    // Available, Tea Break, Lunch Break, Meeting
+  start_time       DateTime  @default(now())
+  end_time         DateTime?
+  duration_minutes Float     @default(0)
+
+  attendance Attendance @relation(fields: [attendance_id], references: [id], onDelete: Cascade)
 }

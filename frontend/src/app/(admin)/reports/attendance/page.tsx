@@ -14,7 +14,7 @@ export default function AttendanceReportPage() {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com';
       const res = await fetch(`${apiUrl}/api/leaves/report`, {
         headers: { Authorization: `Bearer ${token}` }
       });

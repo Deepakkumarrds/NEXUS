@@ -29,7 +29,7 @@ export default function LeavesPage() {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com';
       
       if (activeTab === 'my-leaves') {
         const res = await fetch(`${apiUrl}/api/leaves/my-leaves`, {
@@ -55,7 +55,7 @@ export default function LeavesPage() {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com';
       const res = await fetch(`${apiUrl}/api/leaves/apply`, {
         method: 'POST',
         headers: { 
@@ -80,7 +80,7 @@ export default function LeavesPage() {
   const handleApprovalAction = async (id: string, action: 'approve' | 'reject') => {
     try {
       const token = localStorage.getItem('token');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com';
       const res = await fetch(`${apiUrl}/api/leaves/${id}/${action}`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` }

@@ -18,7 +18,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     setMounted(true);
     
     if (!token) {
-      router.push('/login');
+      window.location.replace('/login');
     } else {
       let isAdmin = false;
       if (userStr) {
@@ -32,7 +32,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       const isRestricted = restrictedPaths.some(p => pathname?.startsWith(p));
       
       if (!isAdmin && isRestricted) {
-        router.push('/');
+        window.location.replace('/');
       }
     }
   }, [router, pathname]);

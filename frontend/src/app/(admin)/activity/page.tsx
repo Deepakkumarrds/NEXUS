@@ -11,6 +11,7 @@ export default function ClientActivityPage() {
   
   const [loading, setLoading] = useState(false);
   const [activityData, setActivityData] = useState<{summaries: any[], tasks: any[]}>({ summaries: [], tasks: [] });
+  const [expandedDays, setExpandedDays] = useState<Record<string, boolean>>({});
 
   // Generate last 12 months for dropdown
   const availableMonths = [];
@@ -95,6 +96,12 @@ export default function ClientActivityPage() {
 
     // Convert map to sorted array (descending by date)
     const sortedDates = Object.keys(map).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+    
+    // Automatically expand the first date if not already set
+    if (sortedDates.length > 0 && Object.keys(expandedDays).length === 0) {
+      setExpandedDays({ [sortedDates[0]]: true });
+    }
+
     return sortedDates.map(dateStr => {
       const depts = Object.keys(map[dateStr]).sort();
       return {
@@ -107,6 +114,10 @@ export default function ClientActivityPage() {
       };
     });
   }, [activityData]);
+
+  const toggleDay = (dateStr: string) => {
+    setExpandedDays(prev => ({ ...prev, [dateStr]: !prev[dateStr] }));
+  };
 
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
@@ -160,27 +171,40 @@ export default function ClientActivityPage() {
           <p className="text-sm mt-1">There are no tasks or summaries recorded for {selectedMonth}.</p>
         </div>
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-4">
           {groupedData.map((dayData, dayIdx) => (
-            <div key={dayIdx} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-              <div className="bg-slate-50 border-b border-slate-200 px-6 py-4 flex items-center">
-                <div className="bg-indigo-100 text-indigo-700 p-2 rounded-lg mr-4">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            <div key={dayIdx} className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+              <button 
+                onClick={() => toggleDay(dayData.date)}
+                className="w-full bg-slate-50 border-b border-slate-200 px-5 py-3 flex items-center justify-between hover:bg-slate-100 transition-colors"
+              >
+                <div className="flex items-center">
+                  <div className="bg-indigo-100 text-indigo-700 p-1.5 rounded-md mr-3">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                  </div>
+                  <h2 className="text-base font-bold text-slate-900 tracking-tight">
+                    {new Date(dayData.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                  </h2>
                 </div>
-                <h2 className="text-lg font-bold text-slate-900 tracking-tight">
-                  {new Date(dayData.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                </h2>
-              </div>
+                <div className="text-slate-400">
+                  {expandedDays[dayData.date] ? (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7"></path></svg>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                  )}
+                </div>
+              </button>
               
-              <div className="divide-y divide-slate-100">
-                {dayData.departments.map((deptData, deptIdx) => (
-                  <div key={deptIdx} className="p-6">
-                    <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4 flex items-center">
-                      <span className="bg-slate-200 w-2 h-2 rounded-full mr-2"></span>
-                      {deptData.name}
-                    </h3>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 ml-4 border-l-2 border-slate-100 pl-6">
+              {expandedDays[dayData.date] && (
+                <div className="divide-y divide-slate-100">
+                  {dayData.departments.map((deptData, deptIdx) => (
+                    <div key={deptIdx} className="p-4 sm:p-5">
+                      <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center">
+                        <span className="bg-slate-200 w-1.5 h-1.5 rounded-full mr-2"></span>
+                        {deptData.name}
+                      </h3>
+                      
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 ml-2 border-l-2 border-slate-100 pl-4 sm:pl-5">
                       
                       {/* Left: Summary */}
                       <div>
@@ -242,9 +266,9 @@ export default function ClientActivityPage() {
                       </div>
 
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
         </div>

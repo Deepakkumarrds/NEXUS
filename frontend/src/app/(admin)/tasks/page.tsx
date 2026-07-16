@@ -326,13 +326,6 @@ export default function TasksPage() {
                                         <span className="text-xs font-bold text-slate-700 leading-none">{task.assignee?.name || 'Unassigned'}</span>
                                       </div>
                                     </div>
-                                    
-                                    {task.creator && task.creator.name !== task.assignee?.name && (
-                                      <div className="flex flex-col items-end text-right">
-                                        <span className="text-[9px] font-medium text-slate-400 leading-none mb-0.5">Created by</span>
-                                        <span className="text-[10px] font-bold text-slate-600 leading-none">{task.creator.name}</span>
-                                      </div>
-                                    )}
                                   </div>
                                 </div>
                               </div>

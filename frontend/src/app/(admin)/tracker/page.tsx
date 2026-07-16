@@ -18,6 +18,8 @@ type Client = {
 const DEPARTMENTS = ['All Departments', 'Web Development', 'SEO', 'Paid Media', 'Social Media'];
 
 export default function TrackerPage() {
+  const [userRole, setUserRole] = useState<string>('');
+  
   const [department, setDepartment] = useState(DEPARTMENTS[0]);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [viewMode, setViewMode] = useState<'Day' | 'Week'>('Day');
@@ -43,6 +45,16 @@ export default function TrackerPage() {
       setDates(d);
     }
   }, [selectedDate, viewMode]);
+
+  useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const u = JSON.parse(userStr);
+        setUserRole(u.role || '');
+      } catch (e) {}
+    }
+  }, []);
 
   useEffect(() => {
     if (dates.length > 0) fetchTrackerData();
@@ -160,8 +172,7 @@ export default function TrackerPage() {
     <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Daily Tracker</h1>
-          <p className="text-sm text-slate-500 mt-1">Grid view of daily updates per client.</p>
+          <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Tracking Hub</h1>
         </div>
         <div className="flex items-center gap-4">
           <label className="flex items-center space-x-2 text-sm text-slate-700 cursor-pointer">
@@ -202,7 +213,6 @@ export default function TrackerPage() {
           </select>
         </div>
       </div>
-
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
         {loading ? (
           <div className="p-12 text-center text-slate-500">Loading Tracker Grid...</div>

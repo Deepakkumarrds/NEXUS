@@ -38,8 +38,7 @@ export default function ClientsPage() {
     spoc: true,
     service: true,
     industry: true,
-    status: true,
-    renewal: true
+    status: true
   });
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
@@ -82,7 +81,7 @@ export default function ClientsPage() {
   const uniqueIndustries = Array.from(new Set(clients.map(c => c.industry).filter(Boolean)));
 
   const exportCSV = () => {
-    const headers = ['Company', 'Email', 'Client Name', 'SPOC', 'Industry', 'Status', 'Retainer Value', 'Service Type', 'Renewal Date'];
+    const headers = ['Company', 'Email', 'Client Name', 'SPOC', 'Industry', 'Status', 'Retainer Value', 'Service Type'];
     const rows = filteredClients.map(c => [
       `"${c.company_name}"`,
       `"${c.email || ''}"`,
@@ -91,8 +90,7 @@ export default function ClientsPage() {
       `"${c.industry || ''}"`,
       `"${c.client_status}"`,
       `"${c.retainer_value || 0}"`,
-      `"${c.service_type || ''}"`,
-      `"${c.renewal_date ? new Date(c.renewal_date).toLocaleDateString() : ''}"`
+      `"${c.service_type || ''}"`
     ]);
     
     const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
@@ -212,27 +210,26 @@ export default function ClientsPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-visible min-h-[400px]">
+      <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-x-auto min-h-[400px]">
         {loading ? (
           <div className="p-8 text-center text-slate-500 text-sm">Loading data...</div>
         ) : (
           <table className="min-w-full divide-y divide-slate-200 text-sm">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                {columns.company && <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700">Company</th>}
-                {columns.contact && <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700">Client Name</th>}
-                {columns.spoc && <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700">SPOC</th>}
-                {columns.service && <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700">Service & Value</th>}
-                {columns.industry && <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700">Industry</th>}
-                {columns.status && <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700">Status</th>}
-                {columns.renewal && <th scope="col" className="px-6 py-3 text-left font-semibold text-slate-700">Renewal Date</th>}
-                <th scope="col" className="px-6 py-3 text-right font-semibold text-slate-700">Actions</th>
+                {columns.company && <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700">Company</th>}
+                {columns.contact && <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700">Client Name</th>}
+                {columns.spoc && <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700">SPOC</th>}
+                {columns.service && <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700">Service & Value</th>}
+                {columns.industry && <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700">Industry</th>}
+                {columns.status && <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700">Status</th>}
+                <th scope="col" className="px-4 py-3 text-right font-semibold text-slate-700">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-slate-100 relative">
               {filteredClients.map(client => (
                 <tr key={client.id} className="hover:bg-slate-50 transition-colors">
-                  {columns.company && <td className="px-6 py-4 whitespace-nowrap">
+                  {columns.company && <td className="px-4 py-3 whitespace-nowrap">
                     <Link href={`/clients/${client.id}`} className="font-medium text-indigo-600 hover:text-indigo-800 flex items-center transition-colors">
                       {client.logo ? (
                         <img src={client.logo} alt={client.brand_name || client.company_name} className="w-8 h-8 rounded object-cover border border-indigo-100 mr-3 shrink-0" />
@@ -247,30 +244,33 @@ export default function ClientsPage() {
                       </div>
                     </Link>
                   </td>}
-                  {columns.contact && <td className="px-6 py-4 whitespace-nowrap text-slate-700 font-medium">
+                  {columns.contact && <td className="px-4 py-3 whitespace-nowrap text-slate-700 font-medium">
                     {client.primary_contact_name || '-'}
                   </td>}
-                  {columns.spoc && <td className="px-6 py-4 whitespace-nowrap">
+                  {columns.spoc && <td className="px-4 py-3 whitespace-nowrap">
                     <span className="text-xs font-semibold px-2.5 py-1 bg-slate-100 text-slate-600 rounded">
                       {client.spoc_name || 'Unassigned'}
                     </span>
                   </td>}
-                  {columns.service && <td className="px-6 py-4 whitespace-nowrap">
-                    {client.retainer_value && <div className="text-slate-900 font-medium">{`₹${client.retainer_value.toLocaleString('en-IN')}/mo`}</div>}
-                    <div className="text-slate-500 text-xs">{client.service_type || 'General'}</div>
+                  {columns.service && <td className="px-4 py-3">
+                    {client.retainer_value && <div className="text-slate-900 font-medium mb-1">{`₹${client.retainer_value.toLocaleString('en-IN')}/mo`}</div>}
+                    <div className="flex flex-col gap-1">
+                      {client.service_type ? client.service_type.split(',').map((service, idx) => (
+                        <span key={idx} className="text-xs text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md w-fit font-medium">
+                          {service.trim()}
+                        </span>
+                      )) : <span className="text-slate-500 text-xs">General</span>}
+                    </div>
                   </td>}
-                  {columns.industry && <td className="px-6 py-4 whitespace-nowrap text-slate-600">
+                  {columns.industry && <td className="px-4 py-3 whitespace-nowrap text-slate-600">
                     {client.industry || '-'}
                   </td>}
-                  {columns.status && <td className="px-6 py-4 whitespace-nowrap">
+                  {columns.status && <td className="px-4 py-3 whitespace-nowrap">
                     <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${getStatusBadge(client.client_status)}`}>
                       {client.client_status}
                     </span>
                   </td>}
-                  {columns.renewal && <td className="px-6 py-4 whitespace-nowrap text-slate-500">
-                    {client.renewal_date ? new Date(client.renewal_date).toLocaleDateString() : 'N/A'}
-                  </td>}
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-4 py-3 whitespace-nowrap">
                     <div className="flex items-center justify-end gap-2">
                       <Link 
                         href={`/clients/${client.id}`}

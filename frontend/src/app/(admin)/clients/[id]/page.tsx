@@ -175,6 +175,7 @@ export default function ClientDetailsPage() {
   const [editFocusedArea, setEditFocusedArea] = useState('');
   const [editCustomerMindset, setEditCustomerMindset] = useState('');
   const [editLogo, setEditLogo] = useState('');
+  const [editOnboardingDate, setEditOnboardingDate] = useState('');
 
   // Monthly Plans State
   const [monthlyDepartment, setMonthlyDepartment] = useState('Social Media');
@@ -211,6 +212,7 @@ export default function ClientDetailsPage() {
       setEditFocusedArea(client.focused_area || '');
       setEditCustomerMindset(client.customer_mindset || '');
       setEditLogo(client.logo || '');
+      setEditOnboardingDate(client.onboarding_date ? new Date(client.onboarding_date).toISOString().split('T')[0] : '');
       
       // Parse service_type from string to array
       if (client.service_type) {
@@ -245,7 +247,8 @@ export default function ClientDetailsPage() {
           objective: editObjective || null,
           focused_area: editFocusedArea || null,
           customer_mindset: editCustomerMindset || null,
-          logo: editLogo || null
+          logo: editLogo || null,
+          onboarding_date: editOnboardingDate || null
         })
       });
       if (res.ok) {
@@ -1766,17 +1769,23 @@ export default function ClientDetailsPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
+                  <label className="block mb-1">Project Start Date / Joining Date</label>
+                  <input type="date" value={editOnboardingDate} onChange={e => setEditOnboardingDate(e.target.value)} className="w-full border border-slate-300 rounded p-2 outline-none font-normal text-slate-800" />
+                </div>
+                <div>
                   <label className="block mb-1">Email</label>
                   <input type="email" value={editEmail} onChange={e => setEditEmail(e.target.value)} className="w-full border border-slate-300 rounded p-2 outline-none font-normal text-slate-800" />
                 </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block mb-1">Phone Number</label>
                   <input type="text" value={editPhone} onChange={e => setEditPhone(e.target.value)} className="w-full border border-slate-300 rounded p-2 outline-none font-normal text-slate-800" placeholder="e.g. +91 98765 43210" />
                 </div>
-              </div>
-              <div>
-                <label className="block mb-1">Website URL</label>
-                <input type="url" value={editWebsite} onChange={e => setEditWebsite(e.target.value)} className="w-full border border-slate-300 rounded p-2 outline-none font-normal text-slate-800" placeholder="https://example.com" />
+                <div>
+                  <label className="block mb-1">Website URL</label>
+                  <input type="url" value={editWebsite} onChange={e => setEditWebsite(e.target.value)} className="w-full border border-slate-300 rounded p-2 outline-none font-normal text-slate-800" placeholder="https://example.com" />
+                </div>
               </div>
 
               <div>

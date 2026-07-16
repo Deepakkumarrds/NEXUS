@@ -21,6 +21,7 @@ export default function TrackerDropdown() {
       const token = localStorage.getItem('token');
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com';
       const res = await fetch(`${apiUrl}/api/attendance/my-status`, {
+        cache: 'no-store',
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
@@ -51,6 +52,7 @@ export default function TrackerDropdown() {
   }, []);
 
   const handleAction = async (actionUrl: string, newStatus?: string) => {
+    if (loading) return;
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
@@ -91,8 +93,9 @@ export default function TrackerDropdown() {
   return (
     <div className="relative w-full" ref={dropdownRef}>
       <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-3 py-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors shadow-sm"
+        onClick={() => !loading && setIsOpen(!isOpen)}
+        disabled={loading}
+        className={`w-full flex items-center justify-between px-3 py-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors shadow-sm ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
       >
         <div className="flex items-center gap-2">
           <span className={`w-2.5 h-2.5 rounded-full ${STATUS_COLORS[status as keyof typeof STATUS_COLORS] || 'bg-slate-400'}`}></span>

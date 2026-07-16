@@ -18,6 +18,7 @@ const clientSchema = z.object({
   phone: z.string().optional(),
   website: z.string().url('Invalid URL format (e.g. https://example.com)').optional().or(z.literal('')),
   client_status: z.enum(['Active', 'Hold', 'Lost']),
+  onboarding_date: z.string().optional(),
   retainer_value: z.string().optional(),
   objective: z.string().optional(),
   focused_area: z.string().optional(),
@@ -63,6 +64,7 @@ export default function NewClientPage() {
       phone: '',
       website: '',
       client_status: 'Active',
+      onboarding_date: '',
       retainer_value: '',
       objective: '',
       focused_area: '',
@@ -241,6 +243,15 @@ export default function NewClientPage() {
                 <option value="Lost">Lost</option>
               </select>
               {errors.client_status && <p className="mt-1 text-xs text-rose-500">{errors.client_status.message}</p>}
+            </div>
+
+            <div>
+              <label className="block font-medium text-slate-700 mb-1.5">Project Start Date / Joining Date</label>
+              <input 
+                type="date"
+                className="w-full border border-slate-300 rounded-md p-2 outline-none transition-shadow focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                {...register('onboarding_date')}
+              />
             </div>
           </div>
 

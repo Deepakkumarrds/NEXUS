@@ -5,7 +5,7 @@ const { calculateClientHealth } = require('../utils/healthScoreEngine');
 // Create a new client
 exports.createClient = async (req, res) => {
   try {
-    const { company_name, brand_name, industry, website, email, phone, client_status, service_type, retainer_value, primary_contact_name, spoc_name, brand_shortcode, logo, objective, focused_area, customer_mindset } = req.body;
+    const { company_name, brand_name, industry, website, email, phone, client_status, service_type, retainer_value, primary_contact_name, spoc_name, brand_shortcode, logo, objective, focused_area, customer_mindset, onboarding_date } = req.body;
     
     const client = await prisma.client.create({
       data: {
@@ -24,7 +24,8 @@ exports.createClient = async (req, res) => {
         logo,
         objective,
         focused_area,
-        customer_mindset
+        customer_mindset,
+        onboarding_date: onboarding_date ? new Date(onboarding_date) : null
       },
     });
 
@@ -57,8 +58,7 @@ exports.getClientById = async (req, res) => {
   try {
     const { id } = req.params;
     
-    // Auto-recalculate health score on fetch
-    await calculateClientHealth(id);
+    // Auto-recalculate health score on fetch removed as it is now manual
 
     const client = await prisma.client.findUnique({
       where: { id },
@@ -97,6 +97,10 @@ exports.updateClient = async (req, res) => {
   try {
     const { id } = req.params;
     const updateData = req.body;
+
+    if (updateData.onboarding_date) {
+      updateData.onboarding_date = new Date(updateData.onboarding_date);
+    }
 
     const client = await prisma.client.update({
       where: { id },

@@ -9,6 +9,7 @@ router.post('/apply', leaveController.applyLeave);
 router.get('/my-leaves', leaveController.getMyLeaves);
 router.get('/pending', leaveController.getPendingLeaves);
 router.get('/report', leaveController.getAttendanceReport);
+router.get('/calendar', leaveController.getCalendar);
 router.post('/:id/approve', leaveController.approveLeave);
 router.post('/:id/reject', leaveController.rejectLeave);
 

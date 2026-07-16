@@ -8,6 +8,26 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Setup HTTP server and Socket.io
+const http = require('http');
+const server = http.createServer(app);
+const { Server } = require("socket.io");
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+});
+
+// Make io globally available for controllers
+global.io = io;
+
+io.on('connection', (socket) => {
+  socket.on('join_user_room', (userId) => {
+    socket.join(`user_${userId}`);
+  });
+});
+
 const clientRoutes = require('./routes/clientRoutes');
 const taskRoutes = require('./routes/taskRoutes');
 const communicationRoutes = require('./routes/communicationRoutes');
@@ -74,6 +94,9 @@ app.use('/api/knowledge', knowledgeRoutes);
 app.use('/api/work-requests', workRequestRoutes);
 app.use('/api/upload', uploadRoutes);
 
+const healthRoutes = require('./routes/healthRoutes');
+app.use('/api/client-health', healthRoutes);
+
 // Static uploads folder
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -94,7 +117,7 @@ app.get('/api/setup-roles', async (req, res) => {
 });
 
 // Start the server
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
   
   // Initialize cron jobs

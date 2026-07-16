@@ -357,15 +357,12 @@ model Escalation {
 }
 
 model ClientHealthScore {
-  id                      String   @id @default(uuid()) @db.Uuid
-  client_id               String   @db.Uuid
-  communication_score     Int      @default(0)
-  task_completion_score   Int      @default(0)
-  escalation_score        Int      @default(0)
-  report_timeliness_score Int      @default(0)
-  overall_score           Int      @default(0)
-  risk_level              String   @default("Stable") // Excellent, Stable, Risk, Critical
-  calculated_at           DateTime @default(now())
+  id              String   @id @default(uuid()) @db.Uuid
+  client_id       String   @db.Uuid
+  overall_score   Int      
+  risk_level      String   
+  feedback        String?  @db.Text 
+  calculated_at   DateTime @default(now())
 
   client Client @relation(fields: [client_id], references: [id], onDelete: Cascade)
 }
@@ -505,6 +502,8 @@ model LeaveRecord {
   reason      String?
   status      String   @default("Pending") // Pending, Approved, Rejected
   approved_by String?  @db.Uuid
+  is_half_day Boolean  @default(false)
+  days        Float    @default(0)
   created_at  DateTime @default(now())
 
   user     User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
@@ -515,12 +514,12 @@ model LeaveBalance {
   id                  String @id @default(uuid()) @db.Uuid
   user_id             String @db.Uuid
   year                Int
-  sick_leaves_total   Int    @default(12)
-  sick_leaves_used    Int    @default(0)
-  casual_leaves_total Int    @default(12)
-  casual_leaves_used  Int    @default(0)
-  earned_leaves_total Int    @default(0)
-  earned_leaves_used  Int    @default(0)
+  sick_leaves_total   Float    @default(12)
+  sick_leaves_used    Float    @default(0)
+  casual_leaves_total Float    @default(12)
+  casual_leaves_used  Float    @default(0)
+  earned_leaves_total Float    @default(0)
+  earned_leaves_used  Float    @default(0)
 
   user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 

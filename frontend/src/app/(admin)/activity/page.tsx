@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import HealthScoresTab from './HealthScoresTab';
 
 export default function ClientActivityPage() {
+  const [activeTab, setActiveTab] = useState<'Timeline' | 'Health'>('Timeline');
   const [clients, setClients] = useState<any[]>([]);
   const [selectedClient, setSelectedClient] = useState<string>('');
   
@@ -71,41 +73,61 @@ export default function ClientActivityPage() {
   };
 
   const flatData = useMemo(() => {
-    const list: any[] = [];
+    const groups: Record<string, any> = {};
     const clientName = clients.find(c => c.id === selectedClient)?.company_name || '--';
 
-    // Add summaries
+    // Grouping by Date and Department
     activityData.summaries.forEach(s => {
-      list.push({
-        id: 'sum_' + s.id,
-        date: s.date,
-        client: clientName,
-        task: '--',
-        summary: s.summary_text || '--',
-        department: s.department || 'General',
-        user: s.updater?.name || '--',
-        status: s.status_color || '--'
-      });
+      const d = new Date(s.date);
+      const dateKey = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+      const dept = s.department || 'General';
+      const key = `${dateKey}_${dept}`;
+      
+      if (!groups[key]) {
+        groups[key] = { id: key, date: s.date, client: clientName, taskTitles: [], summaries: [], department: dept, users: new Set(), status: s.status_color || '--' };
+      }
+      
+      if (s.summary_text) groups[key].summaries.push(s.summary_text);
+      if (s.updater?.name) groups[key].users.add(s.updater.name);
+      
+      // Prefer summary status color if available
+      if (s.status_color) groups[key].status = s.status_color;
     });
 
-    // Add tasks
     activityData.tasks.forEach(t => {
       const dateVal = t.completed_at || t.updated_at || t.created_at;
-      list.push({
-        id: 'task_' + t.id,
-        date: dateVal,
-        client: clientName,
-        task: t.title,
-        summary: '--',
-        department: t.department || 'General',
-        user: t.assignee?.name || '--',
-        status: t.status || '--'
-      });
+      const d = new Date(dateVal);
+      const dateKey = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+      const dept = t.department || 'General';
+      const key = `${dateKey}_${dept}`;
+      
+      if (!groups[key]) {
+        groups[key] = { id: key, date: dateVal, client: clientName, taskTitles: [], summaries: [], department: dept, users: new Set(), status: t.status || '--' };
+      }
+      
+      if (t.title) groups[key].taskTitles.push(t.title);
+      if (t.assignee?.name) groups[key].users.add(t.assignee.name);
+      
+      // If status is empty or default, use task status
+      if (groups[key].status === '--' && t.status) {
+        groups[key].status = t.status;
+      }
     });
+
+    const list = Object.values(groups).map(g => ({
+      id: g.id,
+      date: g.date,
+      client: g.client,
+      task: g.taskTitles.length > 0 ? g.taskTitles.join(' | ') : '--',
+      summary: g.summaries.length > 0 ? g.summaries.join(' | ') : '--',
+      department: g.department,
+      user: g.users.size > 0 ? Array.from(g.users).join(', ') : '--',
+      status: g.status
+    }));
 
     // Sort descending by date
     return list.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [activityData]);
+  }, [activityData, clients, selectedClient]);
 
   const getStatusBadgeClass = (status: string) => {
     if (!status || status === '--') return 'bg-slate-100 text-slate-700';
@@ -119,37 +141,60 @@ export default function ClientActivityPage() {
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-        <div className="mb-4 md:mb-0">
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Client Activity</h1>
-          <p className="text-sm text-slate-500 mt-1">Simple unified table view of all tasks and summaries.</p>
+      <div className="mb-6">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-start mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Client Activity</h1>
+            <p className="text-sm text-slate-500 mt-1">
+              {activeTab === 'Timeline' ? 'Simple unified table view of all tasks and summaries.' : 'Track client health scores and risk levels.'}
+            </p>
+          </div>
+          
+          {activeTab === 'Timeline' && (
+            <div className="flex items-center gap-4 mt-4 md:mt-0">
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Brand</label>
+                <select 
+                  value={selectedClient}
+                  onChange={(e) => setSelectedClient(e.target.value)}
+                  className="border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-slate-700 py-2 pl-3 pr-10 outline-none bg-white"
+                >
+                  {clients.map(c => <option key={c.id} value={c.id}>{c.company_name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Month</label>
+                <select 
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
+                  className="border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-slate-700 py-2 pl-3 pr-10 outline-none bg-white"
+                >
+                  {availableMonths.map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
+              </div>
+            </div>
+          )}
         </div>
-        <div className="flex items-center gap-4">
-          <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Brand</label>
-            <select 
-              value={selectedClient}
-              onChange={(e) => setSelectedClient(e.target.value)}
-              className="border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-slate-700 py-2 pl-3 pr-10 outline-none"
-            >
-              {clients.map(c => <option key={c.id} value={c.id}>{c.company_name}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Month</label>
-            <select 
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
-              className="border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-slate-700 py-2 pl-3 pr-10 outline-none"
-            >
-              {availableMonths.map(m => <option key={m} value={m}>{m}</option>)}
-            </select>
-          </div>
+        
+        <div className="flex space-x-8 border-b border-slate-200">
+          <button
+            onClick={() => setActiveTab('Timeline')}
+            className={`py-2 px-1 text-sm font-medium border-b-2 transition-colors ${activeTab === 'Timeline' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'}`}
+          >
+            Activity Timeline
+          </button>
+          <button
+            onClick={() => setActiveTab('Health')}
+            className={`py-2 px-1 text-sm font-medium border-b-2 transition-colors ${activeTab === 'Health' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'}`}
+          >
+            Health Scores
+          </button>
         </div>
       </div>
 
-      {loading ? (
-        <div className="p-12 text-center text-slate-500 bg-white rounded-xl shadow-sm border border-slate-200 animate-pulse">
+      {activeTab === 'Timeline' ? (
+        loading ? (
+          <div className="p-12 text-center text-slate-500 bg-white rounded-xl shadow-sm border border-slate-200 animate-pulse">
           Loading activity timeline...
         </div>
       ) : flatData.length === 0 ? (
@@ -181,10 +226,10 @@ export default function ClientActivityPage() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
                     {row.client}
                   </td>
-                  <td className="px-6 py-4 text-sm text-slate-700 min-w-[200px]">
+                  <td className="px-6 py-4 text-sm text-slate-700 max-w-[250px]">
                     <div className="line-clamp-2" title={row.task}>{row.task}</div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-slate-700 min-w-[200px]">
+                  <td className="px-6 py-4 text-sm text-slate-700 max-w-[300px]">
                     <div className="line-clamp-2" title={row.summary}>{row.summary}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
@@ -204,6 +249,9 @@ export default function ClientActivityPage() {
             </tbody>
           </table>
         </div>
+        )
+      ) : (
+        <HealthScoresTab />
       )}
     </div>
   );

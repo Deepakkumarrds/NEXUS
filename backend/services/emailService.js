@@ -125,6 +125,59 @@ const sendWeeklyReportEmail = async (clientEmail, clientName, reportHtml) => {
   return sendEmail(clientEmail, subject, reportHtml);
 };
 
+const sendLeaveAppliedEmail = async (managerEmail, employeeName, startDate, endDate, leaveType, reason) => {
+  const subject = `Leave Request: ${employeeName}`;
+  const html = `
+    <h2>New Leave Request</h2>
+    <p><b>${employeeName}</b> has applied for <b>${leaveType} Leave</b>.</p>
+    <p><b>From:</b> ${new Date(startDate).toLocaleDateString()}</p>
+    <p><b>To:</b> ${new Date(endDate).toLocaleDateString()}</p>
+    <p><b>Reason:</b> ${reason || 'Not provided'}</p>
+    <p>Please log in to the dashboard to approve or reject this request.</p>
+  `;
+  return sendEmail(managerEmail, subject, html);
+};
+
+const sendLeaveApprovedEmail = async (employeeEmail, startDate, endDate, leaveType) => {
+  const subject = `Leave Approved: ${leaveType} Leave`;
+  const html = `
+    <h2>Leave Approved</h2>
+    <p>Your request for <b>${leaveType} Leave</b> from ${new Date(startDate).toLocaleDateString()} to ${new Date(endDate).toLocaleDateString()} has been <b>Approved</b>.</p>
+  `;
+  return sendEmail(employeeEmail, subject, html);
+};
+
+const sendLeaveRejectedEmail = async (employeeEmail, startDate, endDate, leaveType) => {
+  const subject = `Leave Rejected: ${leaveType} Leave`;
+  const html = `
+    <h2>Leave Rejected</h2>
+    <p>Your request for <b>${leaveType} Leave</b> from ${new Date(startDate).toLocaleDateString()} to ${new Date(endDate).toLocaleDateString()} has been <b>Rejected</b>.</p>
+    <p>Please contact your manager for more details.</p>
+  `;
+  return sendEmail(employeeEmail, subject, html);
+};
+
+const sendDailyTrackerReminder = async (employeeEmail, employeeName, missingClients, timeOfDay) => {
+  const isMorning = timeOfDay === 'Morning';
+  const subject = isMorning 
+    ? `Morning Reminder: Plan your Daily Tracker 🌅`
+    : `Evening Reminder: Wrap up your Daily Tracker 🌙`;
+
+  const clientList = missingClients.map(c => `<li><b>${c}</b></li>`).join('');
+
+  const html = `
+    <h2>${isMorning ? 'Good morning' : 'Good evening'}, ${employeeName}!</h2>
+    <p>${isMorning 
+      ? 'You logged in a little while ago. Please plan your day and enter your initial tasks/summaries for the following active clients:' 
+      : 'Before you log off for the day, please ensure your final summaries and task statuses are updated for the following active clients:'}</p>
+    <ul>
+      ${clientList}
+    </ul>
+    <p>Go to your <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/tracker" style="background-color: #4f46e5; color: white; padding: 5px 10px; text-decoration: none; border-radius: 3px;">Daily Tracker</a> to update them.</p>
+  `;
+  return sendEmail(employeeEmail, subject, html);
+};
+
 module.exports = {
   sendEmail,
   notifyClientAssetReady,
@@ -133,5 +186,9 @@ module.exports = {
   sendDeadlineReminder,
   sendWelcomeEmail,
   sendPasswordResetEmail,
-  sendWeeklyReportEmail
+  sendWeeklyReportEmail,
+  sendLeaveAppliedEmail,
+  sendLeaveApprovedEmail,
+  sendLeaveRejectedEmail,
+  sendDailyTrackerReminder
 };

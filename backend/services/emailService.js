@@ -34,7 +34,7 @@ const sendEmail = async (to, subject, htmlContent) => {
     const mailTransporter = await initTransporter();
     
     const info = await mailTransporter.sendMail({
-      from: '"RDS" <gowthamrdsdigital@gmail.com>',
+      from: '"Nexus" <gowthamrdsdigital@gmail.com>',
       to: to,
       subject: subject,
       html: htmlContent,

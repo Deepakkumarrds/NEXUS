@@ -208,9 +208,7 @@ export default function AttendancePage() {
 
       {activeTab === 'history' && (
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-100 bg-slate-50">
-            <h3 className="text-lg font-semibold text-slate-900">Detailed Past Attendance</h3>
-          </div>
+
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-slate-200">
               <thead className="bg-slate-50">

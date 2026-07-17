@@ -66,26 +66,63 @@ const startCronJobs = () => {
     }
   });
 
-  // Hourly job to check and send weekly reports
-  cron.schedule('0 * * * *', async () => {
-    console.log('🕒 Checking Weekly Report Schedule...');
+
+  // Auto Punch-out at 8:00 PM (20:00) server time
+  cron.schedule('0 20 * * *', async () => {
+    console.log('🕒 Running Auto Punch-out...');
     try {
-      const settings = await prisma.globalSettings.findFirst();
-      if (!settings) return;
-
       const now = new Date();
-      const currentDay = now.getDay();
-      const currentHour = now.getHours();
-      
-      const targetDay = settings.weekly_report_day;
-      const targetHour = parseInt(settings.weekly_report_time.split(':')[0]);
+      const today = new Date();
+      today.setUTCHours(0, 0, 0, 0);
 
-      if (currentDay === targetDay && currentHour === targetHour) {
-        console.log('📨 Time to send Weekly Reports!');
-        await sendWeeklyReportsNow();
+      // Find all users who are not offline
+      const activeUsers = await prisma.user.findMany({
+        where: { 
+          status: 'Active',
+          current_status: { not: 'Offline' }
+        }
+      });
+
+      for (const user of activeUsers) {
+        // Find their active attendance for today
+        const attendance = await prisma.attendance.findFirst({
+          where: { user_id: user.id, date: today, logout_time: null }
+        });
+
+        if (attendance) {
+          // Close active status log
+          const activeLog = await prisma.statusLog.findFirst({
+            where: { attendance_id: attendance.id, end_time: null }
+          });
+          if (activeLog) {
+            const diffMs = now - new Date(activeLog.start_time);
+            const diffMins = diffMs / 1000 / 60;
+            await prisma.statusLog.update({
+              where: { id: activeLog.id },
+              data: { end_time: now, duration_minutes: diffMins }
+            });
+          }
+
+          // Punch out
+          await prisma.attendance.update({
+            where: { id: attendance.id },
+            data: { logout_time: now }
+          });
+        }
+
+        // Update user status
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { current_status: 'Offline' }
+        });
+
+        if (global.io) {
+          global.io.to(`user_${user.id}`).emit('attendance_update', { message: 'Auto-punched out at 8 PM' });
+        }
       }
+      console.log(`Successfully auto-punched out ${activeUsers.length} users.`);
     } catch (err) {
-      console.error('Error running weekly report cron job:', err);
+      console.error('Error running auto punch-out cron job:', err);
     }
   });
 };

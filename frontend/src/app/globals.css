@@ -36,3 +36,46 @@ input, select, textarea {
   transform: translateY(-2px);
   box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.04);
 }
+
+/* ========================================================
+   GLOBAL TABLE STANDARDIZATION
+   Forces all tables in the dashboard to have the exact same
+   premium styling, regardless of inline Tailwind classes.
+   ======================================================== */
+table {
+  width: 100% !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  text-align: left !important;
+}
+thead {
+  background-color: #f8fafc !important; /* slate-50 */
+}
+thead th {
+  padding: 14px 20px !important;
+  font-family: var(--font-heading) !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  color: #64748b !important; /* slate-500 */
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  border-bottom: 2px solid #e2e8f0 !important; /* slate-200 */
+}
+tbody {
+  background-color: #ffffff !important;
+}
+tbody tr {
+  transition: background-color 0.15s ease-in-out !important;
+}
+tbody tr:hover {
+  background-color: #f8fafc !important; /* slate-50 */
+}
+tbody td {
+  padding: 16px 20px !important;
+  font-size: 0.875rem !important; /* text-sm */
+  color: #334155 !important; /* slate-700 */
+  border-bottom: 1px solid #f1f5f9 !important; /* slate-100 */
+}
+tbody tr:last-child td {
+  border-bottom: none !important;
+}

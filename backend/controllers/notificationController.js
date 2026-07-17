@@ -51,3 +51,28 @@ exports.markAllAsRead = async (req, res) => {
     res.status(500).json({ status: 'error', message: 'Failed to update notifications' });
   }
 };
+
+exports.createTestNotification = async (req, res) => {
+  try {
+    let user = await prisma.user.findFirst();
+    if (!user) return res.status(404).json({ status: 'error', message: 'No user found' });
+
+    const notification = await prisma.notification.create({
+      data: {
+        user_id: user.id,
+        title: 'Real-Time Notification',
+        message: 'This notification was pushed instantly via Socket.io!',
+        is_read: false
+      }
+    });
+
+    if (global.io) {
+      global.io.emit('new_notification', notification);
+    }
+
+    res.status(200).json({ status: 'success', data: notification });
+  } catch (error) {
+    console.error('Error creating test notification:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to create test notification' });
+  }
+};

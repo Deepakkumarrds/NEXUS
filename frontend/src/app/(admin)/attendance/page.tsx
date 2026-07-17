@@ -16,6 +16,7 @@ export default function AttendancePage() {
   const [history, setHistory] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<'today' | 'history'>('today');
   const [loading, setLoading] = useState(true);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
     fetchMyStatus();
@@ -40,6 +41,11 @@ export default function AttendancePage() {
         };
       } catch (e) {}
     }
+  }, []);
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+    return () => clearInterval(timer);
   }, []);
 
   const formatDuration = (mins: number) => {
@@ -188,7 +194,7 @@ export default function AttendancePage() {
                       </div>
                       <div className="flex-shrink-0">
                         <span className="inline-flex items-center px-2.5 py-1 rounded bg-slate-100 text-slate-600 text-xs font-medium">
-                          {Math.round(log.duration_minutes || 0)} mins
+                          {Math.round(log.duration_minutes || (log.end_time ? 0 : (currentTime.getTime() - new Date(log.start_time).getTime()) / 60000))} mins
                         </span>
                       </div>
                     </div>

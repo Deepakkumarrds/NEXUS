@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
-import * as XLSX from 'xlsx';
+import TabAICalendar from './components/TabAICalendar';
 
 export default function ClientDetailsPage() {
   const params = useParams();
@@ -13,8 +13,8 @@ export default function ClientDetailsPage() {
   const isEditMode = searchParams.get('edit') === 'true';
   const [client, setClient] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'onboarding' | 'socials' | 'campaigns' | 'timeline' | 'monthly_plans'>('overview');
-  const [timelineFilter, setTimelineFilter] = useState<'all'|'task'|'communication'|'sow'|'meeting'|'escalation'>('all');
+  const [activeTab, setActiveTab] = useState<'overview' | 'onboarding' | 'socials' | 'campaigns' | 'timeline' | 'monthly_plans' | 'ai_calendar'>('overview');
+  const [timelineFilter, setTimelineFilter] = useState<'all' | 'task' | 'communication' | 'sow' | 'meeting' | 'escalation'>('all');
 
   const [internalNotes, setInternalNotes] = useState('');
   const [savingNotes, setSavingNotes] = useState(false);
@@ -35,7 +35,7 @@ export default function ClientDetailsPage() {
       toast.error('Please select both start and end dates.');
       return;
     }
-    
+
     if (!exportIncludes.profile && !exportIncludes.tasks && !exportIncludes.comms) {
       toast.error('Please select at least one type of content to export.');
       return;
@@ -49,46 +49,46 @@ export default function ClientDetailsPage() {
         tasks: exportIncludes.tasks.toString(),
         comms: exportIncludes.comms.toString()
       }).toString();
-      
+
       window.open(`/clients/${clientId}/report?${query}`, '_blank');
       setShowExportModal(false);
       return;
     }
-    
+
     try {
       toast.loading('Generating report...', { id: 'export' });
-      
+
       const [tasksRes, commsRes] = await Promise.all([
         fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com'}/api/tasks?client_id=${clientId}`),
         fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com'}/api/communications`)
       ]);
-      
+
       const tasksData = await tasksRes.json();
       const commsData = await commsRes.json();
-      
+
       const allTasks = tasksData.data || [];
       const allComms = commsData.data ? commsData.data.filter((c: any) => c.client_id === clientId) : [];
-      
+
       const start = new Date(exportStartDate);
       start.setHours(0, 0, 0, 0);
       const end = new Date(exportEndDate);
       end.setHours(23, 59, 59, 999);
-      
+
       const filteredTasks = allTasks.filter((t: any) => {
         const d = new Date(t.created_at);
         return d >= start && d <= end;
       });
-      
+
       const filteredComms = allComms.filter((c: any) => {
         const d = new Date(c.created_at);
         return d >= start && d <= end;
       });
-      
+
       if (filteredTasks.length === 0 && filteredComms.length === 0) {
         toast.error('No work found in this date range.', { id: 'export' });
         return;
       }
-      
+
       const tasksSheetData = filteredTasks.map((t: any) => ({
         'Task ID': t.id,
         'Title': t.title,
@@ -99,7 +99,7 @@ export default function ClientDetailsPage() {
         'Due Date': t.due_date ? new Date(t.due_date).toLocaleDateString() : 'N/A',
         'Assignee': t.assignee ? t.assignee.name : 'Unassigned',
       }));
-      
+
       const commsSheetData = filteredComms.map((c: any) => ({
         'Log ID': c.id,
         'Type': c.communication_type,
@@ -109,22 +109,22 @@ export default function ClientDetailsPage() {
         'Next Action': c.next_action || 'N/A',
         'Creator': c.creator ? c.creator.name : 'Unknown'
       }));
-      
+
       const wb = XLSX.utils.book_new();
-      
+
       if (exportIncludes.tasks && tasksSheetData.length > 0) {
         const wsTasks = XLSX.utils.json_to_sheet(tasksSheetData);
         XLSX.utils.book_append_sheet(wb, wsTasks, 'Tasks');
       }
-      
+
       if (exportIncludes.comms && commsSheetData.length > 0) {
         const wsComms = XLSX.utils.json_to_sheet(commsSheetData);
         XLSX.utils.book_append_sheet(wb, wsComms, 'Communications');
       }
-      
+
       const fileName = `${client.company_name.replace(/\s+/g, '_')}_Report_${exportStartDate}_to_${exportEndDate}.xlsx`;
       XLSX.writeFile(wb, fileName);
-      
+
       toast.success('Report downloaded successfully!', { id: 'export' });
       setShowExportModal(false);
     } catch (e) {
@@ -184,13 +184,13 @@ export default function ClientDetailsPage() {
   const [monthlyFilter, setMonthlyFilter] = useState('All');
 
   const SERVICES = [
-    'SEO', 
-    'SMM (Social Media)', 
-    'Web Development', 
-    'PPC Advertising', 
-    'Content Marketing', 
-    'Branding & Design', 
-    'Email Marketing', 
+    'SEO',
+    'SMM (Social Media)',
+    'Web Development',
+    'PPC Advertising',
+    'Content Marketing',
+    'Branding & Design',
+    'Email Marketing',
     'WhatsApp Marketing',
     'Paid Media'
   ];
@@ -213,14 +213,14 @@ export default function ClientDetailsPage() {
       setEditCustomerMindset(client.customer_mindset || '');
       setEditLogo(client.logo || '');
       setEditOnboardingDate(client.onboarding_date ? new Date(client.onboarding_date).toISOString().split('T')[0] : '');
-      
+
       // Parse service_type from string to array
       if (client.service_type) {
         setEditServices(client.service_type.split(',').map((s: string) => s.trim()));
       } else {
         setEditServices([]);
       }
-      
+
       setShowEditModal(true);
     }
   };
@@ -429,12 +429,12 @@ export default function ClientDetailsPage() {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com'}/api/clients/${clientId}/socials`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          platform: socialPlatform, 
-          profile_url: socialUrl, 
+        body: JSON.stringify({
+          platform: socialPlatform,
+          profile_url: socialUrl,
           username: socialUsername,
           password: socialPassword,
-          access_provided: socialAccess 
+          access_provided: socialAccess
         })
       });
       if (res.ok) {
@@ -470,12 +470,12 @@ export default function ClientDetailsPage() {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com'}/api/clients/${clientId}/seo`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          platform: seoPlatform, 
-          profile_url: seoUrl, 
+        body: JSON.stringify({
+          platform: seoPlatform,
+          profile_url: seoUrl,
           username: seoUsername,
           password: seoPassword,
-          access_provided: seoAccess 
+          access_provided: seoAccess
         })
       });
       if (res.ok) {
@@ -509,13 +509,13 @@ export default function ClientDetailsPage() {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com'}/api/clients/${clientId}/paid-media`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          platform: paidPlatform, 
+        body: JSON.stringify({
+          platform: paidPlatform,
           ad_account_id: paidAccountId,
-          profile_url: paidUrl, 
+          profile_url: paidUrl,
           username: paidUsername,
           password: paidPassword,
-          access_provided: paidAccess 
+          access_provided: paidAccess
         })
       });
       if (res.ok) {
@@ -660,17 +660,16 @@ export default function ClientDetailsPage() {
             <span className="text-slate-300">/</span>
             <span className="text-slate-900 font-semibold truncate max-w-[200px]">{client.company_name}</span>
           </nav>
-          
+
           <h1 className="text-3xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
             {client.logo && (
               <img src={client.logo} alt={client.company_name} className="w-10 h-10 rounded-lg object-cover border border-slate-200 shadow-sm shrink-0" />
             )}
             {client.company_name}
-            <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
-              client.client_status === 'Active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-              client.client_status === 'Hold' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-              'bg-rose-50 text-rose-700 border-rose-200'
-            }`}>
+            <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${client.client_status === 'Active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                client.client_status === 'Hold' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                  'bg-rose-50 text-rose-700 border-rose-200'
+              }`}>
               {client.client_status}
             </span>
           </h1>
@@ -690,7 +689,7 @@ export default function ClientDetailsPage() {
             )}
           </div>
         </div>
-        
+
         {/* Actions & Health Score Badge */}
         <div className="flex flex-col items-end gap-4">
           {client.health_scores && client.health_scores.length > 0 ? (
@@ -709,7 +708,7 @@ export default function ClientDetailsPage() {
               </div>
             </div>
           )}
-          
+
           <button onClick={() => setShowExportModal(true)} className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-md shadow text-sm font-semibold hover:bg-slate-800 transition">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
             Export Report
@@ -719,71 +718,80 @@ export default function ClientDetailsPage() {
 
       {/* Tabs Menu (iOS Segmented Pills Style) */}
       <div className="bg-slate-100 p-1.5 rounded-xl border border-slate-200/80 flex space-x-1.5 mb-6 max-w-3xl">
-        <button 
-          onClick={() => setActiveTab('overview')} 
-          className={`flex-1 py-2 px-3 text-center text-xs md:text-sm font-semibold rounded-lg transition-all duration-200 outline-none cursor-pointer ${
-            activeTab === 'overview' 
-              ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50' 
+        <button
+          onClick={() => setActiveTab('overview')}
+          className={`flex-1 py-2 px-3 text-center text-xs md:text-sm font-semibold rounded-lg transition-all duration-200 outline-none cursor-pointer ${activeTab === 'overview'
+              ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50'
               : 'text-slate-500 hover:text-slate-800'
-          }`}
+            }`}
         >
           Overview & Contacts
         </button>
-        <button 
-          onClick={() => setActiveTab('onboarding')} 
-          className={`flex-1 py-2 px-3 text-center text-xs md:text-sm font-semibold rounded-lg transition-all duration-200 outline-none cursor-pointer ${
-            activeTab === 'onboarding' 
-              ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50' 
+        <button
+          onClick={() => setActiveTab('onboarding')}
+          className={`flex-1 py-2 px-3 text-center text-xs md:text-sm font-semibold rounded-lg transition-all duration-200 outline-none cursor-pointer ${activeTab === 'onboarding'
+              ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50'
               : 'text-slate-500 hover:text-slate-800'
-          }`}
+            }`}
         >
           Onboarding Checklist
         </button>
-        <button 
-          onClick={() => setActiveTab('socials')} 
-          className={`flex-1 py-2 px-3 text-center text-xs md:text-sm font-semibold rounded-lg transition-all duration-200 outline-none cursor-pointer ${
-            activeTab === 'socials' 
-              ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50' 
+        <button
+          onClick={() => setActiveTab('socials')}
+          className={`flex-1 py-2 px-3 text-center text-xs md:text-sm font-semibold rounded-lg transition-all duration-200 outline-none cursor-pointer ${activeTab === 'socials'
+              ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50'
               : 'text-slate-500 hover:text-slate-800'
-          }`}
+            }`}
         >
           Access Vaults
         </button>
-        <button 
-          onClick={() => setActiveTab('campaigns')} 
-          className={`flex-1 py-2 px-3 text-center text-xs md:text-sm font-semibold rounded-lg transition-all duration-200 outline-none cursor-pointer ${
-            activeTab === 'campaigns' 
-              ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50' 
+        <button
+          onClick={() => setActiveTab('campaigns')}
+          className={`flex-1 py-2 px-3 text-center text-xs md:text-sm font-semibold rounded-lg transition-all duration-200 outline-none cursor-pointer ${activeTab === 'campaigns'
+              ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50'
               : 'text-slate-500 hover:text-slate-800'
-          }`}
+            }`}
         >
           Campaigns
         </button>
-        <button 
-          onClick={() => setActiveTab('timeline')} 
-          className={`flex-1 py-2 px-3 text-center text-xs md:text-sm font-semibold rounded-lg transition-all duration-200 outline-none cursor-pointer ${
-            activeTab === 'timeline' 
-              ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50' 
+        <button
+          onClick={() => setActiveTab('timeline')}
+          className={`flex-1 py-2 px-3 text-center text-xs md:text-sm font-semibold rounded-lg transition-all duration-200 outline-none cursor-pointer ${activeTab === 'timeline'
+              ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50'
               : 'text-slate-500 hover:text-slate-800'
-          }`}
+            }`}
         >
           Activity Timeline
         </button>
-        <button 
-          onClick={() => setActiveTab('monthly_plans')} 
-          className={`flex-1 py-2 px-3 text-center text-xs md:text-sm font-semibold rounded-lg transition-all duration-200 outline-none cursor-pointer ${
-            activeTab === 'monthly_plans' 
-              ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50' 
+        <button
+          onClick={() => setActiveTab('monthly_plans')}
+          className={`flex-1 py-2 px-3 text-center text-xs md:text-sm font-semibold rounded-lg transition-all duration-200 outline-none cursor-pointer ${activeTab === 'monthly_plans'
+              ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50'
               : 'text-slate-500 hover:text-slate-800'
-          }`}
+            }`}
         >
           Monthly Plans
+        </button>
+        <button
+          onClick={() => setActiveTab('ai_calendar')}
+          className={`flex-1 py-2 px-3 flex items-center justify-center text-xs md:text-sm font-semibold rounded-lg transition-all duration-200 outline-none cursor-pointer ${
+            activeTab === 'ai_calendar'
+              ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md border border-indigo-400'
+              : 'text-indigo-500 hover:bg-indigo-50'
+          }`}
+        >
+          <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+          AI Calendar
         </button>
       </div>
 
       {/* Tab Contents */}
       <div className="grid grid-cols-1 gap-6">
-        
+
+        {activeTab === 'ai_calendar' && (
+          <TabAICalendar client={client} />
+        )}
+
         {activeTab === 'monthly_plans' && (
           <div className="bg-white p-6 rounded-xl border border-slate-200/60 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] space-y-6">
             <div>
@@ -817,8 +825,8 @@ export default function ClientDetailsPage() {
             {client.monthly_plans && client.monthly_plans.length > 0 ? (
               <div className="space-y-4">
                 <div className="flex justify-end">
-                  <select 
-                    value={monthlyFilter} 
+                  <select
+                    value={monthlyFilter}
                     onChange={e => setMonthlyFilter(e.target.value)}
                     className="text-xs border border-slate-300 rounded p-1.5 bg-white outline-none w-48"
                   >
@@ -828,14 +836,14 @@ export default function ClientDetailsPage() {
                     ))}
                   </select>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {(monthlyFilter === 'All' ? client.monthly_plans : client.monthly_plans.filter((p: any) => p.month_year === monthlyFilter)).map((plan: any) => (
                     <div key={plan.id} className="border border-slate-200 rounded-lg p-4 bg-white relative group">
                       <div className="flex justify-between items-start mb-3">
                         <div className="flex items-center space-x-2">
                           <div className="w-8 h-8 rounded-md bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs uppercase shadow-sm border border-indigo-100">
-                            {plan.department.substring(0,2)}
+                            {plan.department.substring(0, 2)}
                           </div>
                           <div>
                             <p className="font-semibold text-sm text-slate-900 leading-none">{plan.department}</p>
@@ -936,7 +944,7 @@ export default function ClientDetailsPage() {
                     <span className="block text-slate-500 text-[10px] uppercase tracking-wide font-bold">Services</span>
                     <span className="font-medium text-slate-800 block leading-tight">{client.service_type || 'None'}</span>
                   </div>
-                  
+
                   {/* Strategic Brand Info */}
                   <div className="pt-2 mt-2 border-t border-slate-100">
                     <span className="block text-slate-500 text-[10px] uppercase tracking-wide font-bold text-indigo-600">Core Objective</span>
@@ -961,7 +969,7 @@ export default function ClientDetailsPage() {
                     {savingNotes ? 'Saving...' : 'Save Notes'}
                   </button>
                 </div>
-                <textarea 
+                <textarea
                   value={internalNotes}
                   onChange={(e) => setInternalNotes(e.target.value)}
                   placeholder="Leave internal observations, links, or notes here..."
@@ -985,20 +993,20 @@ export default function ClientDetailsPage() {
                         <div className="flex justify-between items-start">
                           <div>
                             <p className="font-medium text-slate-800 flex items-center">
-                              {contact.name} 
+                              {contact.name}
                               {contact.is_primary && <span className="ml-2 text-[9px] bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded border border-indigo-100 font-bold">PRIMARY</span>}
                             </p>
                             <p className="text-slate-500 text-xs font-medium">{contact.designation} {contact.department ? `(${contact.department})` : ''}</p>
                             <p className="text-slate-500 text-xs mt-1">{contact.email} • {contact.phone || 'No phone'}</p>
-                            
+
                             {/* Key Celebrations Logs */}
                             {(contact.birth_date || contact.anniversary_date || (contact.festival_greetings && contact.festival_greetings.length > 0)) && (
                               <div className="mt-2 p-2 bg-slate-50 rounded border border-slate-100 space-y-1 text-[11px]">
                                 {contact.birth_date && (
-                                  <p className="text-slate-600">🎂 Birthday: <span className="font-semibold">{new Date(contact.birth_date).toLocaleDateString(undefined, {month: 'long', day: 'numeric'})}</span></p>
+                                  <p className="text-slate-600">🎂 Birthday: <span className="font-semibold">{new Date(contact.birth_date).toLocaleDateString(undefined, { month: 'long', day: 'numeric' })}</span></p>
                                 )}
                                 {contact.anniversary_date && (
-                                  <p className="text-slate-600">🎉 Anniversary: <span className="font-semibold">{new Date(contact.anniversary_date).toLocaleDateString(undefined, {month: 'long', day: 'numeric'})}</span></p>
+                                  <p className="text-slate-600">🎉 Anniversary: <span className="font-semibold">{new Date(contact.anniversary_date).toLocaleDateString(undefined, { month: 'long', day: 'numeric' })}</span></p>
                                 )}
                                 {contact.festival_greetings && contact.festival_greetings.length > 0 && (
                                   <p className="text-slate-600">🪔 Festivals: <span className="font-semibold">{contact.festival_greetings.join(', ')}</span></p>
@@ -1047,8 +1055,8 @@ export default function ClientDetailsPage() {
             </div>
 
             <form onSubmit={handleAddOnboardingItem} className="flex space-x-2">
-              <input 
-                type="text" 
+              <input
+                type="text"
                 placeholder="Add new checklist item (e.g. 'Get Meta Business Manager access')"
                 value={newStepName}
                 onChange={e => setNewStepName(e.target.value)}
@@ -1062,9 +1070,9 @@ export default function ClientDetailsPage() {
                 {client.onboarding_checklist.map((item: any) => (
                   <div key={item.id} className="flex items-center justify-between p-3 rounded-lg border border-slate-100 hover:bg-slate-50 transition">
                     <div className="flex items-center space-x-3">
-                      <input 
-                        type="checkbox" 
-                        checked={item.is_completed} 
+                      <input
+                        type="checkbox"
+                        checked={item.is_completed}
                         onChange={() => toggleOnboardingItem(item.id, item.is_completed)}
                         className="h-4.5 w-4.5 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500 cursor-pointer"
                       />
@@ -1090,7 +1098,7 @@ export default function ClientDetailsPage() {
         {/* Access Vaults Tab */}
         {activeTab === 'socials' && (
           <div className="space-y-6">
-            
+
             {/* SOCIAL MEDIA VAULT */}
             <div className="bg-white p-6 rounded-xl border border-slate-200/60 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] space-y-6">
               <div>
@@ -1144,7 +1152,7 @@ export default function ClientDetailsPage() {
                       <div className="flex justify-between items-start mb-3">
                         <div className="flex items-center space-x-2">
                           <div className="w-8 h-8 rounded-md bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs uppercase shadow-sm border border-indigo-100">
-                            {handle.platform.substring(0,2)}
+                            {handle.platform.substring(0, 2)}
                           </div>
                           <div>
                             <p className="font-semibold text-sm text-slate-900 leading-none">{handle.platform}</p>
@@ -1381,17 +1389,17 @@ export default function ClientDetailsPage() {
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                         </button>
                       </div>
-                      
+
                       {handle.ad_account_id && (
                         <div className="mb-2">
-                           <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 block mb-0.5">Ad Account ID</span>
-                           <span className="font-mono text-sm font-semibold text-indigo-700 flex items-center gap-2">
-                             {handle.ad_account_id}
-                             <button onClick={() => copyToClipboard(handle.ad_account_id)} className="text-slate-400 hover:text-indigo-600"><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg></button>
-                           </span>
+                          <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 block mb-0.5">Ad Account ID</span>
+                          <span className="font-mono text-sm font-semibold text-indigo-700 flex items-center gap-2">
+                            {handle.ad_account_id}
+                            <button onClick={() => copyToClipboard(handle.ad_account_id)} className="text-slate-400 hover:text-indigo-600"><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg></button>
+                          </span>
                         </div>
                       )}
-                      
+
                       <div className="space-y-2 mt-3 text-xs bg-slate-50 p-2.5 rounded border border-slate-100">
                         <div className="flex justify-between items-center">
                           <span className="text-slate-500 font-medium">Username:</span>
@@ -1446,7 +1454,7 @@ export default function ClientDetailsPage() {
         {/* Campaign Performance Tab */}
         {activeTab === 'campaigns' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            
+
             {/* Logger Form */}
             <div className="lg:col-span-1 bg-white p-5 rounded-lg border border-slate-200 shadow-sm space-y-4">
               <div>
@@ -1547,7 +1555,7 @@ export default function ClientDetailsPage() {
                 <svg className="w-5 h-5 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 Activity Timeline
               </h2>
-              
+
               <div className="flex flex-wrap gap-2">
                 {[
                   { id: 'all', label: 'All Activity' },
@@ -1560,18 +1568,17 @@ export default function ClientDetailsPage() {
                   <button
                     key={f.id}
                     onClick={() => setTimelineFilter(f.id as any)}
-                    className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-colors ${
-                      timelineFilter === f.id 
-                        ? 'bg-slate-800 border-slate-800 text-white shadow-sm' 
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-colors ${timelineFilter === f.id
+                        ? 'bg-slate-800 border-slate-800 text-white shadow-sm'
                         : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                    }`}
+                      }`}
                   >
                     {f.label}
                   </button>
                 ))}
               </div>
             </div>
-            
+
             <div className="relative border-l-2 border-slate-100 ml-3 space-y-8">
               {(() => {
                 let events: any[] = [];
@@ -1594,7 +1601,7 @@ export default function ClientDetailsPage() {
                   });
                 }
                 if (client.meetings) events.push(...client.meetings.map((m: any) => ({ ...m, type: 'meeting', event_title: `Meeting: ${m.title}`, date: new Date(m.meeting_date) })));
-                
+
                 if (timelineFilter !== 'all') {
                   events = events.filter(e => e.type.startsWith(timelineFilter));
                 }
@@ -1607,13 +1614,12 @@ export default function ClientDetailsPage() {
 
                 return events.map((ev, i) => (
                   <div key={i} className="relative pl-6">
-                    <span className={`absolute -left-3 top-1 w-6 h-6 rounded-full flex items-center justify-center border-2 border-white ring-4 ring-white shadow-sm ${
-                      ev.type.startsWith('task') ? 'bg-indigo-100 text-indigo-600' :
-                      ev.type === 'communication' ? 'bg-sky-100 text-sky-600' :
-                      ev.type === 'sow' ? 'bg-emerald-100 text-emerald-600' :
-                      ev.type === 'meeting' ? 'bg-amber-100 text-amber-600' :
-                      'bg-rose-100 text-rose-600'
-                    }`}>
+                    <span className={`absolute -left-3 top-1 w-6 h-6 rounded-full flex items-center justify-center border-2 border-white ring-4 ring-white shadow-sm ${ev.type.startsWith('task') ? 'bg-indigo-100 text-indigo-600' :
+                        ev.type === 'communication' ? 'bg-sky-100 text-sky-600' :
+                          ev.type === 'sow' ? 'bg-emerald-100 text-emerald-600' :
+                            ev.type === 'meeting' ? 'bg-amber-100 text-amber-600' :
+                              'bg-rose-100 text-rose-600'
+                      }`}>
                       {ev.type === 'task' && <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>}
                       {(ev.type === 'task_completed' || ev.type === 'escalation_resolved') && <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>}
                       {ev.type === 'communication' && <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>}
@@ -1655,7 +1661,7 @@ export default function ClientDetailsPage() {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
               </button>
             </div>
-            
+
             <form onSubmit={handleAddContact} className="p-5 space-y-4 text-xs font-semibold text-slate-600">
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -1696,9 +1702,9 @@ export default function ClientDetailsPage() {
                 <label className="block mb-1">Festival Greetings Opt-in</label>
                 <div className="flex flex-wrap gap-2 mt-1.5">
                   {['Diwali', 'Eid', 'Christmas', 'Holi', 'New Year'].map(fest => (
-                    <button 
-                      key={fest} 
-                      type="button" 
+                    <button
+                      key={fest}
+                      type="button"
                       onClick={() => toggleFestival(fest)}
                       className={`px-3 py-1 rounded-full border text-[10px] font-bold transition ${contactFestivals.includes(fest) ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-white border-slate-200 text-slate-500'}`}
                     >
@@ -1727,7 +1733,7 @@ export default function ClientDetailsPage() {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
               </button>
             </div>
-            
+
             <form onSubmit={handleUpdateProfile} className="p-5 space-y-4 text-xs font-semibold text-slate-600 max-h-[70vh] overflow-y-auto">
               <div>
                 <label className="block mb-1">Company Name <span className="text-rose-500">*</span></label>
@@ -1790,8 +1796,8 @@ export default function ClientDetailsPage() {
 
               <div>
                 <label className="block mb-1">Brand Logo</label>
-                <input 
-                  type="file" 
+                <input
+                  type="file"
                   accept="image/*"
                   onChange={async (e) => {
                     const file = e.target.files?.[0];
@@ -1812,8 +1818,8 @@ export default function ClientDetailsPage() {
                         toast.error('Failed to upload logo');
                       }
                     }
-                  }} 
-                  className="w-full border border-slate-300 rounded p-1.5 outline-none font-normal text-slate-800" 
+                  }}
+                  className="w-full border border-slate-300 rounded p-1.5 outline-none font-normal text-slate-800"
                 />
                 {editLogo && <img src={editLogo} alt="Logo preview" className="h-10 mt-2 object-contain bg-slate-50 p-1 rounded border border-slate-200" />}
               </div>
@@ -1839,8 +1845,8 @@ export default function ClientDetailsPage() {
                 <div className="grid grid-cols-2 gap-3 bg-slate-50 p-4 rounded-lg border border-slate-200">
                   {SERVICES.map(service => (
                     <label key={service} className="flex items-center space-x-2 text-xs text-slate-700 cursor-pointer font-medium">
-                      <input 
-                        type="checkbox" 
+                      <input
+                        type="checkbox"
                         checked={editServices.includes(service)}
                         onChange={(e) => {
                           if (e.target.checked) {
@@ -1879,23 +1885,23 @@ export default function ClientDetailsPage() {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
               </button>
             </div>
-            
+
             <div className="p-6 space-y-5 text-sm">
               <p className="text-slate-600">Select the contents, date range, and format for your report.</p>
-              
+
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-2">Report Contents</label>
                 <div className="space-y-2">
                   <label className="flex items-center space-x-2 text-slate-700 cursor-pointer font-medium">
-                    <input type="checkbox" checked={exportIncludes.profile} onChange={(e) => setExportIncludes({...exportIncludes, profile: e.target.checked})} className="rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 w-4 h-4 cursor-pointer" />
+                    <input type="checkbox" checked={exportIncludes.profile} onChange={(e) => setExportIncludes({ ...exportIncludes, profile: e.target.checked })} className="rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 w-4 h-4 cursor-pointer" />
                     <span>Profile & SOW (Client Details)</span>
                   </label>
                   <label className="flex items-center space-x-2 text-slate-700 cursor-pointer font-medium">
-                    <input type="checkbox" checked={exportIncludes.tasks} onChange={(e) => setExportIncludes({...exportIncludes, tasks: e.target.checked})} className="rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 w-4 h-4 cursor-pointer" />
+                    <input type="checkbox" checked={exportIncludes.tasks} onChange={(e) => setExportIncludes({ ...exportIncludes, tasks: e.target.checked })} className="rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 w-4 h-4 cursor-pointer" />
                     <span>Tasks Log</span>
                   </label>
                   <label className="flex items-center space-x-2 text-slate-700 cursor-pointer font-medium">
-                    <input type="checkbox" checked={exportIncludes.comms} onChange={(e) => setExportIncludes({...exportIncludes, comms: e.target.checked})} className="rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 w-4 h-4 cursor-pointer" />
+                    <input type="checkbox" checked={exportIncludes.comms} onChange={(e) => setExportIncludes({ ...exportIncludes, comms: e.target.checked })} className="rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 w-4 h-4 cursor-pointer" />
                     <span>Minutes of Meeting (Communications)</span>
                   </label>
                 </div>
@@ -1904,18 +1910,18 @@ export default function ClientDetailsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">Start Date</label>
-                  <input 
-                    type="date" 
-                    value={exportStartDate} 
+                  <input
+                    type="date"
+                    value={exportStartDate}
                     onChange={(e) => setExportStartDate(e.target.value)}
                     className="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all shadow-sm"
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">End Date</label>
-                  <input 
-                    type="date" 
-                    value={exportEndDate} 
+                  <input
+                    type="date"
+                    value={exportEndDate}
                     onChange={(e) => setExportEndDate(e.target.value)}
                     className="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all shadow-sm"
                   />
@@ -1942,7 +1948,7 @@ export default function ClientDetailsPage() {
                 </div>
               </div>
             </div>
-            
+
             <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
               <button onClick={() => setShowExportModal(false)} className="px-4 py-2 font-semibold text-slate-600 bg-white border border-slate-200 rounded-lg shadow-sm hover:bg-slate-50 transition-colors">Cancel</button>
               <button onClick={handleExportReport} className={`px-4 py-2 font-semibold text-white rounded-lg shadow-sm transition-colors flex items-center gap-2 ${exportFormat === 'pdf' ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-emerald-600 hover:bg-emerald-700'}`}>

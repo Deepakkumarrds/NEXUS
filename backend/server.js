@@ -97,6 +97,9 @@ app.use('/api/upload', uploadRoutes);
 const healthRoutes = require('./routes/healthRoutes');
 app.use('/api/client-health', healthRoutes);
 
+const aiRoutes = require('./routes/aiRoutes');
+app.use('/api/ai', aiRoutes);
+
 // Static uploads folder
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 

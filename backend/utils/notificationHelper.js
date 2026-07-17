@@ -11,13 +11,16 @@ exports.createNotification = async (title, message) => {
     // For now, assigning to the first user (Admin)
     let user = await prisma.user.findFirst();
     if (user) {
-      await prisma.notification.create({
+      const notification = await prisma.notification.create({
         data: {
           user_id: user.id,
           title,
           message
         }
       });
+      if (global.io) {
+        global.io.emit('new_notification', notification);
+      }
     }
   } catch (error) {
     console.error('Failed to create notification:', error);

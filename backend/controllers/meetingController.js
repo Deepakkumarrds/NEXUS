@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 exports.createMeeting = async (req, res) => {
   try {
     const { client_id, meeting_title, meeting_date, attendees, agenda, discussion_points, action_items } = req.body;
-    
+
     // Dummy user for created_by
     let user = await prisma.user.findFirst();
 
@@ -80,7 +80,7 @@ exports.updateMeeting = async (req, res) => {
   try {
     const { id } = req.params;
     const { client_id, meeting_title, meeting_date, attendees, agenda, discussion_points } = req.body;
-    
+
     const meeting = await prisma.meeting.update({
       where: { id },
       data: {

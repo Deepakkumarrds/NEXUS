@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { io } from 'socket.io-client';
 
 type Notification = {
   id: string;
@@ -24,6 +25,18 @@ export default function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const now = useLiveClock();
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    audioRef.current = new Audio('/mixkit-bell-notification-933.mp3');
+  }, []);
+
+  const playNotificationSound = () => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().catch(e => console.error('Audio play failed:', e));
+    }
+  };
 
   const fetchNotifications = async () => {
     try {
@@ -48,10 +61,37 @@ export default function NotificationBell() {
     }
   };
 
+  // Setup Socket.io for Real-Time notifications
   useEffect(() => {
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 30000);
-    return () => clearInterval(interval);
+
+    const userStr = localStorage.getItem('user');
+    let userId = null;
+    if (userStr) {
+      try {
+        userId = JSON.parse(userStr).id;
+      } catch (e) {}
+    }
+
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com';
+    const socket = io(apiUrl);
+
+    if (userId) {
+      socket.emit('join_user_room', userId);
+    }
+
+    socket.on('new_notification', (newNotif: Notification) => {
+      setNotifications(prev => {
+        // Prevent duplicates
+        if (prev.some(n => n.id === newNotif.id)) return prev;
+        return [newNotif, ...prev];
+      });
+      playNotificationSound();
+    });
+
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
@@ -98,51 +138,67 @@ export default function NotificationBell() {
           <>
             {/* Backdrop */}
             <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-            <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border border-slate-200 z-50 overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50">
+            
+            {/* Dropdown */}
+            <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-slate-200 z-50 overflow-hidden">
+              <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
                 <h3 className="font-semibold text-slate-800">Notifications</h3>
                 {unreadCount > 0 && (
-                  <button
-                    onClick={markAllAsRead}
-                    className="text-xs font-medium text-indigo-600 hover:text-indigo-800"
-                  >
-                    Mark all read
-                  </button>
+                  <span className="text-xs font-medium bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full">
+                    {unreadCount} new
+                  </span>
                 )}
               </div>
-
-              <div className="max-h-80 overflow-y-auto">
-                {notifications.length === 0 ? (
-                  <div className="p-4 text-center text-sm text-slate-500">
-                    You're all caught up!
-                  </div>
-                ) : (
-                  notifications.slice(0, 5).map(notification => (
-                    <div
-                      key={notification.id}
-                      className={`p-4 border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors ${!notification.is_read ? 'bg-indigo-50/30' : ''}`}
+              
+              <div className="max-h-96 overflow-y-auto">
+                {notifications.length > 0 ? (
+                  notifications.map((notification) => (
+                    <div 
+                      key={notification.id} 
+                      className={`p-4 border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer flex gap-3 ${
+                        !notification.is_read ? 'bg-indigo-50/30' : ''
+                      }`}
                     >
-                      <div className="flex justify-between items-start mb-1">
-                        <span className="font-medium text-sm text-slate-800">{notification.title}</span>
-                        {!notification.is_read && <span className="w-2 h-2 rounded-full bg-indigo-500 mt-1.5 flex-shrink-0"></span>}
+                      <div className={`w-2 h-2 mt-1.5 rounded-full shrink-0 ${
+                        !notification.is_read ? 'bg-indigo-500' : 'bg-slate-300'
+                      }`} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-slate-900 truncate">
+                          {notification.title}
+                        </p>
+                        <p className="text-xs text-slate-500 mt-1 line-clamp-2">
+                          {notification.message}
+                        </p>
+                        <p className="text-[10px] text-slate-400 mt-2 font-medium">
+                          {new Date(notification.created_at).toLocaleTimeString('en-US', {
+                            hour: 'numeric',
+                            minute: '2-digit',
+                            hour12: true
+                          })}
+                        </p>
                       </div>
-                      <p className="text-xs text-slate-600 line-clamp-2">{notification.message}</p>
-                      <span className="text-[10px] text-slate-400 mt-2 block">
-                        {new Date(notification.created_at).toLocaleDateString()}
-                      </span>
                     </div>
                   ))
+                ) : (
+                  <div className="px-4 py-6 text-center text-sm text-slate-500">
+                    No new notifications
+                  </div>
                 )}
               </div>
-
-              <div className="p-2 border-t border-slate-100 bg-slate-50 text-center">
-                <Link
-                  href="/notifications"
-                  onClick={() => setIsOpen(false)}
-                  className="text-xs font-medium text-slate-600 hover:text-indigo-600 transition-colors"
+            
+              <div className="p-2 border-t border-slate-100 bg-slate-50 flex justify-between">
+                <button
+                  onClick={(e) => { e.stopPropagation(); playNotificationSound(); }}
+                  className="w-full mr-2 py-2 text-xs font-semibold text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded transition-colors"
                 >
-                  View all activity
-                </Link>
+                  Test Sound
+                </button>
+                <button
+                  onClick={markAllAsRead}
+                  className="w-full py-2 text-xs font-semibold text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded transition-colors"
+                >
+                  Mark all as read
+                </button>
               </div>
             </div>
           </>

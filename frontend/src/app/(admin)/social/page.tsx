@@ -86,7 +86,7 @@ export default function SocialPosterPage() {
         const formData = new FormData();
         formData.append('file', selectedFile);
 
-        const uploadResponse = await axios.post('http://localhost:5000/api/upload', formData, {
+        const uploadResponse = await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/upload`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
 

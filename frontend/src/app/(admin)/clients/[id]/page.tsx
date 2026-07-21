@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import TabAICalendar from './components/TabAICalendar';
-
+import * as XLSX from 'xlsx';
 export default function ClientDetailsPage() {
   const params = useParams();
   const searchParams = useSearchParams();

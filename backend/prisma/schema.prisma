@@ -450,13 +450,15 @@ model OnboardingChecklist {
 }
 
 model SocialHandle {
-  id              String  @id @default(uuid()) @db.Uuid
-  client_id       String  @db.Uuid
-  platform        String // Instagram, Meta, YouTube, LinkedIn, Twitter
-  profile_url     String
-  username        String?
-  password        String?
-  access_provided String // Admin, Advertiser, Analyst, None
+  id                  String  @id @default(uuid()) @db.Uuid
+  client_id           String  @db.Uuid
+  platform            String // Instagram, Meta, YouTube, LinkedIn, Twitter
+  profile_url         String
+  username            String?
+  password            String?
+  access_provided     String // Admin, Advertiser, Analyst, None
+  access_token        String? @db.Text
+  platform_account_id String?
 
   client Client @relation(fields: [client_id], references: [id], onDelete: Cascade)
 }

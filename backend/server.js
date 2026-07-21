@@ -50,6 +50,7 @@ const settingsRoutes = require('./routes/settingsRoutes');
 const knowledgeRoutes = require('./routes/knowledgeRoutes');
 const workRequestRoutes = require('./routes/workRequestRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
+const socialRoutes = require('./routes/socialRoutes');
 
 // Middlewares
 app.use(cors());
@@ -93,6 +94,7 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/knowledge', knowledgeRoutes);
 app.use('/api/work-requests', workRequestRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/social', socialRoutes);
 
 const healthRoutes = require('./routes/healthRoutes');
 app.use('/api/client-health', healthRoutes);

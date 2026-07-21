@@ -284,6 +284,8 @@ export default function ClientDetailsPage() {
   const [socialUsername, setSocialUsername] = useState('');
   const [socialPassword, setSocialPassword] = useState('');
   const [socialAccess, setSocialAccess] = useState('Analyst');
+  const [socialAccessToken, setSocialAccessToken] = useState('');
+  const [socialPlatformAccountId, setSocialPlatformAccountId] = useState('');
 
   // SEO Access Form State
   const [seoPlatform, setSeoPlatform] = useState('Google Analytics');
@@ -434,13 +436,18 @@ export default function ClientDetailsPage() {
           profile_url: socialUrl,
           username: socialUsername,
           password: socialPassword,
-          access_provided: socialAccess
+          access_provided: socialAccess,
+          access_token: socialAccessToken,
+          platform_account_id: socialPlatformAccountId
         })
       });
       if (res.ok) {
+        toast.success('Social handle added');
         setSocialUrl('');
         setSocialUsername('');
         setSocialPassword('');
+        setSocialAccessToken('');
+        setSocialPlatformAccountId('');
         fetchClientDetails();
       }
     } catch (err) {
@@ -1131,8 +1138,8 @@ export default function ClientDetailsPage() {
                   <label className="block text-xs font-semibold text-slate-600 mb-1">Password</label>
                   <input type="text" value={socialPassword} onChange={e => setSocialPassword(e.target.value)} placeholder="Password" className="w-full text-xs border border-slate-300 rounded p-1.5 outline-none focus:border-indigo-500" />
                 </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">Access Role</label>
+                <div className="md:col-span-1">
+                  <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Access Level</label>
                   <select value={socialAccess} onChange={e => setSocialAccess(e.target.value)} className="w-full text-xs border border-slate-300 rounded p-1.5 bg-white outline-none">
                     <option value="Admin">Admin</option>
                     <option value="Advertiser">Advertiser</option>
@@ -1140,8 +1147,24 @@ export default function ClientDetailsPage() {
                     <option value="None">None</option>
                   </select>
                 </div>
-                <div>
-                  <button type="submit" className="w-full bg-indigo-600 text-white font-semibold text-xs px-4 py-1.5 rounded hover:bg-indigo-700 transition shadow-sm">Save</button>
+                
+                {socialPlatform === 'Instagram' && (
+                  <>
+                    <div className="md:col-span-2">
+                      <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Access Token</label>
+                      <input type="text" value={socialAccessToken} onChange={e => setSocialAccessToken(e.target.value)} placeholder="IGAA..." className="w-full text-xs border border-slate-300 rounded p-1.5 outline-none focus:border-indigo-500" />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">User ID</label>
+                      <input type="text" value={socialPlatformAccountId} onChange={e => setSocialPlatformAccountId(e.target.value)} placeholder="1784..." className="w-full text-xs border border-slate-300 rounded p-1.5 outline-none focus:border-indigo-500" />
+                    </div>
+                  </>
+                )}
+
+                <div className="md:col-span-6 flex justify-end mt-2">
+                  <button type="submit" className="px-4 py-1.5 bg-indigo-600 text-white text-xs font-semibold rounded hover:bg-indigo-700 transition-colors">
+                    Add Handle
+                  </button>
                 </div>
               </form>
 

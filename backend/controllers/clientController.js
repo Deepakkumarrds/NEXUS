@@ -261,7 +261,7 @@ exports.getSocialHandles = async (req, res) => {
 exports.addSocialHandle = async (req, res) => {
   try {
     const { id } = req.params;
-    const { platform, profile_url, access_provided, username, password } = req.body;
+    const { platform, profile_url, access_provided, username, password, access_token, platform_account_id } = req.body;
     const handle = await prisma.socialHandle.create({
       data: {
         client_id: id,
@@ -269,7 +269,9 @@ exports.addSocialHandle = async (req, res) => {
         profile_url,
         username: username || null,
         password: password || null,
-        access_provided: access_provided || 'None'
+        access_provided: access_provided || 'None',
+        access_token: access_token || null,
+        platform_account_id: platform_account_id || null
       }
     });
     res.status(201).json({ status: 'success', data: handle });

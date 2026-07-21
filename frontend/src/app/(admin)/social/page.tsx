@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from 'react';
-import axios from 'axios';
 import { Camera, Image as ImageIcon, Send, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 
 export default function SocialPosterPage() {
@@ -22,9 +21,10 @@ export default function SocialPosterPage() {
   React.useEffect(() => {
     const fetchClients = async () => {
       try {
-        const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/clients`);
-        if (res.data.status === 'success') {
-          setClients(res.data.data);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/clients`);
+        const res = await response.json();
+        if (res.status === 'success') {
+          setClients(res.data);
         }
       } catch (err) {
         console.error('Failed to fetch clients:', err);
@@ -43,9 +43,10 @@ export default function SocialPosterPage() {
 
     const fetchAccounts = async () => {
       try {
-        const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/clients/${selectedClientId}/socials`);
-        if (res.data.status === 'success') {
-          const igAccounts = res.data.data.filter((handle: any) => handle.platform === 'Instagram' && handle.access_token);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/clients/${selectedClientId}/socials`);
+        const res = await response.json();
+        if (res.status === 'success') {
+          const igAccounts = res.data.filter((handle: any) => handle.platform === 'Instagram' && handle.access_token);
           setInstagramAccounts(igAccounts);
           if (igAccounts.length > 0) {
             setSelectedSocialHandleId(igAccounts[0].id);
@@ -86,33 +87,40 @@ export default function SocialPosterPage() {
         const formData = new FormData();
         formData.append('file', selectedFile);
 
-        const uploadResponse = await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/upload`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/upload`, {
+          method: 'POST',
+          body: formData
         });
+        const uploadResData = await response.json();
 
-        if (uploadResponse.data && uploadResponse.data.url) {
-          finalImageUrl = uploadResponse.data.url;
+        if (uploadResData && uploadResData.url) {
+          finalImageUrl = uploadResData.url;
         } else {
           throw new Error('File upload failed to return a public URL.');
         }
       }
 
       // 2. Post to Instagram
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/social/instagram/post`, {
-        imageUrl: finalImageUrl,
-        caption,
-        socialHandleId: selectedSocialHandleId
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/social/instagram/post`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          imageUrl: finalImageUrl,
+          caption,
+          socialHandleId: selectedSocialHandleId
+        })
       });
+      const responseData = await res.json();
 
-      if (response.data.status === 'success') {
+      if (responseData.status === 'success') {
         setStatus('success');
-        setMessage('Post successfully published to Instagram!');
-        setPostId(response.data.postId);
+        setMessage('Successfully posted to Instagram!');
+        setPostId(responseData.data?.id || 'Unknown ID');
         setImageUrl('');
         setSelectedFile(null);
         setCaption('');
       } else {
-        throw new Error(response.data.message || 'Failed to post.');
+        throw new Error(responseData.message || 'Failed to post to Instagram');
       }
     } catch (error: any) {
       console.error('Posting error:', error);

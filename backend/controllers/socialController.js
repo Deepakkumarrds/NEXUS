@@ -29,7 +29,7 @@ exports.postToInstagram = async (req, res) => {
         console.log(`Attempting to post to Instagram. Image: ${imageUrl}`);
 
         // Step 1: Create Media Container
-        const containerRes = await axios.post(`https://graph.instagram.com/v20.0/me/media`, {
+        const containerRes = await axios.post(`https://graph.instagram.com/v20.0/${IG_USER_ID}/media`, {
             image_url: imageUrl,
             caption: caption || '',
             access_token: ACCESS_TOKEN
@@ -48,7 +48,7 @@ exports.postToInstagram = async (req, res) => {
 
         // Step 2: Publish the Container
         console.log(`Publishing container...`);
-        const publishRes = await axios.post(`https://graph.instagram.com/v20.0/me/media_publish`, {
+        const publishRes = await axios.post(`https://graph.instagram.com/v20.0/${IG_USER_ID}/media_publish`, {
             creation_id: creationId,
             access_token: ACCESS_TOKEN
         });

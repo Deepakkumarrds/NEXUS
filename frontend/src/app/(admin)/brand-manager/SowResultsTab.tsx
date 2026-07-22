@@ -29,6 +29,23 @@ export default function SowResultsTab() {
       });
   };
 
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this SOW? This will remove all associated monthly data.')) return;
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com'}/api/sows/${id}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        setSows(sows.filter(s => s.id !== id));
+      } else {
+        alert('Failed to delete SOW');
+      }
+    } catch (error) {
+      console.error('Error deleting SOW:', error);
+      alert('Error connecting to backend server.');
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'Approved':
@@ -60,6 +77,7 @@ export default function SowResultsTab() {
                 <th className="p-4">Month</th>
                 <th className="p-4">Value</th>
                 <th className="p-4">Status</th>
+                <th className="p-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-sm">
@@ -80,6 +98,22 @@ export default function SowResultsTab() {
                     </td>
                     <td className="p-4">
                       {getStatusBadge(month.approval_status)}
+                    </td>
+                    <td className="p-4 text-right">
+                      <div className="flex items-center justify-end gap-3">
+                        <a 
+                          href={`/sows/${sow.id}`} 
+                          className="text-xs font-medium text-indigo-600 hover:text-indigo-900 transition-colors"
+                        >
+                          Edit
+                        </a>
+                        <button 
+                          onClick={() => handleDelete(sow.id)}
+                          className="text-xs font-medium text-red-600 hover:text-red-900 transition-colors"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))

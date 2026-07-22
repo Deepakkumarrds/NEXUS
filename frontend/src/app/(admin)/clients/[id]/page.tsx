@@ -19,6 +19,7 @@ export default function ClientDetailsPage() {
   const [client, setClient] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'overview' | 'marketing' | 'delivery' | 'ai_calendar'>('overview');
+  const [isBrandManager, setIsBrandManager] = useState(false);
 
   // Export Report State
   const [showExportModal, setShowExportModal] = useState(false);
@@ -44,6 +45,13 @@ export default function ClientDetailsPage() {
 
   useEffect(() => {
     fetchClientDetails();
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        setIsBrandManager(user.role === 'Brand Manager');
+      } catch (e) {}
+    }
   }, [clientId]);
 
   // Edit Profile Form State
@@ -289,7 +297,7 @@ export default function ClientDetailsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block mb-1">Client Status <span className="text-rose-500">*</span></label>
-                  <select value={editStatus} onChange={e => setEditStatus(e.target.value as any)} className="w-full border border-slate-300 rounded p-2 bg-white outline-none font-normal text-slate-800">
+                  <select disabled={!isBrandManager} value={editStatus} onChange={e => setEditStatus(e.target.value as any)} className="w-full border border-slate-300 rounded p-2 bg-white outline-none font-normal text-slate-800 disabled:opacity-50 disabled:bg-slate-100 disabled:cursor-not-allowed">
                     <option value="Active">Active</option>
                     <option value="Hold">Hold</option>
                     <option value="Lost">Lost</option>
@@ -297,7 +305,7 @@ export default function ClientDetailsPage() {
                 </div>
                 <div>
                   <label className="block mb-1">Health Status</label>
-                  <select value={editHealthStatus} onChange={e => setEditHealthStatus(e.target.value as any)} className="w-full border border-slate-300 rounded p-2 bg-white outline-none font-normal text-slate-800">
+                  <select disabled={!isBrandManager} value={editHealthStatus} onChange={e => setEditHealthStatus(e.target.value as any)} className="w-full border border-slate-300 rounded p-2 bg-white outline-none font-normal text-slate-800 disabled:opacity-50 disabled:bg-slate-100 disabled:cursor-not-allowed">
                     <option value="Green">Green</option>
                     <option value="Yellow">Yellow</option>
                     <option value="Red">Red</option>

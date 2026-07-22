@@ -7,8 +7,16 @@ export default function BrandStatusTab() {
   const [brands, setBrands] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [isBrandManager, setIsBrandManager] = useState(false);
 
   useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        setIsBrandManager(user.role === 'Brand Manager');
+      } catch (e) {}
+    }
     fetchBrands();
   }, []);
 
@@ -148,7 +156,7 @@ export default function BrandStatusTab() {
                       <select
                         value={brand.client_status || 'Active'}
                         onChange={(e) => handleStatusChange(brand.id, e.target.value)}
-                        disabled={updatingId === brand.id}
+                        disabled={!isBrandManager || updatingId === brand.id}
                         className={`rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm w-full max-w-[120px] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer border-r-8 border-transparent ${
                           brand.client_status === 'Active' ? 'bg-emerald-100 text-emerald-700' :
                           brand.client_status === 'Hold' ? 'bg-amber-100 text-amber-700' :
@@ -168,7 +176,7 @@ export default function BrandStatusTab() {
                       <select
                         value={brand.health_status || 'Green'}
                         onChange={(e) => handleHealthChange(brand.id, e.target.value)}
-                        disabled={updatingId === brand.id}
+                        disabled={!isBrandManager || updatingId === brand.id}
                         className={`rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm w-full max-w-[120px] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer border-r-8 border-transparent ${
                           brand.health_status === 'Green' ? 'bg-emerald-100 text-emerald-700' :
                           brand.health_status === 'Yellow' ? 'bg-amber-100 text-amber-700' :
@@ -192,8 +200,8 @@ export default function BrandStatusTab() {
                             handleFeedbackChange(brand.id, e.target.value);
                           }
                         }}
-                        disabled={updatingId === brand.id}
-                        placeholder="Add a note..."
+                        disabled={!isBrandManager || updatingId === brand.id}
+                        placeholder={isBrandManager ? "Add a note..." : ""}
                         className="border-b border-transparent hover:border-slate-300 focus:border-indigo-500 rounded-none px-2 py-1 text-sm bg-transparent outline-none w-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-slate-600 placeholder-slate-400"
                       />
                       {updatingId === brand.id && (

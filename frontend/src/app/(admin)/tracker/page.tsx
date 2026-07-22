@@ -164,7 +164,12 @@ export default function TrackerPage() {
     return dates.some(date => {
       const dateStr = date.toISOString().split('T')[0];
       const cell = trackerMap[client.id]?.[dateStr];
-      return cell && (cell.summary_text || cell.status_color || (cell.tasks && cell.tasks.length > 0));
+      return cell && (
+        cell.summary_text || 
+        cell.status_color || 
+        (cell.tasks && cell.tasks.length > 0) || 
+        (cell.summaries && cell.summaries.length > 0)
+      );
     });
   });
 

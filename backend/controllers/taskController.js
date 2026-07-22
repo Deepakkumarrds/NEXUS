@@ -5,7 +5,7 @@ const { createNotification } = require('../utils/notificationHelper');
 // Create a new task
 exports.createTask = async (req, res) => {
   try {
-    const { title, description, priority, due_date, client_id, assigned_to, is_recurring, recurrence_pattern, recurrence_end, resource_links, checklist, sow_id, sow_item_id, department, is_sow, estimated_hours } = req.body;
+    const { title, description, priority, due_date, client_id, assigned_to, is_recurring, recurrence_pattern, recurrence_end, resource_links, checklist, sow_id, sow_item_id, department, is_sow, estimated_hours, is_weekly_target } = req.body;
     
     // Use the logged-in user as the creator
     const creatorId = req.user && req.user.id ? req.user.id : (await prisma.user.findFirst()).id;
@@ -23,6 +23,7 @@ exports.createTask = async (req, res) => {
         is_recurring: is_recurring || false,
         recurrence_pattern: recurrence_pattern || null,
         recurrence_end: recurrence_end ? new Date(recurrence_end) : null,
+        is_weekly_target: is_weekly_target || false,
         resource_links: resource_links || [],
         checklist: checklist || null,
         department: department || undefined,
@@ -213,6 +214,7 @@ exports.updateTask = async (req, res) => {
       is_recurring, 
       recurrence_pattern, 
       recurrence_end,
+      is_weekly_target,
       resource_links,
       checklist,
       sow_id,
@@ -241,10 +243,11 @@ exports.updateTask = async (req, res) => {
         delay_reason: delay_reason || undefined,
         delay_notes: delay_notes || undefined,
         original_due_date: original_due_date ? new Date(original_due_date) : undefined,
-        is_recurring,
-        recurrence_pattern,
-        recurrence_end: recurrence_end ? new Date(recurrence_end) : undefined,
-        resource_links: resource_links || undefined,
+        is_recurring: is_recurring !== undefined ? is_recurring : undefined,
+        recurrence_pattern: recurrence_pattern !== undefined ? recurrence_pattern : undefined,
+        recurrence_end: recurrence_end !== undefined ? new Date(recurrence_end) : undefined,
+        is_weekly_target: is_weekly_target !== undefined ? is_weekly_target : undefined,
+        resource_links: resource_links !== undefined ? resource_links : undefined,
         checklist: checklist || undefined,
         department: department !== undefined ? department : undefined,
         is_sow: is_sow !== undefined ? is_sow : undefined,

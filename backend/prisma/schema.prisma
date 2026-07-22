@@ -47,6 +47,8 @@ model User {
   attendances            Attendance[]
   approved_leaves        LeaveRecord[]          @relation("LeaveApprover")
   leave_balances         LeaveBalance[]
+  sows_submitted         SowMonth[]             @relation("SowSubmitter")
+  sows_approved          SowMonth[]             @relation("SowApprover")
 }
 
 model Role {
@@ -202,6 +204,7 @@ model Task {
   is_recurring          Boolean   @default(false)
   recurrence_pattern    String?
   recurrence_end        DateTime?
+  is_weekly_target      Boolean   @default(false)
   resource_links        String[]
   checklist             Json?
   estimated_hours       Float     @default(1.0)
@@ -301,13 +304,18 @@ model Sow {
 }
 
 model SowMonth {
-  id         String @id @default(uuid()) @db.Uuid
-  sow_id     String @db.Uuid
-  month_year String // e.g. "January 2026"
-  value      Float  @default(0)
+  id              String  @id @default(uuid()) @db.Uuid
+  sow_id          String  @db.Uuid
+  month_year      String // e.g. "January 2026"
+  value           Float   @default(0)
+  approval_status String  @default("Draft") // Draft, Pending Approval, Approved
+  submitted_by    String? @db.Uuid
+  approved_by     String? @db.Uuid
 
-  sow   Sow       @relation(fields: [sow_id], references: [id], onDelete: Cascade)
-  items SowItem[]
+  sow       Sow       @relation(fields: [sow_id], references: [id], onDelete: Cascade)
+  items     SowItem[]
+  submitter User?     @relation("SowSubmitter", fields: [submitted_by], references: [id])
+  approver  User?     @relation("SowApprover", fields: [approved_by], references: [id])
 }
 
 model SowItem {

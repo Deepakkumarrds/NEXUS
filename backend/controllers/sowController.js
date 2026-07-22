@@ -55,7 +55,7 @@ exports.createSow = async (req, res) => {
     }
     await createNotification('New Contract (SOW) Drafted', `SOW: ${sow_name} (${totalItems} Deliverables)`);
 
-    res.status(201).json({ status: 'success', data: sow });
+    res.status(201).json({ status: 'success', data: createdSow });
   } catch (error) {
     console.error('Error creating SOW:', error);
     res.status(500).json({ status: 'error', message: 'Failed to create SOW' });
@@ -65,7 +65,9 @@ exports.createSow = async (req, res) => {
 // Get all SOWs
 exports.getAllSows = async (req, res) => {
   try {
-    let sows = await prisma.sow.findMany({
+    const { approval_status } = req.query;
+    
+    let queryOptions = {
       include: {
         client: { select: { company_name: true } },
         months: {
@@ -74,7 +76,24 @@ exports.getAllSows = async (req, res) => {
         items: { include: { tasks: true } }
       },
       orderBy: { created_at: 'desc' }
-    });
+    };
+
+    if (approval_status) {
+      queryOptions.where = {
+        months: {
+          some: {
+            approval_status: approval_status
+          }
+        }
+      };
+      
+      // Also filter the nested months
+      queryOptions.include.months.where = {
+        approval_status: approval_status
+      };
+    }
+
+    let sows = await prisma.sow.findMany(queryOptions);
 
     // Role-based Financial Privacy
     if (req.query.role === 'Team Member') {
@@ -191,11 +210,15 @@ exports.deleteSow = async (req, res) => {
 exports.updateSowItemStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, remarks } = req.body;
+
+    const data = {};
+    if (status !== undefined) data.status = status;
+    if (remarks !== undefined) data.remarks = remarks;
 
     const item = await prisma.sowItem.update({
       where: { id },
-      data: { status }
+      data
     });
 
     res.status(200).json({ status: 'success', data: item });
@@ -226,3 +249,52 @@ exports.addSowItem = async (req, res) => {
     res.status(500).json({ status: 'error', message: 'Failed to add item' });
   }
 };
+
+// Submit SOW Month for Approval
+exports.submitSowMonthForApproval = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { user_id } = req.body;
+
+    const month = await prisma.sowMonth.update({
+      where: { id },
+      data: {
+        approval_status: 'Pending Approval',
+        submitted_by: user_id
+      }
+    });
+
+    const sow = await prisma.sow.findUnique({ where: { id: month.sow_id } });
+    await createNotification('SOW Pending Approval', `A new SOW month (${month.month_year}) requires your approval.`);
+
+    res.status(200).json({ status: 'success', data: month });
+  } catch (error) {
+    console.error('Error submitting SOW month:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to submit SOW month' });
+  }
+};
+
+// Approve SOW Month
+exports.approveSowMonth = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { user_id } = req.body;
+
+    const month = await prisma.sowMonth.update({
+      where: { id },
+      data: {
+        approval_status: 'Approved',
+        approved_by: user_id
+      }
+    });
+
+    const sow = await prisma.sow.findUnique({ where: { id: month.sow_id } });
+    await createNotification('SOW Approved', `SOW month (${month.month_year}) has been approved.`);
+
+    res.status(200).json({ status: 'success', data: month });
+  } catch (error) {
+    console.error('Error approving SOW month:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to approve SOW month' });
+  }
+};
+

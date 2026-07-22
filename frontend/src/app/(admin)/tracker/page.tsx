@@ -20,7 +20,8 @@ const DEPARTMENTS = ['All Departments', 'Web Development', 'SEO', 'Paid Media', 
 export default function TrackerPage() {
   const [userRole, setUserRole] = useState<string>('');
   
-  const [department, setDepartment] = useState(DEPARTMENTS[0]);
+  const [department, setDepartment] = useState<string[]>([DEPARTMENTS[0]]);
+  const [showDeptMenu, setShowDeptMenu] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [viewMode, setViewMode] = useState<'Day' | 'Week'>('Day');
   const [dates, setDates] = useState<Date[]>([]);
@@ -67,7 +68,7 @@ export default function TrackerPage() {
       const startDate = dates[0].toISOString();
       const endDate = dates[dates.length - 1].toISOString();
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com'}/api/tracker?department=${encodeURIComponent(department)}&startDate=${startDate}&endDate=${endDate}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com'}/api/tracker?department=${encodeURIComponent(department.join(','))}&startDate=${startDate}&endDate=${endDate}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
@@ -86,21 +87,20 @@ export default function TrackerPage() {
     const dateStr = date.toISOString().split('T')[0];
     const cellData = trackerMap[client.id]?.[dateStr] || { summary_text: '', status_color: '', tasks: [], summaries: [] };
     
-    let initialModalDepartment = department;
+    const isAllDepts = department.includes('All Departments') || department.length > 1;
+    let initialModalDepartment = isAllDepts ? 'Web Development' : department[0];
     
-    if (department === 'All Departments') {
+    if (isAllDepts) {
       // Find the first department that actually has data in this cell
       if (cellData.summaries && cellData.summaries.length > 0) {
         initialModalDepartment = cellData.summaries[0].department;
-      } else {
-        initialModalDepartment = 'Web Development';
       }
     }
     
     let initialText = '';
     let initialColor = '';
     
-    if (department === 'All Departments') {
+    if (isAllDepts) {
       const existingSummary = cellData.summaries?.find(s => s.department === initialModalDepartment);
       if (existingSummary) {
         initialText = existingSummary.text || '';
@@ -204,13 +204,46 @@ export default function TrackerPage() {
             onChange={(e) => setSelectedDate(new Date(e.target.value))}
             className="border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-slate-700 py-2 px-3"
           />
-          <select 
-            value={department}
-            onChange={(e) => setDepartment(e.target.value)}
-            className="border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-slate-700 py-2 pl-3 pr-10"
-          >
-            {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
-          </select>
+          <div className="relative">
+            <button 
+              onClick={() => setShowDeptMenu(!showDeptMenu)}
+              className="border-slate-300 bg-white rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-slate-700 py-2 pl-3 pr-10 border flex items-center justify-between min-w-[160px] max-w-[250px]"
+            >
+              <span className="truncate">{department.includes('All Departments') ? 'All Departments' : department.join(', ')}</span>
+            </button>
+            {showDeptMenu && (
+              <div className="absolute right-0 mt-1 w-56 bg-white shadow-lg rounded-md border border-slate-200 py-1 max-h-60 overflow-y-auto z-50">
+                <div 
+                  className="fixed inset-0 z-10" 
+                  onClick={() => setShowDeptMenu(false)}
+                ></div>
+                <div className="relative z-20">
+                  {DEPARTMENTS.map(d => (
+                    <label key={d} className="flex items-center px-4 py-2 hover:bg-slate-50 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 mr-3"
+                        checked={department.includes(d)}
+                        onChange={(e) => {
+                          if (d === 'All Departments') {
+                            setDepartment(e.target.checked ? ['All Departments'] : []);
+                          } else {
+                            let newDept = [...department].filter(x => x !== 'All Departments');
+                            if (e.target.checked) newDept.push(d);
+                            else newDept = newDept.filter(x => x !== d);
+                            
+                            if (newDept.length === 0) newDept = ['All Departments'];
+                            setDepartment(newDept);
+                          }
+                        }}
+                      />
+                      <span className="text-sm text-slate-700">{d}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
@@ -274,7 +307,7 @@ export default function TrackerPage() {
                               <ol className="list-decimal list-inside space-y-1">
                                 {cell.tasks.map((task: any, idx: number) => (
                                   <li key={task.id} className="text-[10px] leading-tight">
-                                    {department === 'All Departments' && task.department && (
+                                    {(department.includes('All Departments') || department.length > 1) && task.department && (
                                       <span className="font-bold text-slate-500 mr-1">[{task.department}]</span>
                                     )}
                                     <span className={task.status === 'Completed' ? 'line-through text-slate-400' : 'text-slate-700'}>
@@ -311,7 +344,7 @@ export default function TrackerPage() {
             </p>
 
             <div className="space-y-4">
-              {department === 'All Departments' && (
+              {(department.includes('All Departments') || department.length > 1) && (
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Select Department</label>
                   <select 

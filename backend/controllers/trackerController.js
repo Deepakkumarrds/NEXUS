@@ -29,14 +29,20 @@ exports.getTrackerData = async (req, res) => {
       orderBy: { company_name: 'asc' }
     });
 
+    const isAllDepartments = !department || department === 'All Departments' || department === 'All' || department.includes('All Departments');
+    let deptArray = [];
+    if (!isAllDepartments && typeof department === 'string') {
+      deptArray = department.split(',').map(d => d.trim()).filter(Boolean);
+    }
+
     const trackerWhere = {
       date: {
         gte: start,
         lte: end
       }
     };
-    if (department !== 'All Departments' && department !== 'All') {
-      trackerWhere.department = department;
+    if (!isAllDepartments && deptArray.length > 0) {
+      trackerWhere.department = { in: deptArray };
     }
 
     // Fetch all trackers within the date range
@@ -54,8 +60,8 @@ exports.getTrackerData = async (req, res) => {
         lte: end
       }
     };
-    if (department !== 'All Departments' && department !== 'All') {
-      taskWhere.department = department;
+    if (!isAllDepartments && deptArray.length > 0) {
+      taskWhere.department = { in: deptArray };
     }
     
     // Fetch all tasks within the date range
@@ -91,12 +97,14 @@ exports.getTrackerData = async (req, res) => {
         };
       }
       
+      const showPrefix = isAllDepartments || deptArray.length > 1;
+      
       const cell = trackerMap[t.client_id][dateKey];
       if (t.summary_text) {
-        if (department === 'All Departments') {
+        if (showPrefix) {
           cell.summaries.push({ department: t.department, text: t.summary_text, color: t.status_color });
         }
-        const prefix = department === 'All Departments' ? `[${t.department}]\n` : '';
+        const prefix = showPrefix ? `[${t.department}]\n` : '';
         cell.summary_text += (cell.summary_text ? '\n\n' : '') + prefix + t.summary_text;
       }
       

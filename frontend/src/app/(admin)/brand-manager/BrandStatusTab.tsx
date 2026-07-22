@@ -6,6 +6,7 @@ export default function BrandStatusTab() {
   const [loading, setLoading] = useState(true);
   const [brands, setBrands] = useState<any[]>([]);
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [isBrandManager, setIsBrandManager] = useState(false);
 
@@ -99,10 +100,11 @@ export default function BrandStatusTab() {
     }
   };
 
-  const filteredBrands = brands.filter(b => 
-    b.company_name?.toLowerCase().includes(search.toLowerCase()) ||
-    b.brand_name?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredBrands = brands.filter(b => {
+    const matchesSearch = b.company_name?.toLowerCase().includes(search.toLowerCase()) || b.brand_name?.toLowerCase().includes(search.toLowerCase());
+    const matchesStatus = statusFilter === 'All' ? true : b.client_status === statusFilter;
+    return matchesSearch && matchesStatus;
+  }).sort((a, b) => (a.company_name || '').localeCompare(b.company_name || ''));
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden flex flex-col">
@@ -119,8 +121,20 @@ export default function BrandStatusTab() {
           />
         </div>
         
-        <div className="text-xs font-medium text-slate-500 bg-white px-3 py-1.5 rounded-md border border-slate-200">
-          Showing {filteredBrands.length} brands
+        <div className="flex items-center gap-3">
+          <select 
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="text-sm border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 py-2 pl-3 pr-8"
+          >
+            <option value="All">All Statuses</option>
+            <option value="Active">Active</option>
+            <option value="Hold">Hold</option>
+            <option value="Lost">Lost</option>
+          </select>
+          <div className="text-xs font-medium text-slate-500 bg-white px-3 py-1.5 rounded-md border border-slate-200">
+            Showing {filteredBrands.length} brands
+          </div>
         </div>
       </div>
 
@@ -157,11 +171,11 @@ export default function BrandStatusTab() {
                         value={brand.client_status || 'Active'}
                         onChange={(e) => handleStatusChange(brand.id, e.target.value)}
                         disabled={!isBrandManager || updatingId === brand.id}
-                        className={`rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm w-full max-w-[120px] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer border-r-8 border-transparent ${
-                          brand.client_status === 'Active' ? 'bg-emerald-100 text-emerald-700' :
-                          brand.client_status === 'Hold' ? 'bg-amber-100 text-amber-700' :
-                          brand.client_status === 'Lost' ? 'bg-red-100 text-red-700' :
-                          'bg-slate-100 text-slate-700'
+                        className={`border border-transparent rounded-full px-3 py-1.5 text-xs font-semibold focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm w-full max-w-[120px] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${
+                          brand.client_status === 'Active' ? 'bg-green-100 text-green-900' :
+                          brand.client_status === 'Hold' ? 'bg-yellow-100 text-yellow-900' :
+                          brand.client_status === 'Lost' ? 'bg-red-100 text-red-900' :
+                          'bg-slate-100 text-slate-900'
                         }`}
                       >
                         <option value="Active">Active</option>
@@ -177,11 +191,11 @@ export default function BrandStatusTab() {
                         value={brand.health_status || 'Green'}
                         onChange={(e) => handleHealthChange(brand.id, e.target.value)}
                         disabled={!isBrandManager || updatingId === brand.id}
-                        className={`rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm w-full max-w-[120px] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer border-r-8 border-transparent ${
-                          brand.health_status === 'Green' ? 'bg-emerald-100 text-emerald-700' :
-                          brand.health_status === 'Yellow' ? 'bg-amber-100 text-amber-700' :
-                          brand.health_status === 'Red' ? 'bg-rose-100 text-rose-700' :
-                          'bg-emerald-100 text-emerald-700'
+                        className={`border border-transparent rounded-full px-3 py-1.5 text-xs font-semibold focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm w-full max-w-[120px] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${
+                          brand.health_status === 'Green' ? 'bg-green-100 text-green-900' :
+                          brand.health_status === 'Yellow' ? 'bg-yellow-100 text-yellow-900' :
+                          brand.health_status === 'Red' ? 'bg-red-100 text-red-900' :
+                          'bg-green-100 text-green-900'
                         }`}
                       >
                         <option value="Green">Green</option>

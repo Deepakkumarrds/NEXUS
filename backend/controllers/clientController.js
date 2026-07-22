@@ -5,7 +5,7 @@ const { calculateClientHealth } = require('../utils/healthScoreEngine');
 // Create a new client
 exports.createClient = async (req, res) => {
   try {
-    const { company_name, brand_name, industry, website, email, phone, client_status, service_type, retainer_value, primary_contact_name, spoc_name, brand_shortcode, logo, objective, focused_area, customer_mindset, onboarding_date } = req.body;
+    const { company_name, brand_name, industry, website, email, phone, client_status, health_status, service_type, retainer_value, primary_contact_name, spoc_name, brand_shortcode, logo, objective, focused_area, customer_mindset, onboarding_date } = req.body;
     
     const client = await prisma.client.create({
       data: {
@@ -16,6 +16,7 @@ exports.createClient = async (req, res) => {
         email,
         phone,
         client_status: client_status || "Active",
+        health_status: health_status || "Green",
         service_type,
         retainer_value: retainer_value ? parseFloat(retainer_value) : null,
         primary_contact_name,

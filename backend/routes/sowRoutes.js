@@ -10,5 +10,7 @@ router.put('/:id', sowController.updateSow);
 router.delete('/:id', sowController.deleteSow);
 router.patch('/items/:id/status', sowController.updateSowItemStatus);
 router.post('/:id/items', sowController.addSowItem);
+router.patch('/month/:id/submit', sowController.submitSowMonthForApproval);
+router.patch('/month/:id/approve', sowController.approveSowMonth);
 
 module.exports = router;

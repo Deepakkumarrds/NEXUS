@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-export default function LeavesPage() {
+export default function LeavesComponent() {
   const [activeTab, setActiveTab] = useState('my-leaves');
   const [leavesData, setLeavesData] = useState<any>(null);
   const [pendingApprovals, setPendingApprovals] = useState<any[]>([]);
@@ -116,20 +116,7 @@ export default function LeavesPage() {
 
   return (
     <div className="max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Leave Tracker</h1>
-          <p className="text-sm text-slate-500 mt-1">Manage and track your leave balances.</p>
-        </div>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 transition-colors shadow-sm"
-        >
-          Apply for Leave
-        </button>
-      </div>
-
-      <div className="mb-6 border-b border-slate-200">
+      <div className="mb-6 border-b border-slate-200 flex justify-between items-center"><div className="flex-1"></div><button onClick={() => setIsModalOpen(true)} className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 transition-colors shadow-sm">Apply for Leave</button></div><div className="mb-6 border-b border-slate-200">
         <nav className="-mb-px flex space-x-8">
           <button
             onClick={() => setActiveTab('my-leaves')}

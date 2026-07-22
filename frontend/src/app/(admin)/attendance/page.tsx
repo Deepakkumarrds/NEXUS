@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import LeavesComponent from './components/LeavesComponent';
 import { io } from 'socket.io-client';
 
 const STATUS_COLORS = {
@@ -14,7 +15,7 @@ const STATUS_COLORS = {
 export default function AttendancePage() {
   const [attendance, setAttendance] = useState<any>(null);
   const [history, setHistory] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<'today' | 'history'>('today');
+  const [activeTab, setActiveTab] = useState<'today' | 'history' | 'leaves'>('today');
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -112,8 +113,8 @@ export default function AttendancePage() {
   return (
     <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">My Attendance & Status</h1>
-        <p className="text-sm text-slate-500 mt-1">Track your daily working hours and breaks.</p>
+        <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Time & Leaves</h1>
+        <p className="text-sm text-slate-500 mt-1">Track your daily working hours, breaks, and leaves.</p>
       </div>
 
       <div className="mb-6 flex space-x-4 border-b border-slate-200">
@@ -137,6 +138,7 @@ export default function AttendancePage() {
         >
           History
         </button>
+        <button onClick={() => setActiveTab('leaves')} className={py-2 px-4 border-b-2 font-medium text-sm transition-colors }>Leave Management</button>
       </div>
 
       {activeTab === 'today' && (
@@ -256,6 +258,7 @@ export default function AttendancePage() {
           </div>
         </div>
       )}
+          {activeTab === 'leaves' && <LeavesComponent />}
     </div>
   );
 }

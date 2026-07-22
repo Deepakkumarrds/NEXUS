@@ -24,8 +24,8 @@ body {
 
 /* Force readable dark text on all form elements */
 input, select, textarea {
-  color: #0f172a !important;
-  background-color: #ffffff !important;
+  color: #0f172a;
+  background-color: #ffffff;
 }
 
 /* Smooth transition classes for premium cards */

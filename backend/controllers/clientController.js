@@ -66,7 +66,7 @@ exports.getClientById = async (req, res) => {
         contacts: true,
         spocs: true,
         tasks: { orderBy: { created_at: 'desc' }, take: 5 },
-        sows: { orderBy: { created_at: 'desc' }, take: 5 },
+        sows: { orderBy: { created_at: 'desc' }, take: 5, include: { months: { include: { items: true } } } },
         meetings: { orderBy: { meeting_date: 'desc' }, take: 5 },
         communications: { orderBy: { created_at: 'desc' }, take: 5 },
         reports: { orderBy: { created_at: 'desc' }, take: 5 },

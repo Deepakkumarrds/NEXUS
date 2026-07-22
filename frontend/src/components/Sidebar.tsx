@@ -8,6 +8,7 @@ import TrackerDropdown from './TrackerDropdown';
 export default function Sidebar() {
   const pathname = usePathname() || '';
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isBrandManager, setIsBrandManager] = useState(false);
 
   useEffect(() => {
     const userStr = localStorage.getItem('user');
@@ -15,8 +16,11 @@ export default function Sidebar() {
       try {
         const user = JSON.parse(userStr);
         // authController returns role as a string, e.g., 'Admin'
-        if (user.role === 'Admin') {
+        if (user.role === 'Admin' || user.role === 'Management') {
           setIsAdmin(true);
+        }
+        if (user.role === 'Brand Manager') {
+          setIsBrandManager(true);
         }
       } catch (e) {}
     }
@@ -42,7 +46,23 @@ export default function Sidebar() {
       
       <nav className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         <ul className="space-y-1 text-sm font-medium">
-          <li>
+          {isBrandManager && (
+            <li>
+              <Link 
+                href="/brand-manager" 
+                className={`flex items-center px-3 py-2.5 rounded-lg transition-all duration-200 outline-none group ${
+                  isActive('/brand-manager') 
+                    ? 'bg-indigo-50/70 text-indigo-600 font-semibold' 
+                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                }`}
+              >
+                <svg className={`w-4 h-4 mr-3 transition-colors ${isActive('/brand-manager') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2-2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                Brand Manager Dashboard
+              </Link>
+            </li>
+          )}
+          {!isBrandManager && (
+            <li>
             <Link 
               href="/" 
               className={`flex items-center px-3 py-2.5 rounded-lg transition-all duration-200 outline-none group ${
@@ -55,6 +75,7 @@ export default function Sidebar() {
               Dashboard
             </Link>
           </li>
+          )}
           <li>
             <Link 
               href="/clients" 
@@ -68,17 +89,32 @@ export default function Sidebar() {
               Clients Master
             </Link>
           </li>
+          {!isBrandManager && (
+            <li>
+              <Link 
+                href="/tasks" 
+                className={`flex items-center px-3 py-2.5 rounded-lg transition-all duration-200 outline-none group ${
+                  isActive('/tasks') 
+                    ? 'bg-indigo-50/70 text-indigo-600 font-semibold' 
+                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                }`}
+              >
+                <svg className={`w-4 h-4 mr-3 transition-colors ${isActive('/tasks') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                Tasks
+              </Link>
+            </li>
+          )}
           <li>
             <Link 
-              href="/tasks" 
+              href="/meetings" 
               className={`flex items-center px-3 py-2.5 rounded-lg transition-all duration-200 outline-none group ${
-                isActive('/tasks') 
+                isActive('/meetings') 
                   ? 'bg-indigo-50/70 text-indigo-600 font-semibold' 
                   : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
               }`}
             >
-              <svg className={`w-4 h-4 mr-3 transition-colors ${isActive('/tasks') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
-              Tasks
+              <svg className={`w-4 h-4 mr-3 transition-colors ${isActive('/meetings') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+              Meetings
             </Link>
           </li>
           {isAdmin && (
@@ -96,19 +132,7 @@ export default function Sidebar() {
                   Communications
                 </Link>
               </li>
-              <li>
-                <Link 
-                  href="/meetings" 
-                  className={`flex items-center px-3 py-2.5 rounded-lg transition-all duration-200 outline-none group ${
-                    isActive('/meetings') 
-                      ? 'bg-indigo-50/70 text-indigo-600 font-semibold' 
-                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                  }`}
-                >
-                  <svg className={`w-4 h-4 mr-3 transition-colors ${isActive('/meetings') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                  Meetings
-                </Link>
-              </li>
+
 
               <li>
                 <Link 
@@ -133,7 +157,20 @@ export default function Sidebar() {
                   }`}
                 >
                   <svg className={`w-4 h-4 mr-3 transition-colors ${isActive('/approvals') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                  Approvals
+                  Creative Approvals
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  href="/sows/approvals" 
+                  className={`flex items-center px-3 py-2.5 rounded-lg transition-all duration-200 outline-none group ${
+                    isActive('/sows/approvals') 
+                      ? 'bg-indigo-50/70 text-indigo-600 font-semibold' 
+                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  }`}
+                >
+                  <svg className={`w-4 h-4 mr-3 transition-colors ${isActive('/sows/approvals') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                  SOW Approvals
                 </Link>
               </li>
               <li>
@@ -152,19 +189,21 @@ export default function Sidebar() {
             </>
           )}
 
-          <li>
-            <Link 
-              href="/tracker" 
-              className={`flex items-center px-3 py-2.5 rounded-lg transition-all duration-200 outline-none group ${
-                isActive('/tracker') 
-                  ? 'bg-indigo-50/70 text-indigo-600 font-semibold' 
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-              }`}
-            >
-              <svg className={`w-4 h-4 mr-3 transition-colors ${isActive('/tracker') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-              Daily Tracker
-            </Link>
-          </li>
+          {!isBrandManager && (
+            <li>
+              <Link 
+                href="/tracker" 
+                className={`flex items-center px-3 py-2.5 rounded-lg transition-all duration-200 outline-none group ${
+                  isActive('/tracker') 
+                    ? 'bg-indigo-50/70 text-indigo-600 font-semibold' 
+                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                }`}
+              >
+                <svg className={`w-4 h-4 mr-3 transition-colors ${isActive('/tracker') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                Daily Tracker
+              </Link>
+            </li>
+          )}
           <li>
             <Link 
               href="/attendance" 

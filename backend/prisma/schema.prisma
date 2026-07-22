@@ -101,6 +101,7 @@ model Client {
   timezone             String?
   client_status        String    @default("Active") // Active, Hold, Lost
   health_status        String    @default("Green") // Green, Yellow, Red
+  health_feedback      String?
   onboarding_date      DateTime?
   renewal_date         DateTime?
   retainer_value       Float?

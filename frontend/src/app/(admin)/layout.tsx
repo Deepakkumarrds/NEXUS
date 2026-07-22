@@ -24,11 +24,11 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       if (userStr) {
         try {
           const user = JSON.parse(userStr);
-          if (user.role === 'Admin') isAdmin = true;
+          if (user.role === 'Admin' || user.role === 'Management') isAdmin = true;
         } catch (e) {}
       }
 
-      const restrictedPaths = ['/communications', '/meetings', '/sows', '/approvals', '/reports', '/intelligence', '/knowledge', '/escalations', '/team', '/settings'];
+      const restrictedPaths = ['/communications', '/sows', '/approvals', '/reports', '/intelligence', '/knowledge', '/escalations', '/team', '/settings'];
       const isRestricted = restrictedPaths.some(p => pathname?.startsWith(p));
       
       if (!isAdmin && isRestricted) {

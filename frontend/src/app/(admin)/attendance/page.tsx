@@ -138,7 +138,7 @@ export default function AttendancePage() {
         >
           History
         </button>
-        <button onClick={() => setActiveTab('leaves')} className={py-2 px-4 border-b-2 font-medium text-sm transition-colors }>Leave Management</button>
+        <button onClick={() => setActiveTab('leaves')} className={`py-2 px-4 border-b-2 font-medium text-sm transition-colors ${activeTab === 'leaves' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'}`}>Leave Management</button>
       </div>
 
       {activeTab === 'today' && (

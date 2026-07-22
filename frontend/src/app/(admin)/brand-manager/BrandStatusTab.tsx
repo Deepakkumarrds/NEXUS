@@ -49,6 +49,27 @@ export default function BrandStatusTab() {
     }
   };
 
+  const handleHealthChange = async (clientId: string, newHealth: string) => {
+    setUpdatingId(clientId);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com'}/api/clients/${clientId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ health_status: newHealth })
+      });
+      if (res.ok) {
+        setBrands(prev => prev.map(b => b.id === clientId ? { ...b, health_status: newHealth } : b));
+      } else {
+        alert('Failed to update health status');
+      }
+    } catch (error) {
+      console.error('Error updating health:', error);
+      alert('Error connecting to backend server.');
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
   const filteredBrands = brands.filter(b => 
     b.company_name?.toLowerCase().includes(search.toLowerCase()) ||
     b.brand_name?.toLowerCase().includes(search.toLowerCase())
@@ -86,9 +107,10 @@ export default function BrandStatusTab() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-white border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 font-semibold shadow-sm">
-                <th className="p-4 w-[40%]">Brand Name</th>
+                <th className="p-4 w-[30%]">Brand Name</th>
                 <th className="p-4">Current Status</th>
-                <th className="p-4 w-[30%]">Update Status</th>
+                <th className="p-4 w-[20%]">Update Status</th>
+                <th className="p-4 w-[20%]">Update Health</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-sm bg-white">
@@ -109,6 +131,14 @@ export default function BrandStatusTab() {
                     }`}>
                       {brand.client_status || 'Unknown'}
                     </span>
+                    <span className={`ml-2 px-2.5 py-1 text-[10px] uppercase font-bold rounded-full tracking-wider ${
+                      brand.health_status === 'Green' ? 'bg-emerald-100 text-emerald-700' :
+                      brand.health_status === 'Yellow' ? 'bg-amber-100 text-amber-700' :
+                      brand.health_status === 'Red' ? 'bg-rose-100 text-rose-700' :
+                      'bg-emerald-100 text-emerald-700'
+                    }`}>
+                      {brand.health_status || 'Green'}
+                    </span>
                   </td>
                   <td className="p-4">
                     <div className="flex items-center gap-2">
@@ -116,11 +146,25 @@ export default function BrandStatusTab() {
                         value={brand.client_status || 'Active'}
                         onChange={(e) => handleStatusChange(brand.id, e.target.value)}
                         disabled={updatingId === brand.id}
-                        className="border border-slate-300 rounded-md px-3 py-1.5 text-sm focus:ring-1 focus:ring-indigo-500 outline-none bg-white text-slate-700 shadow-sm w-full max-w-[200px] disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="border border-slate-300 rounded-md px-3 py-1.5 text-sm focus:ring-1 focus:ring-indigo-500 outline-none bg-white text-slate-700 shadow-sm w-full max-w-[150px] disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <option value="Active">Active</option>
                         <option value="Hold">Hold</option>
                         <option value="Lost">Lost</option>
+                      </select>
+                    </div>
+                  </td>
+                  <td className="p-4">
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={brand.health_status || 'Green'}
+                        onChange={(e) => handleHealthChange(brand.id, e.target.value)}
+                        disabled={updatingId === brand.id}
+                        className="border border-slate-300 rounded-md px-3 py-1.5 text-sm focus:ring-1 focus:ring-indigo-500 outline-none bg-white text-slate-700 shadow-sm w-full max-w-[150px] disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <option value="Green">Green</option>
+                        <option value="Yellow">Yellow</option>
+                        <option value="Red">Red</option>
                       </select>
                       {updatingId === brand.id && (
                         <svg className="w-4 h-4 text-indigo-600 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>

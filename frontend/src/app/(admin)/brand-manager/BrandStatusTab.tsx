@@ -171,12 +171,11 @@ export default function BrandStatusTab() {
                         value={brand.client_status || 'Active'}
                         onChange={(e) => handleStatusChange(brand.id, e.target.value)}
                         disabled={!isBrandManager || updatingId === brand.id}
-                        className={`border border-transparent rounded-full px-3 py-1.5 text-xs font-semibold focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm w-full max-w-[120px] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${
-                          brand.client_status === 'Active' ? 'bg-green-100 text-green-900' :
-                          brand.client_status === 'Hold' ? 'bg-yellow-100 text-yellow-900' :
-                          brand.client_status === 'Lost' ? 'bg-red-100 text-red-900' :
-                          'bg-slate-100 text-slate-900'
-                        }`}
+                        style={{
+                          backgroundColor: brand.client_status === 'Active' ? '#dcfce7' : brand.client_status === 'Hold' ? '#fef3c7' : brand.client_status === 'Lost' ? '#fee2e2' : '#f1f5f9',
+                          color: brand.client_status === 'Active' ? '#14532d' : brand.client_status === 'Hold' ? '#78350f' : brand.client_status === 'Lost' ? '#7f1d1d' : '#0f172a'
+                        }}
+                        className={`border border-transparent rounded-full px-3 py-1.5 text-xs font-semibold focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm w-full max-w-[120px] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer`}
                       >
                         <option value="Active">Active</option>
                         <option value="Hold">Hold</option>
@@ -191,12 +190,11 @@ export default function BrandStatusTab() {
                         value={brand.health_status || 'Green'}
                         onChange={(e) => handleHealthChange(brand.id, e.target.value)}
                         disabled={!isBrandManager || updatingId === brand.id}
-                        className={`border border-transparent rounded-full px-3 py-1.5 text-xs font-semibold focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm w-full max-w-[120px] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${
-                          brand.health_status === 'Green' ? 'bg-green-100 text-green-900' :
-                          brand.health_status === 'Yellow' ? 'bg-yellow-100 text-yellow-900' :
-                          brand.health_status === 'Red' ? 'bg-red-100 text-red-900' :
-                          'bg-green-100 text-green-900'
-                        }`}
+                        style={{
+                          backgroundColor: brand.health_status === 'Green' ? '#dcfce7' : brand.health_status === 'Yellow' ? '#fef3c7' : brand.health_status === 'Red' ? '#fee2e2' : '#dcfce7',
+                          color: brand.health_status === 'Green' ? '#14532d' : brand.health_status === 'Yellow' ? '#78350f' : brand.health_status === 'Red' ? '#7f1d1d' : '#14532d'
+                        }}
+                        className={`border border-transparent rounded-full px-3 py-1.5 text-xs font-semibold focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm w-full max-w-[120px] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer`}
                       >
                         <option value="Green">Green</option>
                         <option value="Yellow">Yellow</option>

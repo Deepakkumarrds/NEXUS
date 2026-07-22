@@ -88,7 +88,7 @@ export default function TrackerPage() {
     const cellData = trackerMap[client.id]?.[dateStr] || { summary_text: '', status_color: '', tasks: [], summaries: [] };
     
     const isAllDepts = department.includes('All Departments') || department.length > 1;
-    let initialModalDepartment = isAllDepts ? 'Web Development' : department[0];
+    let initialModalDepartment = department.includes('All Departments') ? 'Web Development' : department[0];
     
     if (isAllDepts) {
       // Find the first department that actually has data in this cell

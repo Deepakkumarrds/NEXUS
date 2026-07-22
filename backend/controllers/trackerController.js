@@ -100,12 +100,14 @@ exports.getTrackerData = async (req, res) => {
       const showPrefix = isAllDepartments || deptArray.length > 1;
       
       const cell = trackerMap[t.client_id][dateKey];
-      if (t.summary_text) {
+      if (t.summary_text || t.status_color) {
         if (showPrefix) {
-          cell.summaries.push({ department: t.department, text: t.summary_text, color: t.status_color });
+          cell.summaries.push({ department: t.department, text: t.summary_text || '', color: t.status_color });
         }
-        const prefix = showPrefix ? `[${t.department}]\n` : '';
-        cell.summary_text += (cell.summary_text ? '\n\n' : '') + prefix + t.summary_text;
+        if (t.summary_text) {
+          const prefix = showPrefix ? `[${t.department}]\n` : '';
+          cell.summary_text += (cell.summary_text ? '\n\n' : '') + prefix + t.summary_text;
+        }
       }
       
       // Keep the most severe status color: Red > Yellow > Green

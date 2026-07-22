@@ -15,7 +15,7 @@ export default function BrandStatusTab() {
     if (userStr) {
       try {
         const user = JSON.parse(userStr);
-        setIsBrandManager(user.role === 'Brand Manager');
+        setIsBrandManager(user.email === 'utkarsh.purohit@rdsdigital.in');
       } catch (e) {}
     }
     fetchBrands();

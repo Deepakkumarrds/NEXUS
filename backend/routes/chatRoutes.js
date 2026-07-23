@@ -154,8 +154,7 @@ router.post('/zoho', async (req, res) => {
     if (q.includes('escalation') || q.includes('issue')) {
       const escalations = await prisma.escalation.findMany({
         where: { status: 'Open' },
-        include: { client: { select: { company_name: true, brand_name: true } } },
-        take: 5
+        include: { client: { select: { company_name: true, brand_name: true } } }
       });
       if (escalations.length === 0) {
         return res.json({ text: "🟢 *ESCALATIONS:* No open escalations! All clear." });
@@ -167,6 +166,55 @@ router.post('/zoho', async (req, res) => {
       });
       return res.json({ text: reply });
     }
+
+    // 4. Direct DB Query Handler: Status of Specific Brand
+    if (q.startsWith('status of ') || q.includes('status of ') || q.includes('status for ') || q.startsWith('status for ')) {
+      let brandQuery = q.replace('status of ', '').replace('status for ', '').trim();
+      if (brandQuery.endsWith('?')) brandQuery = brandQuery.slice(0, -1).trim();
+
+      if (brandQuery) {
+        const client = await prisma.client.findFirst({
+          where: {
+            OR: [
+              { company_name: { contains: brandQuery, mode: 'insensitive' } },
+              { brand_name: { contains: brandQuery, mode: 'insensitive' } }
+            ]
+          },
+          include: {
+            tasks: { where: { status: { in: ['Pending', 'In Progress', 'Review'] } } },
+            escalations: { where: { status: 'Open' } },
+            daily_trackers: { orderBy: { date: 'desc' }, take: 2 }
+          }
+        });
+
+        if (client) {
+          const brandName = client.brand_name || client.company_name;
+          const healthIcon = client.health_status === 'Red' ? '🔴' : client.health_status === 'Yellow' ? '🟡' : '🟢';
+
+          let reply = `🏢 *${brandName.toUpperCase()} STATUS*\n-----------------------------------------\n`;
+          reply += `• *Account Status:* ${client.client_status} ${healthIcon}\n`;
+          reply += `• *Service Type:* ${client.service_type || 'Retainer'}\n`;
+          reply += `• *Active Tasks:* ${client.tasks.length} pending\n`;
+          reply += `• *Open Escalations:* ${client.escalations.length}\n`;
+
+          if (client.renewal_date) {
+            const renewalStr = new Date(client.renewal_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            reply += `• *Contract Renewal:* ${renewalStr}\n`;
+          }
+
+          if (client.daily_trackers && client.daily_trackers.length > 0) {
+            reply += `\n📝 *RECENT TRACKER LOGS:*\n`;
+            client.daily_trackers.forEach(t => {
+              reply += `   └ *[${t.department || 'General'}]:* ${t.summary_text || 'In Progress'}\n`;
+            });
+          }
+
+          reply += `\n🔗 *Open Brand in Dashboard:* ${process.env.FRONTEND_URL || 'https://rds-db.vercel.app'}`;
+          return res.json({ text: reply });
+        }
+      }
+    }
+
 
     // Fallback to Groq AI Assistant if available
     if (process.env.GROQ_API_KEY) {

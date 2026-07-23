@@ -573,6 +573,51 @@ const processScheduledMomDispatches = async () => {
   }
 };
 
+const sendTaskClosingReminders = async (timeSlotStr) => {
+  console.log(`🕒 Running Task Closing Reminder (${timeSlotStr})...`);
+  try {
+    const activeTasks = await prisma.task.findMany({
+      where: { status: { in: ['Pending', 'In Progress', 'Review'] } },
+      include: {
+        client: { select: { company_name: true, brand_name: true } },
+        assignee: { select: { name: true, email: true } }
+      },
+      orderBy: { due_date: 'asc' }
+    });
+
+    let msg = `⏰ *TASK CLOSING & LOGGING REMINDER (${timeSlotStr})*\n`;
+    msg += `=========================================\n`;
+    msg += `Team, before wrapping up your work for the day, please ensure your active task statuses and daily tracker summaries are updated.\n\n`;
+
+    if (activeTasks.length > 0) {
+      msg += `📌 *ACTIVE & OVERDUE TASKS STILL OPEN (${activeTasks.length}):*\n`;
+      const now = new Date();
+      activeTasks.slice(0, 10).forEach((t, idx) => {
+        const brand = t.client?.brand_name || t.client?.company_name || 'General';
+        const assignee = t.assignee?.name ? `@${t.assignee.name}` : 'Unassigned';
+        const isOverdue = t.due_date && new Date(t.due_date) < now;
+        const statusTag = isOverdue ? '🚨 *OVERDUE*' : `[${t.status}]`;
+
+        msg += `${idx + 1}. *${t.title}*\n   └ Brand: ${brand} | Owner: ${assignee} ${statusTag}\n`;
+      });
+      if (activeTasks.length > 10) {
+        msg += `\n...and ${activeTasks.length - 10} more tasks.\n`;
+      }
+    } else {
+      msg += `✨ *GREAT JOB! ALL TASKS ARE COMPLETED FOR TODAY.*\n`;
+    }
+
+    msg += `\n🔗 *Update Tasks:* ${process.env.FRONTEND_URL || 'https://rds-db.vercel.app'}/tasks`;
+    msg += `\n🔗 *Update Daily Tracker:* ${process.env.FRONTEND_URL || 'https://rds-db.vercel.app'}/tracker`;
+
+    await sendCliqNotification(msg);
+    return true;
+  } catch (err) {
+    console.error('Error sending task closing reminders:', err);
+    return false;
+  }
+};
+
 module.exports = {
   startCronJobs,
   sendWeeklyReportsNow,
@@ -580,6 +625,7 @@ module.exports = {
   sendDailyTaskSummaryToCliq,
   sendDetailedDailyReportToCliq,
   send11AmDailySummaryCheck,
+  sendTaskClosingReminders,
   processScheduledMomDispatches
 };
 

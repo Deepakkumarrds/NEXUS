@@ -30,6 +30,7 @@ export default function NewMeetingPage() {
   const [isRecording, setIsRecording] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [speechNotice, setSpeechNotice] = useState('');
 
   const [formData, setFormData] = useState({
     client_id: '',
@@ -80,7 +81,7 @@ export default function NewMeetingPage() {
           }
           setIsRecording(false);
           if (event.error === 'network') {
-            alert('Live voice recognition network timeout. You can directly paste or upload your meeting notes/transcript in the text box below!');
+            setSpeechNotice('Live speech server connection timed out. You can paste notes or upload a file directly below!');
           }
         };
 

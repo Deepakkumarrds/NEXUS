@@ -101,44 +101,53 @@ async function checkSowBreaches() {
  * Format SOW Scope & Deliverable Comparison report for interactive Zoho Cliq queries
  */
 async function getSowBreachReport(clientQuery = null) {
-  const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+  try {
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
 
-  let sowWhere = {};
-  if (clientQuery && typeof clientQuery === 'string' && clientQuery.trim() !== '') {
-    const qTrim = clientQuery.trim();
-    sowWhere = {
-      client: {
-        OR: [
-          { company_name: { contains: qTrim, mode: 'insensitive' } },
-          { brand_name: { contains: qTrim, mode: 'insensitive' } }
-        ]
-      }
-    };
-  }
+    // Clean up stop words from clientQuery (e.g. "for indian academy" -> "indian academy")
+    let cleanBrand = '';
+    if (clientQuery && typeof clientQuery === 'string') {
+      cleanBrand = clientQuery
+        .replace(/\b(for|of|the|about|status|sow|report|breach|alert|details)\b/gi, '')
+        .trim();
+    }
 
-  const sows = await prisma.sow.findMany({
-    where: sowWhere,
-    include: {
-      client: { select: { company_name: true, brand_name: true } },
-      months: {
-        include: {
-          items: {
-            include: {
-              tasks: true
+    const normalize = (str) => (str || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const targetNorm = normalize(cleanBrand);
+
+    const allSows = await prisma.sow.findMany({
+      include: {
+        client: { select: { company_name: true, brand_name: true } },
+        months: {
+          include: {
+            items: {
+              include: {
+                tasks: true
+              }
             }
           }
         }
-      }
-    },
-    orderBy: { created_at: 'desc' },
-    take: clientQuery ? 5 : 10
-  });
+      },
+      orderBy: { created_at: 'desc' }
+    });
 
-  if (sows.length === 0) {
-    return `🛡️ *SOW SCOPE REPORT:* No SOW contracts found ${clientQuery ? `matching "${clientQuery}"` : 'in database'}.\n\n🔗 *Manage SOWs:* ${process.env.FRONTEND_URL || 'https://rds-db.vercel.app'}/sows`;
-  }
+    let sows = allSows;
+    if (targetNorm && targetNorm.length > 0) {
+      sows = allSows.filter(sow => {
+        const compNorm = normalize(sow.client?.company_name);
+        const brandNorm = normalize(sow.client?.brand_name);
+        const sowNameNorm = normalize(sow.sow_name);
+        return compNorm.includes(targetNorm) || targetNorm.includes(compNorm) ||
+               (brandNorm && (brandNorm.includes(targetNorm) || targetNorm.includes(brandNorm))) ||
+               sowNameNorm.includes(targetNorm);
+      });
+    }
+
+    if (sows.length === 0) {
+      return `🛡️ *SOW SCOPE REPORT:* No SOW contracts found ${cleanBrand ? `matching "${cleanBrand}"` : 'in database'}.\n\n🔗 *Manage SOWs:* ${process.env.FRONTEND_URL || 'https://rds-db.vercel.app'}/sows`;
+    }
 
   let reply = `🛡️ *SOW SCOPE & DELIVERABLES COMPARISON REPORT*\n=========================================\n\n`;
 
@@ -204,6 +213,10 @@ async function getSowBreachReport(clientQuery = null) {
 
   reply += `\n🔗 *Open SOW Dashboard:* ${process.env.FRONTEND_URL || 'https://rds-db.vercel.app'}/sows`;
   return reply;
+  } catch (error) {
+    console.error('Error generating SOW breach report:', error);
+    return `🛡️ *SOW SCOPE REPORT:* Failed to generate SOW report. Please try again.`;
+  }
 }
 
 module.exports = {

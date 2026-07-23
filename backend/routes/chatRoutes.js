@@ -172,7 +172,7 @@ router.post('/zoho', async (req, res) => {
     }
 
     // 2. Direct DB Query Handler: Overdue / Pending Tasks
-    if (q.includes('overdue task') || q.includes('pending task') || q.includes('task') || q.includes('my task')) {
+    if ((q.includes('overdue task') || q.includes('pending task') || q.includes('task') || q.includes('my task')) && !q.includes('create task') && !q.includes('add task') && !q.includes('new task')) {
       const now = new Date();
       const tasks = await prisma.task.findMany({
         where: { status: { in: ['Pending', 'In Progress', 'Review'] } },

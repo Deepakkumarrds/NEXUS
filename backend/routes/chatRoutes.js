@@ -41,33 +41,52 @@ router.post('/zoho', async (req, res) => {
       return res.json({ text: "Hi! Ask me anything about clients, tasks, or escalations." });
     }
 
-    // 0. Direct DB Query Handler: Each Client Summary
-    if (q.includes('client summary') || q.includes('clients summary') || q.includes('cleints summary') || q.includes('each client')) {
-      const clients = await prisma.client.findMany({
+    // 0. Direct DB Query Handler: Daily Summary & Brand Work Logs
+    if (q.includes('summary') || q.includes('daily summary') || q.includes('client summary') || q.includes('clients summary') || q.includes('cleints summary') || q.includes('each client')) {
+      const todayStart = new Date();
+      todayStart.setUTCHours(0, 0, 0, 0);
+
+      const activeClients = await prisma.client.findMany({
         where: { client_status: 'Active' },
         include: {
-          tasks: { where: { status: { in: ['Pending', 'In Progress'] } } },
-          escalations: { where: { status: 'Open' } }
+          daily_trackers: {
+            where: { date: todayStart }
+          }
         },
-        take: 10
+        orderBy: { company_name: 'asc' },
+        take: 15
       });
-      if (clients.length === 0) {
-        return res.json({ text: "🏢 *CLIENT SUMMARY:* No active clients found." });
-      }
-      let reply = `📊 *ACTIVE CLIENTS SUMMARY (${clients.length} Active Brands)*\n\n`;
-      clients.forEach((c, idx) => {
-        const name = c.brand_name || c.company_name;
-        const pendingTasks = c.tasks ? c.tasks.length : 0;
-        const openEscalations = c.escalations ? c.escalations.length : 0;
-        const health = c.health_status || 'Green';
-        const healthIcon = health === 'Red' ? '🔴' : health === 'Yellow' ? '🟡' : '🟢';
 
-        reply += `${idx + 1}. ${healthIcon} *${name}*\n`;
-        reply += `   └ *Service:* ${c.service_type || 'Retainer'}  |  *Pending Tasks:* ${pendingTasks}  |  *Escalations:* ${openEscalations}\n`;
+      if (activeClients.length === 0) {
+        return res.json({ text: "🏢 *DAILY SUMMARY:* No active clients found." });
+      }
+
+      const formattedDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      let reply = `📊 *DAILY BRAND WORK SUMMARY* • ${formattedDate}\n-----------------------------------------\n\n`;
+
+      activeClients.forEach((c, idx) => {
+        const name = c.brand_name || c.company_name;
+        const trackers = c.daily_trackers || [];
+
+        if (trackers.length > 0) {
+          const latest = trackers[0];
+          const statusIcon = latest.status_color === 'Red' ? '🔴' : latest.status_color === 'Yellow' ? '🟡' : '🟢';
+          const summaryText = latest.summary_text || 'Work in progress';
+          const deptStr = latest.department ? ` (${latest.department})` : '';
+
+          reply += `${idx + 1}. ${statusIcon} *${name}*${deptStr}\n`;
+          reply += `   └ *Status:* ${latest.status_color || 'Active'}\n`;
+          reply += `   └ *Today's Work:* ${summaryText}\n\n`;
+        } else {
+          reply += `${idx + 1}. ⚠️ *${name}*\n`;
+          reply += `   └ 🔴 *No daily summary logged today yet.*\n\n`;
+        }
       });
-      reply += `\n🔗 *Full Dashboard:* ${process.env.FRONTEND_URL || 'https://rds-db.vercel.app'}`;
+
+      reply += `🔗 *Update Daily Tracker:* ${process.env.FRONTEND_URL || 'https://rds-db.vercel.app'}/tracker`;
       return res.json({ text: reply });
     }
+
 
     // 1. Direct DB Query Handler: Active Clients
 

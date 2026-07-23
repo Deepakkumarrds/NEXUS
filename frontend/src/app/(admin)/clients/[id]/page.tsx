@@ -8,6 +8,7 @@ import * as XLSX from 'xlsx';
 
 import TabAICalendar from './components/TabAICalendar';
 import OverviewTab from './tabs/OverviewTab';
+import DefinedDetailsTab from './tabs/DefinedDetailsTab';
 import MarketingTab from './tabs/MarketingTab';
 import DeliveryTab from './tabs/DeliveryTab';
 
@@ -18,8 +19,9 @@ export default function ClientDetailsPage() {
   const isEditMode = searchParams.get('edit') === 'true';
   const [client, setClient] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'marketing' | 'delivery' | 'ai_calendar'>('overview');
+  const [activeTab, setActiveTab] = useState<'details' | 'defined' | 'passwords' | 'plans' | 'ai_calendar'>('details');
   const [isBrandManager, setIsBrandManager] = useState(false);
+
 
   // Export Report State
   const [showExportModal, setShowExportModal] = useState(false);
@@ -248,19 +250,22 @@ export default function ClientDetailsPage() {
         </div>
       </div>
 
-      <div className="bg-slate-100 p-1.5 rounded-xl border border-slate-200/80 flex space-x-1.5 mb-6 max-w-3xl">
-        <button onClick={() => setActiveTab('overview')} className={`flex-1 py-2 px-3 text-center text-xs md:text-sm font-semibold rounded-lg transition-all duration-200 outline-none cursor-pointer ${activeTab === 'overview' ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50' : 'text-slate-500 hover:text-slate-800'}`}>Overview & Onboarding</button>
-        <button onClick={() => setActiveTab('marketing')} className={`flex-1 py-2 px-3 text-center text-xs md:text-sm font-semibold rounded-lg transition-all duration-200 outline-none cursor-pointer ${activeTab === 'marketing' ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50' : 'text-slate-500 hover:text-slate-800'}`}>Marketing Vault</button>
-        <button onClick={() => setActiveTab('delivery')} className={`flex-1 py-2 px-3 text-center text-xs md:text-sm font-semibold rounded-lg transition-all duration-200 outline-none cursor-pointer ${activeTab === 'delivery' ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50' : 'text-slate-500 hover:text-slate-800'}`}>Delivery & SOWs</button>
-        <button onClick={() => setActiveTab('ai_calendar')} className={`flex-1 py-2 px-3 flex items-center justify-center text-xs md:text-sm font-semibold rounded-lg transition-all duration-200 outline-none cursor-pointer ${activeTab === 'ai_calendar' ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md border border-indigo-400' : 'text-indigo-500 hover:bg-indigo-50'}`}>AI Calendar</button>
+      <div className="bg-slate-100 p-1.5 rounded-xl border border-slate-200/80 flex space-x-1.5 mb-6 max-w-4xl overflow-x-auto">
+        <button onClick={() => setActiveTab('details')} className={`flex-1 py-2 px-3 text-center text-xs md:text-sm font-semibold rounded-lg transition-all duration-200 outline-none cursor-pointer whitespace-nowrap ${activeTab === 'details' ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50' : 'text-slate-500 hover:text-slate-800'}`}>1. Client Details</button>
+        <button onClick={() => setActiveTab('defined')} className={`flex-1 py-2 px-3 text-center text-xs md:text-sm font-semibold rounded-lg transition-all duration-200 outline-none cursor-pointer whitespace-nowrap ${activeTab === 'defined' ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50' : 'text-slate-500 hover:text-slate-800'}`}>2. Defined Details</button>
+        <button onClick={() => setActiveTab('passwords')} className={`flex-1 py-2 px-3 text-center text-xs md:text-sm font-semibold rounded-lg transition-all duration-200 outline-none cursor-pointer whitespace-nowrap ${activeTab === 'passwords' ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50' : 'text-slate-500 hover:text-slate-800'}`}>3. Passwords & Access</button>
+        <button onClick={() => setActiveTab('plans')} className={`flex-1 py-2 px-3 text-center text-xs md:text-sm font-semibold rounded-lg transition-all duration-200 outline-none cursor-pointer whitespace-nowrap ${activeTab === 'plans' ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50' : 'text-slate-500 hover:text-slate-800'}`}>4. Monthly Plans</button>
+        <button onClick={() => setActiveTab('ai_calendar')} className={`flex-1 py-2 px-3 flex items-center justify-center text-xs md:text-sm font-semibold rounded-lg transition-all duration-200 outline-none cursor-pointer whitespace-nowrap ${activeTab === 'ai_calendar' ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md border border-indigo-400' : 'text-indigo-500 hover:bg-indigo-50'}`}>5. AI Calendar</button>
       </div>
 
       <div className="grid grid-cols-1 gap-6">
-        {activeTab === 'overview' && <OverviewTab client={client} clientId={clientId} fetchClientDetails={fetchClientDetails} openEditModal={openEditModal} />}
-        {activeTab === 'marketing' && <MarketingTab client={client} clientId={clientId} fetchClientDetails={fetchClientDetails} />}
-        {activeTab === 'delivery' && <DeliveryTab client={client} clientId={clientId} fetchClientDetails={fetchClientDetails} />}
+        {activeTab === 'details' && <OverviewTab client={client} clientId={clientId} fetchClientDetails={fetchClientDetails} openEditModal={openEditModal} />}
+        {activeTab === 'defined' && <DefinedDetailsTab client={client} />}
+        {activeTab === 'passwords' && <MarketingTab client={client} clientId={clientId} fetchClientDetails={fetchClientDetails} />}
+        {activeTab === 'plans' && <DeliveryTab client={client} clientId={clientId} fetchClientDetails={fetchClientDetails} />}
         {activeTab === 'ai_calendar' && <TabAICalendar client={client} />}
       </div>
+
 
       {showEditModal && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">

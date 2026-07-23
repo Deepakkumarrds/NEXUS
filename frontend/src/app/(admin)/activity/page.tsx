@@ -146,55 +146,37 @@ export default function ClientActivityPage() {
           <div>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Client Activity</h1>
             <p className="text-sm text-slate-500 mt-1">
-              {activeTab === 'Timeline' ? 'Simple unified table view of all tasks and summaries.' : 'Track client health scores and risk levels.'}
+              Simple unified table view of all tasks and summaries.
             </p>
           </div>
           
-          {activeTab === 'Timeline' && (
-            <div className="flex items-center gap-4 mt-4 md:mt-0">
-              <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Brand</label>
-                <select 
-                  value={selectedClient}
-                  onChange={(e) => setSelectedClient(e.target.value)}
-                  className="border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-slate-700 py-2 pl-3 pr-10 outline-none bg-white"
-                >
-                  {clients.map(c => <option key={c.id} value={c.id}>{c.company_name}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Month</label>
-                <select 
-                  value={selectedMonth}
-                  onChange={(e) => setSelectedMonth(e.target.value)}
-                  className="border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-slate-700 py-2 pl-3 pr-10 outline-none bg-white"
-                >
-                  {availableMonths.map(m => <option key={m} value={m}>{m}</option>)}
-                </select>
-              </div>
+          <div className="flex items-center gap-4 mt-4 md:mt-0">
+            <div>
+              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Brand</label>
+              <select 
+                value={selectedClient}
+                onChange={(e) => setSelectedClient(e.target.value)}
+                className="border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-slate-700 py-2 pl-3 pr-10 outline-none bg-white"
+              >
+                {clients.map(c => <option key={c.id} value={c.id}>{c.company_name}</option>)}
+              </select>
             </div>
-          )}
-        </div>
-        
-        <div className="flex space-x-8 border-b border-slate-200">
-          <button
-            onClick={() => setActiveTab('Timeline')}
-            className={`py-2 px-1 text-sm font-medium border-b-2 transition-colors ${activeTab === 'Timeline' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'}`}
-          >
-            Activity Timeline
-          </button>
-          <button
-            onClick={() => setActiveTab('Health')}
-            className={`py-2 px-1 text-sm font-medium border-b-2 transition-colors ${activeTab === 'Health' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'}`}
-          >
-            Health Scores
-          </button>
+            <div>
+              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Month</label>
+              <select 
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                className="border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-slate-700 py-2 pl-3 pr-10 outline-none bg-white"
+              >
+                {availableMonths.map(m => <option key={m} value={m}>{m}</option>)}
+              </select>
+            </div>
+          </div>
         </div>
       </div>
 
-      {activeTab === 'Timeline' ? (
-        loading ? (
-          <div className="p-12 text-center text-slate-500 bg-white rounded-xl shadow-sm border border-slate-200 animate-pulse">
+      {loading ? (
+        <div className="p-12 text-center text-slate-500 bg-white rounded-xl shadow-sm border border-slate-200 animate-pulse">
           Loading activity timeline...
         </div>
       ) : flatData.length === 0 ? (
@@ -249,9 +231,6 @@ export default function ClientActivityPage() {
             </tbody>
           </table>
         </div>
-        )
-      ) : (
-        <HealthScoresTab />
       )}
     </div>
   );

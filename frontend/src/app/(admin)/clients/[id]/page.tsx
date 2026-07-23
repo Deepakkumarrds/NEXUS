@@ -30,19 +30,23 @@ export default function ClientDetailsPage() {
   const [exportFormat, setExportFormat] = useState<'excel' | 'pdf'>('pdf');
   const [exportIncludes, setExportIncludes] = useState({ profile: true, tasks: true, comms: true });
 
-  const fetchClientDetails = () => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com'}/api/clients/${clientId}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data && data.data) {
-          setClient(data.data);
-        }
+  const fetchClientDetails = async () => {
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com';
+      const res = await fetch(`${baseUrl}/api/clients/${clientId}`);
+      if (!res || !res.ok) {
         setLoading(false);
-      })
-      .catch(err => {
-        console.error(err);
-        setLoading(false);
-      });
+        return;
+      }
+      const data = await res.json();
+      if (data && data.data) {
+        setClient(data.data);
+      }
+    } catch (err) {
+      console.error('Error fetching client details:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -205,51 +209,51 @@ export default function ClientDetailsPage() {
   return (
     <div className="space-y-6">
       {/* Executive Hero Header Container */}
-      <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-[0_2px_12px_-4px_rgba(6,81,237,0.06)] space-y-4">
+      <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
         {/* Breadcrumb Navigation */}
-        <nav className="flex items-center text-xs font-semibold text-slate-400 space-x-2">
+        <nav className="flex items-center text-xs font-normal text-slate-500 space-x-2">
           <Link href="/" className="hover:text-indigo-600 transition-colors">Dashboard</Link>
           <svg className="w-3 h-3 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
           <Link href="/clients" className="hover:text-indigo-600 transition-colors">Clients</Link>
           <svg className="w-3 h-3 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
-          <span className="text-slate-800 font-bold truncate max-w-[200px]">{client.company_name}</span>
+          <span className="text-slate-700 font-medium truncate max-w-[200px]">{client.company_name}</span>
         </nav>
 
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pt-1">
           {/* Brand Identity & Title */}
           <div className="flex items-start md:items-center gap-4">
             {client.logo ? (
-              <img src={client.logo} alt={client.company_name} className="w-13 h-13 rounded-xl object-cover border border-slate-200 shadow-sm shrink-0" />
+              <img src={client.logo} alt={client.company_name} className="w-12 h-12 rounded-lg object-cover border border-slate-200 shadow-sm shrink-0" />
             ) : (
-              <div className="w-13 h-13 rounded-xl bg-gradient-to-br from-indigo-600 to-slate-800 text-white font-bold text-lg flex items-center justify-center shadow-sm shrink-0 uppercase tracking-wider">
+              <div className="w-12 h-12 rounded-lg bg-indigo-600 text-white font-semibold text-base flex items-center justify-center shadow-sm shrink-0 uppercase tracking-wider">
                 {client.company_name.substring(0, 2)}
               </div>
             )}
 
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               <div className="flex items-center gap-3 flex-wrap">
-                <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
+                <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
                   {client.company_name}
                 </h1>
-                <span className={`px-3 py-1 rounded-full text-xs font-bold border flex items-center gap-1.5 ${
+                <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border flex items-center gap-1.5 ${
                   client.client_status === 'Active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 
                   client.client_status === 'Hold' ? 'bg-amber-50 text-amber-700 border-amber-200' : 
                   'bg-rose-50 text-rose-700 border-rose-200'
                 }`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${client.client_status === 'Active' ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`}></span>
+                  <span className={`w-1.5 h-1.5 rounded-full ${client.client_status === 'Active' ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
                   {client.client_status}
                 </span>
               </div>
 
               {/* Subtitle Details Row */}
-              <div className="flex items-center gap-3 text-xs text-slate-500 flex-wrap">
-                <span className="font-medium text-slate-700">{client.service_type || 'Services Active'}</span>
+              <div className="flex items-center gap-2.5 text-xs text-slate-500 flex-wrap">
+                <span className="text-slate-600">{client.service_type || 'Services Active'}</span>
                 <span className="text-slate-300">•</span>
-                <span>Client Since <b>{new Date(client.created_at).getFullYear()}</b></span>
+                <span>Client Since {new Date(client.created_at).getFullYear()}</span>
                 {client.spoc_name && (
                   <>
                     <span className="text-slate-300">•</span>
-                    <span className="bg-slate-100 text-slate-700 font-semibold px-2.5 py-0.5 rounded-md border border-slate-200/60">
+                    <span className="bg-slate-50 text-slate-600 px-2 py-0.5 rounded border border-slate-200">
                       SPOC: {client.spoc_name}
                     </span>
                   </>
@@ -257,7 +261,7 @@ export default function ClientDetailsPage() {
                 {client.primary_contact_name && (
                   <>
                     <span className="text-slate-300">•</span>
-                    <span className="bg-slate-100 text-slate-700 font-semibold px-2.5 py-0.5 rounded-md border border-slate-200/60">
+                    <span className="bg-slate-50 text-slate-600 px-2 py-0.5 rounded border border-slate-200">
                       Client: {client.primary_contact_name}
                     </span>
                   </>
@@ -267,10 +271,10 @@ export default function ClientDetailsPage() {
           </div>
 
           {/* Health Score & Export Action */}
-          <div className="flex items-center gap-4 border-t lg:border-t-0 border-slate-100 pt-3 lg:pt-0 justify-between lg:justify-end">
-            <div className="flex items-center gap-2 bg-slate-50 border border-slate-200/80 px-3.5 py-2 rounded-xl">
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Health Score:</span>
-              <div className={`flex items-center gap-1.5 text-xs font-extrabold uppercase ${
+          <div className="flex items-center gap-3 border-t lg:border-t-0 border-slate-100 pt-3 lg:pt-0 justify-between lg:justify-end">
+            <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg text-xs">
+              <span className="text-slate-500">Health Score:</span>
+              <div className={`flex items-center gap-1.5 font-medium ${
                 client.health_status === 'Red' ? 'text-rose-600' : 
                 client.health_status === 'Yellow' ? 'text-amber-600' : 
                 'text-emerald-600'
@@ -286,7 +290,7 @@ export default function ClientDetailsPage() {
 
             <button
               onClick={() => setShowExportModal(true)}
-              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl shadow-xs text-xs font-bold transition-all duration-150 active:scale-95"
+              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-1.5 rounded-lg shadow-sm text-xs font-medium transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
               Export Report
@@ -295,16 +299,15 @@ export default function ClientDetailsPage() {
         </div>
       </div>
 
-
       {/* Sleek Sub-Header Tab Navigation */}
       <div className="border-b border-slate-200 mb-6">
         <nav className="flex space-x-8 overflow-x-auto no-scrollbar" aria-label="Tabs">
           <button
             onClick={() => setActiveTab('details')}
-            className={`py-3 px-1 text-sm font-semibold border-b-2 transition-all duration-150 whitespace-nowrap ${
+            className={`py-2.5 px-1 text-sm transition-all duration-150 whitespace-nowrap ${
               activeTab === 'details'
-                ? 'border-indigo-600 text-indigo-600 font-bold'
-                : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
+                ? 'border-b-2 border-indigo-600 text-indigo-600 font-semibold'
+                : 'border-b-2 border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
             Client Details
@@ -312,10 +315,10 @@ export default function ClientDetailsPage() {
 
           <button
             onClick={() => setActiveTab('defined')}
-            className={`py-3 px-1 text-sm font-semibold border-b-2 transition-all duration-150 whitespace-nowrap ${
+            className={`py-2.5 px-1 text-sm transition-all duration-150 whitespace-nowrap ${
               activeTab === 'defined'
-                ? 'border-indigo-600 text-indigo-600 font-bold'
-                : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
+                ? 'border-b-2 border-indigo-600 text-indigo-600 font-semibold'
+                : 'border-b-2 border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
             Defined Details
@@ -323,10 +326,10 @@ export default function ClientDetailsPage() {
 
           <button
             onClick={() => setActiveTab('passwords')}
-            className={`py-3 px-1 text-sm font-semibold border-b-2 transition-all duration-150 whitespace-nowrap ${
+            className={`py-2.5 px-1 text-sm transition-all duration-150 whitespace-nowrap ${
               activeTab === 'passwords'
-                ? 'border-indigo-600 text-indigo-600 font-bold'
-                : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
+                ? 'border-b-2 border-indigo-600 text-indigo-600 font-semibold'
+                : 'border-b-2 border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
             Passwords & Access
@@ -334,10 +337,10 @@ export default function ClientDetailsPage() {
 
           <button
             onClick={() => setActiveTab('plans')}
-            className={`py-3 px-1 text-sm font-semibold border-b-2 transition-all duration-150 whitespace-nowrap ${
+            className={`py-2.5 px-1 text-sm transition-all duration-150 whitespace-nowrap ${
               activeTab === 'plans'
-                ? 'border-indigo-600 text-indigo-600 font-bold'
-                : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
+                ? 'border-b-2 border-indigo-600 text-indigo-600 font-semibold'
+                : 'border-b-2 border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
             Monthly Plans
@@ -345,13 +348,13 @@ export default function ClientDetailsPage() {
 
           <button
             onClick={() => setActiveTab('ai_calendar')}
-            className={`py-3 px-1 text-sm font-semibold border-b-2 transition-all duration-150 whitespace-nowrap flex items-center gap-1.5 ${
+            className={`py-2.5 px-1 text-sm transition-all duration-150 whitespace-nowrap ${
               activeTab === 'ai_calendar'
-                ? 'border-indigo-600 text-indigo-600 font-bold'
-                : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
+                ? 'border-b-2 border-indigo-600 text-indigo-600 font-semibold'
+                : 'border-b-2 border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
-            <span>AI Calendar</span>
+            AI Calendar
           </button>
         </nav>
       </div>

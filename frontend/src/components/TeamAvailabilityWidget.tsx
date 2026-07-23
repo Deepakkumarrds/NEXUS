@@ -22,6 +22,7 @@ export default function TeamAvailabilityWidget() {
         const res = await fetch(`${apiUrl}/api/attendance/team-status`, {
           headers: { Authorization: `Bearer ${token}` }
         });
+        if (!res || !res.ok) return;
         const data = await res.json();
         if (data && data.users) {
           setTeam(data.users);

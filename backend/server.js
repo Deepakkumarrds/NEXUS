@@ -129,6 +129,12 @@ server.listen(PORT, () => {
   const cronService = require('./services/cronService');
   cronService.startCronJobs();
   
-  // Initialize WhatsApp Bot
-  require('./services/whatsappService');
+  // Initialize WhatsApp Bot (Non-blocking)
+  setImmediate(() => {
+    try {
+      require('./services/whatsappService');
+    } catch (e) {
+      console.warn('WhatsApp service init skipped:', e.message);
+    }
+  });
 });

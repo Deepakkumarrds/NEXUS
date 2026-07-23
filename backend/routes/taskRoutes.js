@@ -4,6 +4,7 @@ const taskController = require('../controllers/taskController');
 
 // Routes
 router.post('/', taskController.createTask);
+router.post('/bot-create', taskController.createTaskFromBot);
 router.get('/', taskController.getAllTasks);
 
 // Bulk status update (must be before /:id)

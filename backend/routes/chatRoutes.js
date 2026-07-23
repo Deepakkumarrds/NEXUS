@@ -42,6 +42,41 @@ router.post('/zoho', async (req, res) => {
       return res.json({ text: "Hi! Ask me anything about clients, tasks, or escalations." });
     }
 
+    // 0.4 Direct DB Action Handler: Natural Language Task Creation via Cliq Bot
+    if (q.includes('create task') || q.includes('add task') || q.includes('new task')) {
+      const taskController = require('../controllers/taskController');
+      
+      let brandName = '';
+      let title = '';
+      let assigneeName = '';
+      let dueDateStr = '';
+
+      const brandMatch = userQuery.match(/for\s+([^:\n,]+)/i) || userQuery.match(/brand\s+([^:\n,]+)/i);
+      if (brandMatch) brandName = brandMatch[1].replace(/assigned|due|title|task/gi, '').trim();
+
+      const assigneeMatch = userQuery.match(/assigned\s+(?:to\s+)?([^:\n,]+)/i) || userQuery.match(/assignee\s+([^:\n,]+)/i);
+      if (assigneeMatch) assigneeName = assigneeMatch[1].replace(/due|task|for/gi, '').trim();
+
+      const dueMatch = userQuery.match(/due\s+(?:on\s+)?([^:\n,]+)/i) || userQuery.match(/deadline\s+([^:\n,]+)/i);
+      if (dueMatch) dueDateStr = dueMatch[1].trim();
+
+      if (userQuery.includes(':')) {
+        const parts = userQuery.split(':');
+        title = parts[1].split(/assigned|due/i)[0].trim();
+      } else {
+        title = userQuery.replace(/create task|add task|new task|for\s+[^\s]+/gi, '').split(/assigned|due/i)[0].trim();
+      }
+
+      req.body = {
+        brand_name: brandName,
+        title: title || 'New Bot Task',
+        assigned_to_name: assigneeName,
+        due_date: dueDateStr
+      };
+
+      return taskController.createTaskFromBot(req, res);
+    }
+
     // 0.5 Direct DB Query Handler: SOW Scope & Deliverables Tracker
     if (q.includes('sow') || q.includes('scope')) {
       let clientQuery = q.replace(/\b(sows|sow|scope|breach|alert|report|status|for|of|the|about|details)\b/gi, '').trim();

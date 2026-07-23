@@ -43,6 +43,96 @@ exports.createTask = async (req, res) => {
   }
 };
 
+// Create Task from Bot / Webhook (POST /api/tasks/bot-create)
+exports.createTaskFromBot = async (req, res) => {
+  try {
+    const { brand_name, company_name, title, description, priority, due_date, assigned_to_name, assigned_to_email, department } = req.body;
+
+    if (!title) {
+      return res.status(400).json({ status: 'error', message: 'Task title is required' });
+    }
+
+    const prisma = require('../config/prisma');
+
+    // 1. Resolve Client
+    let client = null;
+    if (brand_name || company_name) {
+      const queryStr = (brand_name || company_name).toLowerCase().trim();
+      const allClients = await prisma.client.findMany({ where: { client_status: 'Active' } });
+      client = allClients.find(c => 
+        (c.brand_name && c.brand_name.toLowerCase().includes(queryStr)) ||
+        (c.company_name && c.company_name.toLowerCase().includes(queryStr))
+      );
+    }
+    if (!client) {
+      client = await prisma.client.findFirst({ where: { client_status: 'Active' } });
+    }
+
+    // 2. Resolve Assignee
+    let assignee = null;
+    if (assigned_to_name || assigned_to_email) {
+      const allUsers = await prisma.user.findMany();
+      if (assigned_to_email) {
+        assignee = allUsers.find(u => u.email.toLowerCase() === assigned_to_email.toLowerCase());
+      }
+      if (!assignee && assigned_to_name) {
+        const nameQuery = assigned_to_name.toLowerCase().trim();
+        assignee = allUsers.find(u => u.name.toLowerCase().includes(nameQuery));
+      }
+    }
+
+    // 3. Resolve Creator
+    const firstUser = await prisma.user.findFirst();
+    const creatorId = firstUser ? firstUser.id : null;
+
+    // 4. Parse Date
+    let parsedDueDate = null;
+    if (due_date) {
+      const d = new Date(due_date);
+      if (!isNaN(d.getTime())) parsedDueDate = d;
+    }
+
+    const task = await prisma.task.create({
+      data: {
+        title,
+        description: description || `Created via Bot Integration for ${client?.brand_name || client?.company_name || 'Client'}`,
+        priority: priority || 'High',
+        due_date: parsedDueDate,
+        client_id: client ? client.id : null,
+        assigned_to: assignee ? assignee.id : null,
+        assigned_by: creatorId,
+        status: 'Pending',
+        department: department || 'Web Development'
+      },
+      include: {
+        client: { select: { company_name: true, brand_name: true } },
+        assignee: { select: { name: true, email: true } }
+      }
+    });
+
+    const clientDisplayName = task.client?.brand_name || task.client?.company_name || 'Client';
+    const assigneeName = task.assignee?.name ? `@${task.assignee.name}` : 'Unassigned';
+    const dueDateStr = task.due_date ? new Date(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'No due date';
+
+    let responseMsg = `✅ *TASK CREATED SUCCESSFULLY VIA BOT*\n=========================================\n`;
+    responseMsg += `• *Task:* "${task.title}"\n`;
+    responseMsg += `• *Brand:* ${clientDisplayName}\n`;
+    responseMsg += `• *Assignee:* ${assigneeName}\n`;
+    responseMsg += `• *Due Date:* ${dueDateStr}\n`;
+    responseMsg += `• *Priority:* ${task.priority}\n\n`;
+    responseMsg += `🔗 *Open Task Manager:* ${process.env.FRONTEND_URL || 'https://rds-db.vercel.app'}/tasks`;
+
+    res.status(201).json({
+      status: 'success',
+      text: responseMsg,
+      data: task
+    });
+  } catch (error) {
+    console.error('Error creating task from bot:', error);
+    res.status(500).json({ status: 'error', message: error.message || 'Failed to create task from bot' });
+  }
+};
+
 // Get all tasks (with optional client filtering)
 exports.getAllTasks = async (req, res) => {
   try {

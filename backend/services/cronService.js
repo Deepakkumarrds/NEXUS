@@ -11,7 +11,9 @@ const prisma = new PrismaClient();
 const startCronJobs = () => {
   console.log('🕒 Initializing Cron Jobs...');
 
-  // Daily SOW Breach Check (9:30 AM, Mon-Fri)
+  const IST = { timezone: "Asia/Kolkata" };
+
+  // Daily SOW Breach Check (9:30 AM IST, Mon-Fri)
   cron.schedule('30 9 * * 1-5', async () => {
     console.log('🛡️ Running Daily SOW Breach Check...');
     try {
@@ -19,38 +21,37 @@ const startCronJobs = () => {
     } catch (e) {
       console.error('Error running SOW Breach check:', e);
     }
-  });
+  }, IST);
 
-  // Dynamic Morning Tracker Reminders (Every 5 mins, Mon-Fri)
+  // Dynamic Morning Tracker Reminders (Every 5 mins, Mon-Fri, IST)
   cron.schedule('*/5 * * * 1-5', async () => {
     await evaluateAndSendTrackerReminders('Morning');
-  });
+  }, IST);
 
-  // Static Evening Tracker & Task Closing Reminders (6:00 PM, 6:30 PM, 7:00 PM, Mon-Sat)
+  // Static Evening Tracker & Task Closing Reminders (6:00 PM, 6:30 PM, 7:00 PM IST, Mon-Sat)
   cron.schedule('0 18 * * 1-6', async () => {
-    await sendTaskClosingReminders('6:00 PM');
+    await sendTaskClosingReminders('6:00 PM IST');
     await evaluateAndSendTrackerReminders('Evening');
     await sendDailyTaskSummaryToCliq();
-  });
+  }, IST);
 
   cron.schedule('30 18 * * 1-6', async () => {
-    await sendTaskClosingReminders('6:30 PM');
-  });
+    await sendTaskClosingReminders('6:30 PM IST');
+  }, IST);
 
   cron.schedule('0 19 * * 1-6', async () => {
-    await sendTaskClosingReminders('7:00 PM');
+    await sendTaskClosingReminders('7:00 PM IST');
     await sendDetailedDailyReportToCliq();
-  });
+  }, IST);
 
   // Recurring check for tasks exceeding estimated duration (Every 30 mins)
   cron.schedule('*/30 * * * *', async () => {
     await checkTaskOverrunAlerts();
-  });
+  }, IST);
 
-  // Run every day at 9:00 AM server time
-  // For testing, we can run it every minute '* * * * *', but daily is '0 9 * * *'
+  // Daily Asset Deadline Check (9:00 AM IST)
   cron.schedule('0 9 * * *', async () => {
-    console.log('🕒 Running Daily Asset Deadline Check...');
+    console.log('🕒 Running Daily Asset Deadline Check (IST)...');
     try {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -93,12 +94,12 @@ const startCronJobs = () => {
     } catch (err) {
       console.error('Error running cron job:', err);
     }
-  });
+  }, IST);
 
 
-  // Auto Punch-out at 8:00 PM (20:00) server time
+  // Auto Punch-out at 8:00 PM IST (20:00)
   cron.schedule('0 20 * * *', async () => {
-    console.log('🕒 Running Auto Punch-out...');
+    console.log('🕒 Running Auto Punch-out (8:00 PM IST)...');
     try {
       const now = new Date();
       const today = new Date();

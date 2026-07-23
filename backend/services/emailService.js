@@ -178,6 +178,67 @@ const sendDailyTrackerReminder = async (employeeEmail, employeeName, missingClie
   return sendEmail(employeeEmail, subject, html);
 };
 
+const sendMomEmail = async (toEmail, meeting) => {
+  const subject = `Minutes of Meeting (MOM): ${meeting.meeting_title}`;
+  const brandName = meeting.client?.brand_name || meeting.client?.company_name || 'Client';
+  const meetingDateStr = meeting.meeting_date ? new Date(meeting.meeting_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+
+  let actionItemsHtml = '';
+  if (meeting.action_items && meeting.action_items.length > 0) {
+    actionItemsHtml = `
+      <h3 style="color: #0f172a; margin-top: 24px;">Assigned Action Items</h3>
+      <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 8px;">
+        <thead>
+          <tr style="background-color: #f1f5f9; text-align: left;">
+            <th style="padding: 8px 12px; border: 1px solid #e2e8f0;">Action Item</th>
+            <th style="padding: 8px 12px; border: 1px solid #e2e8f0;">Assignee</th>
+            <th style="padding: 8px 12px; border: 1px solid #e2e8f0;">Due Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${meeting.action_items.map(item => `
+            <tr>
+              <td style="padding: 8px 12px; border: 1px solid #e2e8f0; color: #0f172a;">${item.action_item}</td>
+              <td style="padding: 8px 12px; border: 1px solid #e2e8f0; color: #475569;">${item.assignee?.name || 'Unassigned'}</td>
+              <td style="padding: 8px 12px; border: 1px solid #e2e8f0; color: #475569;">${item.deadline ? new Date(item.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'No due date'}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #334155; border: 1px solid #e2e8f0; padding: 24px; border-radius: 8px;">
+      <h2 style="color: #4f46e5; margin-top: 0;">Minutes of Meeting (MOM)</h2>
+      <p style="margin: 4px 0; font-size: 14px;"><strong>Meeting:</strong> ${meeting.meeting_title}</p>
+      <p style="margin: 4px 0; font-size: 14px;"><strong>Brand:</strong> ${brandName}</p>
+      <p style="margin: 4px 0; font-size: 14px;"><strong>Date:</strong> ${meetingDateStr}</p>
+      ${meeting.attendees ? `<p style="margin: 4px 0; font-size: 14px;"><strong>Attendees:</strong> ${meeting.attendees}</p>` : ''}
+      
+      ${meeting.agenda ? `
+        <div style="margin-top: 16px;">
+          <h4 style="color: #0f172a; margin-bottom: 4px;">Agenda</h4>
+          <p style="background: #f8fafc; padding: 10px; border-radius: 4px; font-size: 14px; margin-top: 0;">${meeting.agenda}</p>
+        </div>
+      ` : ''}
+
+      <div style="margin-top: 16px;">
+        <h4 style="color: #0f172a; margin-bottom: 4px;">Key Discussion Points & Decisions</h4>
+        <div style="background: #f8fafc; padding: 12px; border-radius: 4px; font-size: 14px; white-space: pre-wrap; line-height: 1.5;">${meeting.discussion_points || 'No discussion points logged.'}</div>
+      </div>
+
+      ${actionItemsHtml}
+
+      <div style="margin-top: 24px; text-align: center;">
+        <a href="${process.env.FRONTEND_URL || 'https://rds-db.vercel.app'}/meetings" style="display: inline-block; background-color: #4f46e5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 14px;">Open Meetings Dashboard</a>
+      </div>
+    </div>
+  `;
+
+  return sendEmail(toEmail, subject, html);
+};
+
 module.exports = {
   sendEmail,
   notifyClientAssetReady,
@@ -190,5 +251,6 @@ module.exports = {
   sendLeaveAppliedEmail,
   sendLeaveApprovedEmail,
   sendLeaveRejectedEmail,
-  sendDailyTrackerReminder
+  sendDailyTrackerReminder,
+  sendMomEmail
 };

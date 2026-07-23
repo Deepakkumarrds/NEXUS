@@ -260,11 +260,7 @@ exports.createMeetingWithTasks = async (req, res) => {
         if (recipient_emails) {
           const emails = recipient_emails.split(',').map(e => e.trim()).filter(Boolean);
           for (const email of emails) {
-            await emailService.sendDeadlineReminder(
-              email,
-              `Minutes of Meeting (MOM): ${meeting_title}`,
-              `${process.env.FRONTEND_URL || 'https://rds-db.vercel.app'}/meetings/${meeting.id}`
-            );
+            await emailService.sendMomEmail(email, meeting);
           }
         }
       } catch (e) {

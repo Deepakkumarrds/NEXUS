@@ -48,15 +48,17 @@ export default function NewMeetingPage() {
   const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
-    // Fetch clients
+    // Fetch clients safely
     fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com') + '/api/clients?activeOnly=true')
-      .then(res => res.json())
-      .then(data => { if (data && data.data) setClients(data.data); });
+      .then(res => res.ok ? res.json() : null)
+      .then(data => { if (data && data.data) setClients(data.data); })
+      .catch(err => console.warn('Clients fetch warning:', err));
 
-    // Fetch team users
+    // Fetch team users safely
     fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com') + '/api/users')
-      .then(res => res.json())
-      .then(data => { if (data && data.data) setUsers(data.data); });
+      .then(res => res.ok ? res.json() : null)
+      .then(data => { if (data && data.data) setUsers(data.data); })
+      .catch(err => console.warn('Users fetch warning:', err));
 
     // Initialize Web Speech API if supported
     if (typeof window !== 'undefined') {
@@ -139,6 +141,10 @@ export default function NewMeetingPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ transcript })
       });
+
+      if (!res.ok) {
+        throw new Error(`Server status ${res.status}. Please check backend connection.`);
+      }
 
       const json = await res.json();
       if (json.status === 'success' && json.data) {

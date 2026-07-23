@@ -3,8 +3,7 @@ const router = express.Router();
 const chatService = require('../services/chatService');
 const sowPredictorService = require('../services/sowPredictorService');
 const { protect } = require('../middleware/authMiddleware');
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../config/prisma');
 
 
 // POST /api/chat

@@ -1,5 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../config/prisma');
 const Groq = require('groq-sdk');
 const { HfInference } = require('@huggingface/inference');
 

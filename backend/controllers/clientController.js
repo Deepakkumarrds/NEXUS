@@ -1,5 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../config/prisma');
 const { calculateClientHealth } = require('../utils/healthScoreEngine');
 
 // Create a new client

@@ -86,7 +86,72 @@ exports.getClientById = async (req, res) => {
       return res.status(404).json({ status: 'error', message: 'Client not found' });
     }
 
-    res.status(200).json({ status: 'success', data: client });
+    // Compute SOW Defined / Delivered / Pending summary
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+
+    // Fetch all completed tasks for this client this month
+    const completedTasksThisMonth = await prisma.task.findMany({
+      where: {
+        client_id: id,
+        status: 'Completed',
+        completed_at: { gte: startOfMonth, lte: endOfMonth }
+      }
+    });
+
+    const pendingTasksThisMonth = await prisma.task.findMany({
+      where: {
+        client_id: id,
+        status: { in: ['Pending', 'In Progress', 'Review'] }
+      }
+    });
+
+    let totalDefined = 0;
+    let totalDelivered = completedTasksThisMonth.length;
+    let totalPending = pendingTasksThisMonth.length;
+
+    const sowDeliverablesSummary = [];
+
+    if (client.sows && client.sows.length > 0) {
+      client.sows.forEach(sow => {
+        if (sow.months) {
+          sow.months.forEach(m => {
+            if (m.items) {
+              m.items.forEach(item => {
+                const qty = item.committed_qty || 1;
+                totalDefined += qty;
+
+                // Match tasks for this item
+                const deliveredForItem = item.tasks ? item.tasks.filter(t => t.status === 'Completed').length : 0;
+
+                sowDeliverablesSummary.push({
+                  id: item.id,
+                  deliverable_name: item.deliverable_name,
+                  defined_qty: qty,
+                  delivered_qty: deliveredForItem,
+                  pending_qty: Math.max(0, qty - deliveredForItem),
+                  status: deliveredForItem > qty ? 'SOW Exceeded' : (deliveredForItem / qty) >= 0.8 ? 'Approaching Limit' : 'In Scope'
+                });
+              });
+            }
+          });
+        }
+      });
+    }
+
+    const clientWithSowSummary = {
+      ...client,
+      sow_summary: {
+        total_defined: totalDefined,
+        total_delivered: totalDelivered,
+        total_pending: totalPending,
+        deliverables: sowDeliverablesSummary
+      }
+    };
+
+    res.status(200).json({ status: 'success', data: clientWithSowSummary });
+
   } catch (error) {
     console.error('Error fetching client:', error);
     res.status(500).json({ status: 'error', message: 'Failed to fetch client' });

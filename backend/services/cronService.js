@@ -22,17 +22,30 @@ const startCronJobs = () => {
   });
 
   // Dynamic Morning Tracker Reminders (Every 5 mins, Mon-Fri)
-
   cron.schedule('*/5 * * * 1-5', async () => {
     await evaluateAndSendTrackerReminders('Morning');
   });
 
-  // Static Evening Tracker Reminders (6:00 PM, Mon-Fri)
-  cron.schedule('0 18 * * 1-5', async () => {
+  // Static Evening Tracker & Task Closing Reminders (6:00 PM, 6:30 PM, 7:00 PM, Mon-Sat)
+  cron.schedule('0 18 * * 1-6', async () => {
+    await sendTaskClosingReminders('6:00 PM');
     await evaluateAndSendTrackerReminders('Evening');
     await sendDailyTaskSummaryToCliq();
   });
 
+  cron.schedule('30 18 * * 1-6', async () => {
+    await sendTaskClosingReminders('6:30 PM');
+  });
+
+  cron.schedule('0 19 * * 1-6', async () => {
+    await sendTaskClosingReminders('7:00 PM');
+    await sendDetailedDailyReportToCliq();
+  });
+
+  // Recurring check for tasks exceeding estimated duration (Every 30 mins)
+  cron.schedule('*/30 * * * *', async () => {
+    await checkTaskOverrunAlerts();
+  });
 
   // Run every day at 9:00 AM server time
   // For testing, we can run it every minute '* * * * *', but daily is '0 9 * * *'

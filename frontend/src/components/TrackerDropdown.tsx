@@ -24,6 +24,7 @@ export default function TrackerDropdown() {
         cache: 'no-store',
         headers: { Authorization: `Bearer ${token}` }
       });
+      if (!res || !res.ok) return;
       const data = await res.json();
       if (data && data.current_status) {
         setStatus(data.current_status);

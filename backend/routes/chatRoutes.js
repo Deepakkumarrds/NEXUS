@@ -52,19 +52,29 @@ router.post('/zoho', async (req, res) => {
       let dueDateStr = '';
 
       const brandMatch = userQuery.match(/for\s+([^:\n,]+)/i) || userQuery.match(/brand\s+([^:\n,]+)/i);
-      if (brandMatch) brandName = brandMatch[1].replace(/assigned|due|title|task/gi, '').trim();
+      if (brandMatch) {
+        brandName = brandMatch[1].split(/assigned|due|title|task/i)[0].trim();
+      }
 
       const assigneeMatch = userQuery.match(/assigned\s+(?:to\s+)?([^:\n,]+)/i) || userQuery.match(/assignee\s+([^:\n,]+)/i);
-      if (assigneeMatch) assigneeName = assigneeMatch[1].replace(/due|task|for/gi, '').trim();
+      if (assigneeMatch) {
+        assigneeName = assigneeMatch[1].split(/due|task|for/i)[0].trim();
+      }
 
       const dueMatch = userQuery.match(/due\s+(?:on\s+)?([^:\n,]+)/i) || userQuery.match(/deadline\s+([^:\n,]+)/i);
-      if (dueMatch) dueDateStr = dueMatch[1].trim();
+      if (dueMatch) {
+        dueDateStr = dueMatch[1].trim();
+        // If year is omitted (e.g. "July 28"), append current year
+        if (!/\d{4}/.test(dueDateStr)) {
+          dueDateStr += ` ${new Date().getFullYear()}`;
+        }
+      }
 
       if (userQuery.includes(':')) {
         const parts = userQuery.split(':');
         title = parts[1].split(/assigned|due/i)[0].trim();
       } else {
-        title = userQuery.replace(/create task|add task|new task|for\s+[^\s]+/gi, '').split(/assigned|due/i)[0].trim();
+        title = userQuery.replace(/create task|add task|new task/gi, '').split(/for|assigned|due/i)[0].trim();
       }
 
       req.body = {

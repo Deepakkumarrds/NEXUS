@@ -43,13 +43,16 @@ router.post('/zoho', async (req, res) => {
       return res.json({ text: "Hi! Ask me anything about clients, tasks, or escalations." });
     }
 
-    // 0.5 Direct DB Query Handler: SOW Comparison & Breach Tracker
-    if (q.startsWith('sow') || q.includes('sow breach') || q.includes('sow alert') || q.includes('sow report') || q.includes('sow status')) {
-      let clientQuery = q.replace(/^(sow|sows|show sow|get sow)\b/gi, '')
-                         .replace(/\b(for|of|the|about|status|report|breach|alert|details)\b/gi, '')
-                         .trim();
+    // 0.5 Direct DB Query Handler: SOW Scope & Deliverables Tracker
+    if (q.includes('sow') || q.includes('scope')) {
+      let clientQuery = q.replace(/\b(sows|sow|scope|breach|alert|report|status|for|of|the|about|details)\b/gi, '').trim();
       const sowReport = await sowPredictorService.getSowBreachReport(clientQuery || null);
       return res.json({ text: sowReport });
+    }
+
+    // 0.6 Direct DB Query Handler: Campaign & Ad Performance (Prevents AI Hallucinations)
+    if (q.includes('campaign') || q.includes('ad spend') || q.includes('ads') || q.includes('conversion')) {
+      return res.json({ text: "📢 *CAMPAIGNS & ADS:* Marketing campaign tracking is currently unlinked for this account. No active ad campaign performance results are logged in the database." });
     }
 
     // 0. Direct DB Query Handler: Daily Summary & Brand Work Logs

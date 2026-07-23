@@ -207,13 +207,20 @@ router.post('/zoho', async (req, res) => {
           }
 
           if (client.daily_trackers && client.daily_trackers.length > 0) {
-            reply += `\n📝 *TRACKING HUB WORK LOGS:*\n`;
+            reply += `\n📝 *DAILY TRACKER LOGS (Date-wise):*\n`;
+            const seen = new Set();
             client.daily_trackers.forEach(t => {
-              reply += `   └ *[${t.department || 'General'}]:* ${t.summary_text || 'In Progress'}\n`;
+              const dateStr = t.date ? new Date(t.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Today';
+              const key = `${dateStr}-${t.department}-${t.summary_text}`;
+              if (!seen.has(key)) {
+                seen.add(key);
+                reply += `   └ *${dateStr} [${t.department || 'General'}]:* ${t.summary_text || 'In Progress'}\n`;
+              }
             });
           } else {
-            reply += `\n📝 *TRACKING HUB WORK LOGS:* No updates logged today yet.\n`;
+            reply += `\n📝 *DAILY TRACKER LOGS:* No updates logged today yet.\n`;
           }
+
 
           reply += `\n🔗 *Open Brand in Dashboard:* ${process.env.FRONTEND_URL || 'https://rds-db.vercel.app'}`;
           return res.json({ text: reply });

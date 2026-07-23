@@ -79,7 +79,7 @@ exports.getMeetingById = async (req, res) => {
 exports.updateMeeting = async (req, res) => {
   try {
     const { id } = req.params;
-    const { client_id, meeting_title, meeting_date, attendees, agenda, discussion_points } = req.body;
+    const { client_id, meeting_title, meeting_date, attendees, agenda, discussion_points, recipient_emails } = req.body;
 
     const meeting = await prisma.meeting.update({
       where: { id },
@@ -89,7 +89,8 @@ exports.updateMeeting = async (req, res) => {
         meeting_date: meeting_date ? new Date(meeting_date) : undefined,
         attendees,
         agenda,
-        discussion_points
+        discussion_points,
+        recipient_emails
       }
     });
     res.status(200).json({ status: 'success', data: meeting });

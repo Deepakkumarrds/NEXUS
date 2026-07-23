@@ -15,6 +15,7 @@ export default function EditMeetingPage() {
     meeting_title: '',
     meeting_date: '',
     attendees: '',
+    recipient_emails: '',
     agenda: '',
     discussion_points: ''
   });
@@ -34,6 +35,7 @@ export default function EditMeetingPage() {
           meeting_title: d.meeting_title || '',
           meeting_date: d.meeting_date ? new Date(d.meeting_date).toISOString().slice(0, 16) : '',
           attendees: d.attendees || '',
+          recipient_emails: d.recipient_emails || '',
           agenda: d.agenda || '',
           discussion_points: d.discussion_points || ''
         });
@@ -114,6 +116,19 @@ export default function EditMeetingPage() {
                 ))}
               </select>
             </div>
+          </div>
+
+          <div>
+            <label className="block font-medium text-slate-700 mb-1.5">Recipient Emails (Whom to Send)</label>
+            <input 
+              type="text" 
+              name="recipient_emails"
+              value={formData.recipient_emails}
+              placeholder="e.g. gowtham.kt@rdsdigital.in, client@brand.com"
+              className="w-full border border-slate-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow"
+              onChange={handleChange}
+            />
+            <p className="text-xs text-slate-500 mt-1">Comma-separated email addresses where MOM dispatches are sent.</p>
           </div>
 
           <div className="grid grid-cols-2 gap-6">

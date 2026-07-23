@@ -9,8 +9,8 @@ export default function DefinedDetailsTab({ client }: any) {
       <div className="bg-white p-6 rounded-xl border border-slate-200/60 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-100 pb-4 gap-2">
           <div>
-            <h3 className="font-bold text-slate-900 text-lg flex items-center gap-2">
-              🛡️ SOW Scope & Deliverable Quotas (Current Month)
+            <h3 className="font-bold text-slate-900 text-lg">
+              SOW Scope & Deliverable Quotas (Current Month)
             </h3>
             <p className="text-xs text-slate-500 mt-1">Tracks Utkarsh's defined contract deliverables against live completed team tasks.</p>
           </div>
@@ -56,8 +56,8 @@ export default function DefinedDetailsTab({ client }: any) {
             <div className="space-y-3">
               {client.sow_summary.deliverables.map((item: any) => (
                 <div key={item.id} className="flex items-center justify-between p-4 bg-slate-50 border border-slate-200/60 rounded-xl text-sm">
-                  <div className="font-bold text-slate-900 flex items-center gap-2">
-                    <span>📌 {item.deliverable_name}</span>
+                  <div className="font-bold text-slate-900">
+                    <span>{item.deliverable_name}</span>
                   </div>
                   <div className="flex items-center gap-6 text-xs font-medium">
                     <span className="text-slate-600">Defined: <b className="text-slate-900 text-sm">{item.defined_qty}</b></span>

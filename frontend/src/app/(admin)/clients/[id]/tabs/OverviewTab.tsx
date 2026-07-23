@@ -15,8 +15,8 @@ export default function OverviewTab({ client, openEditModal }: any) {
       {/* Client Profile Details (Horizontal Grid / Table Layout) */}
       <div className="bg-white p-6 rounded-xl border border-slate-200/60 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] space-y-4">
         <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-          <h3 className="font-bold text-slate-900 text-base flex items-center gap-2">
-            🏢 Client Profile Details
+          <h3 className="font-bold text-slate-900 text-base">
+            Client Profile Details
           </h3>
           <button onClick={() => openEditModal()} className="px-3 py-1.5 bg-indigo-50 border border-indigo-100 text-indigo-700 hover:bg-indigo-600 hover:text-white rounded-md text-xs font-semibold transition-colors flex items-center shadow-sm">
             Edit Profile

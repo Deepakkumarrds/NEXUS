@@ -29,14 +29,6 @@ export default function MarketingTab({ client, clientId, fetchClientDetails }: a
   const [paidPassword, setPaidPassword] = useState('');
   const [paidAccess, setPaidAccess] = useState('Advertiser');
 
-  // Campaign Performance Form State
-  const [campaignName, setCampaignName] = useState('');
-  const [campImpressions, setCampImpressions] = useState('');
-  const [campClicks, setCampClicks] = useState('');
-  const [campConversions, setCampConversions] = useState('');
-  const [campSpend, setCampSpend] = useState('');
-  const [campStartDate, setCampStartDate] = useState('');
-
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast.success('Copied to clipboard');
@@ -151,46 +143,6 @@ export default function MarketingTab({ client, clientId, fetchClientDetails }: a
   const handleDeletePaidMediaAccess = async (accessId: string) => {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com'}/api/clients/paid-media/${accessId}`, {
-        method: 'DELETE'
-      });
-      if (res.ok) fetchClientDetails();
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const handleLogCampaign = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!campaignName.trim() || !campStartDate) return;
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com'}/api/campaigns`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          client_id: clientId,
-          campaign_name: campaignName,
-          impressions: campImpressions,
-          clicks: campClicks,
-          leads_conversions: campConversions,
-          spend_inr: campSpend,
-          start_date: campStartDate
-        })
-      });
-      if (res.ok) {
-        setCampaignName(''); setCampImpressions(''); setCampClicks(''); setCampConversions(''); setCampSpend(''); setCampStartDate('');
-        toast.success('Campaign metrics logged!');
-        fetchClientDetails();
-      } else {
-        toast.error('Failed to log campaign metrics');
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const handleDeleteCampaign = async (id: string) => {
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com'}/api/campaigns/${id}`, {
         method: 'DELETE'
       });
       if (res.ok) fetchClientDetails();

@@ -61,31 +61,46 @@ router.post('/zoho', async (req, res) => {
         return res.json({ text: "🏢 *DAILY SUMMARY:* No active clients found." });
       }
 
-      const formattedDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      let reply = `📊 *DAILY BRAND WORK SUMMARY* • ${formattedDate}\n-----------------------------------------\n\n`;
+      const updatedClients = [];
+      const unupdatedClients = [];
 
-      activeClients.forEach((c, idx) => {
+      activeClients.forEach((c) => {
         const name = c.brand_name || c.company_name;
-        const trackers = c.daily_trackers || [];
+        const trackers = (c.daily_trackers || []).filter(t => t.summary_text && t.summary_text.trim() !== '');
 
         if (trackers.length > 0) {
-          const latest = trackers[0];
-          const statusIcon = latest.status_color === 'Red' ? '🔴' : latest.status_color === 'Yellow' ? '🟡' : '🟢';
-          const summaryText = latest.summary_text || 'Work in progress';
-          const deptStr = latest.department ? ` (${latest.department})` : '';
-
-          reply += `${idx + 1}. ${statusIcon} *${name}*${deptStr}\n`;
-          reply += `   └ *Status:* ${latest.status_color || 'Active'}\n`;
-          reply += `   └ *Today's Work:* ${summaryText}\n\n`;
+          updatedClients.push({ name, trackers });
         } else {
-          reply += `${idx + 1}. ⚠️ *${name}*\n`;
-          reply += `   └ 🔴 *No daily summary logged today yet.*\n\n`;
+          unupdatedClients.push(name);
         }
       });
 
-      reply += `🔗 *Update Daily Tracker:* ${process.env.FRONTEND_URL || 'https://rds-db.vercel.app'}/tracker`;
+      const formattedDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      let reply = `📊 *TRACKING HUB DAILY SUMMARY* • ${formattedDate}\n=========================================\n\n`;
+
+      if (updatedClients.length > 0) {
+        reply += `📝 *TODAY'S UPDATED BRANDS (${updatedClients.length}):*\n\n`;
+        updatedClients.forEach((item, idx) => {
+          reply += `${idx + 1}. 🏢 *${item.name}*\n`;
+          item.trackers.forEach((t) => {
+            reply += `   └ *[${t.department || 'General'}]:* ${t.summary_text}\n`;
+          });
+          reply += `\n`;
+        });
+      }
+
+      if (unupdatedClients.length > 0) {
+        reply += `🔴 *UNUPDATED BRANDS TODAY (${unupdatedClients.length}):*\n`;
+        unupdatedClients.forEach(name => {
+          reply += `  • ${name}\n`;
+        });
+        reply += `\n`;
+      }
+
+      reply += `🔗 *Update Tracking Hub:* ${process.env.FRONTEND_URL || 'https://rds-db.vercel.app'}/tracker`;
       return res.json({ text: reply });
     }
+
 
 
     // 1. Direct DB Query Handler: Active Clients

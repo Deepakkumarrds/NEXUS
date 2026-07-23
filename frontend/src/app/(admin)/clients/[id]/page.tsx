@@ -250,13 +250,66 @@ export default function ClientDetailsPage() {
         </div>
       </div>
 
-      <div className="bg-slate-100 p-1.5 rounded-xl border border-slate-200/80 flex space-x-1.5 mb-6 max-w-4xl overflow-x-auto">
-        <button onClick={() => setActiveTab('details')} className={`flex-1 py-2 px-3 text-center text-xs md:text-sm font-semibold rounded-lg transition-all duration-200 outline-none cursor-pointer whitespace-nowrap ${activeTab === 'details' ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50' : 'text-slate-500 hover:text-slate-800'}`}>Client Details</button>
-        <button onClick={() => setActiveTab('defined')} className={`flex-1 py-2 px-3 text-center text-xs md:text-sm font-semibold rounded-lg transition-all duration-200 outline-none cursor-pointer whitespace-nowrap ${activeTab === 'defined' ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50' : 'text-slate-500 hover:text-slate-800'}`}>Defined Details</button>
-        <button onClick={() => setActiveTab('passwords')} className={`flex-1 py-2 px-3 text-center text-xs md:text-sm font-semibold rounded-lg transition-all duration-200 outline-none cursor-pointer whitespace-nowrap ${activeTab === 'passwords' ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50' : 'text-slate-500 hover:text-slate-800'}`}>Passwords & Access</button>
-        <button onClick={() => setActiveTab('plans')} className={`flex-1 py-2 px-3 text-center text-xs md:text-sm font-semibold rounded-lg transition-all duration-200 outline-none cursor-pointer whitespace-nowrap ${activeTab === 'plans' ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50' : 'text-slate-500 hover:text-slate-800'}`}>Monthly Plans</button>
-        <button onClick={() => setActiveTab('ai_calendar')} className={`flex-1 py-2 px-3 flex items-center justify-center text-xs md:text-sm font-semibold rounded-lg transition-all duration-200 outline-none cursor-pointer whitespace-nowrap ${activeTab === 'ai_calendar' ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md border border-indigo-400' : 'text-indigo-500 hover:bg-indigo-50'}`}>AI Calendar</button>
+      {/* Sleek Sub-Header Tab Navigation */}
+      <div className="border-b border-slate-200 mb-6">
+        <nav className="flex space-x-8 overflow-x-auto no-scrollbar" aria-label="Tabs">
+          <button
+            onClick={() => setActiveTab('details')}
+            className={`py-3 px-1 text-sm font-semibold border-b-2 transition-all duration-150 whitespace-nowrap ${
+              activeTab === 'details'
+                ? 'border-indigo-600 text-indigo-600 font-bold'
+                : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
+            }`}
+          >
+            Client Details
+          </button>
+
+          <button
+            onClick={() => setActiveTab('defined')}
+            className={`py-3 px-1 text-sm font-semibold border-b-2 transition-all duration-150 whitespace-nowrap ${
+              activeTab === 'defined'
+                ? 'border-indigo-600 text-indigo-600 font-bold'
+                : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
+            }`}
+          >
+            Defined Details
+          </button>
+
+          <button
+            onClick={() => setActiveTab('passwords')}
+            className={`py-3 px-1 text-sm font-semibold border-b-2 transition-all duration-150 whitespace-nowrap ${
+              activeTab === 'passwords'
+                ? 'border-indigo-600 text-indigo-600 font-bold'
+                : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
+            }`}
+          >
+            Passwords & Access
+          </button>
+
+          <button
+            onClick={() => setActiveTab('plans')}
+            className={`py-3 px-1 text-sm font-semibold border-b-2 transition-all duration-150 whitespace-nowrap ${
+              activeTab === 'plans'
+                ? 'border-indigo-600 text-indigo-600 font-bold'
+                : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
+            }`}
+          >
+            Monthly Plans
+          </button>
+
+          <button
+            onClick={() => setActiveTab('ai_calendar')}
+            className={`py-3 px-1 text-sm font-semibold border-b-2 transition-all duration-150 whitespace-nowrap flex items-center gap-1.5 ${
+              activeTab === 'ai_calendar'
+                ? 'border-indigo-600 text-indigo-600 font-bold'
+                : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
+            }`}
+          >
+            <span>AI Calendar</span>
+          </button>
+        </nav>
       </div>
+
 
 
       <div className="grid grid-cols-1 gap-6">

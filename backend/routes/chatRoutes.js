@@ -167,24 +167,28 @@ router.post('/zoho', async (req, res) => {
       return res.json({ text: reply });
     }
 
-    // 4. Direct DB Query Handler: Status of Specific Brand (e.g., "dezinepro status", "status of dezinepro")
+    // 4. Direct DB Query Handler: Status of Specific Brand (handles spaces like "dezine pro" vs "dezinepro")
     if (q.includes('status')) {
       let brandQuery = q.replace('status of', '').replace('status for', '').replace('status', '').trim();
       if (brandQuery.endsWith('?')) brandQuery = brandQuery.slice(0, -1).trim();
 
       if (brandQuery && brandQuery.length > 1) {
-        const client = await prisma.client.findFirst({
-          where: {
-            OR: [
-              { company_name: { contains: brandQuery, mode: 'insensitive' } },
-              { brand_name: { contains: brandQuery, mode: 'insensitive' } }
-            ]
-          },
+        const normalize = (str) => (str || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        const targetNorm = normalize(brandQuery);
+
+        const allClients = await prisma.client.findMany({
+          where: { client_status: 'Active' },
           include: {
             tasks: { where: { status: { in: ['Pending', 'In Progress', 'Review'] } } },
             escalations: { where: { status: 'Open' } },
             daily_trackers: { orderBy: { date: 'desc' }, take: 3 }
           }
+        });
+
+        const client = allClients.find(c => {
+          const compNorm = normalize(c.company_name);
+          const brandNorm = normalize(c.brand_name);
+          return compNorm.includes(targetNorm) || targetNorm.includes(compNorm) || (brandNorm && (brandNorm.includes(targetNorm) || targetNorm.includes(brandNorm)));
         });
 
         if (client) {
@@ -216,6 +220,7 @@ router.post('/zoho', async (req, res) => {
         }
       }
     }
+
 
 
 

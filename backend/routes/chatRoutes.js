@@ -53,9 +53,9 @@ router.post('/zoho', async (req, res) => {
             where: { date: todayStart }
           }
         },
-        orderBy: { company_name: 'asc' },
-        take: 15
+        orderBy: { company_name: 'asc' }
       });
+
 
       if (activeClients.length === 0) {
         return res.json({ text: "🏢 *DAILY SUMMARY:* No active clients found." });
@@ -109,16 +109,16 @@ router.post('/zoho', async (req, res) => {
       const clients = await prisma.client.findMany({
         where: { client_status: 'Active' },
         select: { company_name: true, brand_name: true, service_type: true },
-        take: 10
+        orderBy: { company_name: 'asc' }
       });
       if (clients.length === 0) {
         return res.json({ text: "🏢 *ACTIVE CLIENTS:* No active clients found." });
       }
-      let reply = `🏢 *ACTIVE CLIENTS (${clients.length} shown)*\n-----------------------------------------\n`;
+      let reply = `🏢 *ALL ACTIVE CLIENTS (${clients.length})*\n-----------------------------------------\n`;
       clients.forEach((c, idx) => {
         reply += `${idx + 1}. *${c.brand_name || c.company_name}* (${c.service_type || 'General'})\n`;
       });
-      reply += `\n🔗 *View all:* ${process.env.FRONTEND_URL || 'https://rds-db.vercel.app'}`;
+      reply += `\n🔗 *Open Dashboard:* ${process.env.FRONTEND_URL || 'https://rds-db.vercel.app'}`;
       return res.json({ text: reply });
     }
 
@@ -131,13 +131,12 @@ router.post('/zoho', async (req, res) => {
           client: { select: { company_name: true, brand_name: true } },
           assignee: { select: { name: true } }
         },
-        orderBy: { due_date: 'asc' },
-        take: 10
+        orderBy: { due_date: 'asc' }
       });
       if (tasks.length === 0) {
         return res.json({ text: "✨ *TASKS:* No pending tasks found!" });
       }
-      let reply = `📋 *ACTIVE & OVERDUE TASKS (${tasks.length} shown)*\n-----------------------------------------\n`;
+      let reply = `📋 *ALL ACTIVE & OVERDUE TASKS (${tasks.length})*\n-----------------------------------------\n`;
       tasks.forEach((t, idx) => {
         const brand = t.client?.brand_name || t.client?.company_name || 'General';
         const assignee = t.assignee?.name || 'Unassigned';
@@ -146,9 +145,10 @@ router.post('/zoho', async (req, res) => {
         const dueDateStr = t.due_date ? new Date(t.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'No due date';
         reply += `${idx + 1}. *${t.title}*\n   └ Brand: ${brand} | Owner: ${assignee} | Due: ${dueDateStr} ${statusTag}\n`;
       });
-      reply += `\n🔗 *View all tasks:* ${process.env.FRONTEND_URL || 'https://rds-db.vercel.app'}`;
+      reply += `\n🔗 *Open Dashboard:* ${process.env.FRONTEND_URL || 'https://rds-db.vercel.app'}`;
       return res.json({ text: reply });
     }
+
 
     // 3. Direct DB Query Handler: Escalations
     if (q.includes('escalation') || q.includes('issue')) {

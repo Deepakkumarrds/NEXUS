@@ -49,14 +49,15 @@ const tools = [
         type: 'object',
         properties: {
           status: {
-            type: ['string', 'null'],
+            type: 'string',
             description: 'Optional status filter (e.g., Active, Hold, Lost)'
           },
           industry: {
-            type: ['string', 'null'],
+            type: 'string',
             description: 'Optional industry filter (e.g., Real Estate, Healthcare, Education)'
           }
-        }
+        },
+        required: []
       }
     }
   },
@@ -69,22 +70,23 @@ const tools = [
         type: 'object',
         properties: {
           status: {
-            type: ['string', 'null'],
+            type: 'string',
             description: 'Optional status filter (e.g., Pending, In Progress, Review, Completed)'
           },
           priority: {
-            type: ['string', 'null'],
+            type: 'string',
             description: 'Optional priority filter (e.g., High, Medium, Low)'
           },
           searchTerm: {
-            type: ['string', 'null'],
+            type: 'string',
             description: 'Optional search term to filter tasks by title or description'
           },
           clientName: {
-            type: ['string', 'null'],
+            type: 'string',
             description: 'Optional client company name to filter tasks for a specific client'
           }
-        }
+        },
+        required: []
       }
     }
   },
@@ -97,14 +99,15 @@ const tools = [
         type: 'object',
         properties: {
           status: {
-            type: ['string', 'null'],
+            type: 'string',
             description: 'Optional status filter (e.g., Open, In Progress, Resolved)'
           },
           severity: {
-            type: ['string', 'null'],
+            type: 'string',
             description: 'Optional severity filter (e.g., Low, Medium, High, Critical)'
           }
-        }
+        },
+        required: []
       }
     }
   },
@@ -673,8 +676,28 @@ const handleChat = async (messages) => {
     return message;
   } catch (error) {
     console.error('Groq chat error:', error);
+
+    // Fallback if tool generation fails on LLM side
+    if (error.message && (error.message.includes('tool_use_failed') || error.message.includes('Failed to call a function'))) {
+      try {
+        console.log('🔄 Attempting tool fallback completion...');
+        const fallbackResponse = await groq.chat.completions.create({
+          model: 'llama-3.3-70b-versatile',
+          messages: messages.filter(m => m.role !== 'tool' && !m.tool_calls)
+        });
+        const msg = fallbackResponse.choices[0].message;
+        if (msg && msg.content) {
+          msg.content = msg.content.replace(/<function[^>]*>.*?<\/function>/gi, '').trim();
+        }
+        return msg;
+      } catch (fbErr) {
+        console.error('Fallback chat error:', fbErr);
+      }
+    }
+
     throw new Error(`Groq API Error: ${error.message}`);
   }
 };
+
 
 module.exports = { handleChat };

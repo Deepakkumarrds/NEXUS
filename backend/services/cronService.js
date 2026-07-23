@@ -3,6 +3,7 @@ const { PrismaClient } = require('@prisma/client');
 const emailService = require('./emailService');
 const reportGenerator = require('../utils/reportGenerator');
 const { sendMessage } = require('./whatsappService');
+const { sendCliqNotification } = require('./cliqService');
 
 const prisma = new PrismaClient();
 
@@ -17,7 +18,9 @@ const startCronJobs = () => {
   // Static Evening Tracker Reminders (6:00 PM, Mon-Fri)
   cron.schedule('0 18 * * 1-5', async () => {
     await evaluateAndSendTrackerReminders('Evening');
+    await sendDailyTaskSummaryToCliq();
   });
+
 
   // Run every day at 9:00 AM server time
   // For testing, we can run it every minute '* * * * *', but daily is '0 9 * * *'
@@ -57,7 +60,8 @@ const startCronJobs = () => {
           await emailService.sendDeadlineReminder(
             user.email,
             asset.title,
-            'http://localhost:3000/portal/login' // In prod, use process.env.FRONTEND_URL
+            `${process.env.FRONTEND_URL || 'http://localhost:3000'}/portal/login`
+
           );
         }
       }
@@ -305,8 +309,123 @@ const generateReportHtmlForClient = async (clientId) => {
   );
 };
 
+const sendDailyTaskSummaryToCliq = async () => {
+  console.log('🕒 Generating Daily Task & Operations Summary for Zoho Cliq...');
+  try {
+    const todayStart = new Date();
+    todayStart.setUTCHours(0, 0, 0, 0);
+
+    const [completedToday, pendingTotal, overdueTotal, trackersToday, openEscalations] = await Promise.all([
+      prisma.task.count({ where: { status: 'Completed', updated_at: { gte: todayStart } } }),
+      prisma.task.count({ where: { status: { in: ['Pending', 'In Progress', 'Review'] } } }),
+      prisma.task.count({ where: { status: { in: ['Pending', 'In Progress'] }, due_date: { lt: todayStart } } }),
+      prisma.dailyTracker.count({ where: { date: todayStart } }),
+      prisma.escalation.count({ where: { status: 'Open' } })
+    ]);
+
+    const formattedDate = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' });
+
+    const summaryText = `📊 *DAILY OPERATIONS & TASK SUMMARY* (${formattedDate})\n` +
+      `-----------------------------------------\n` +
+      `✅ *Tasks Completed Today:* ${completedToday}\n` +
+      `⏳ *Active Pending Tasks:* ${pendingTotal}\n` +
+      `🚨 *Overdue Tasks:* ${overdueTotal}\n` +
+      `📝 *Daily Trackers Logged Today:* ${trackersToday}\n` +
+      `⚠️ *Open Escalations:* ${openEscalations}\n` +
+      `-----------------------------------------\n` +
+      `👉 View detailed dashboard: ${process.env.FRONTEND_URL || 'http://localhost:3000'}`;
+
+    await sendCliqNotification(summaryText);
+    console.log('✅ Daily summary dispatched to Zoho Cliq!');
+  } catch (err) {
+    console.error('Error generating daily summary for Zoho Cliq:', err);
+  }
+};
+
+const sendDetailedDailyReportToCliq = async () => {
+  console.log('🕒 Generating Detailed Brand Status & Pending Tasks Report for Zoho Cliq...');
+  try {
+    const todayStart = new Date();
+    todayStart.setUTCHours(0, 0, 0, 0);
+
+    // 1. Fetch all active clients/brands
+    const activeClients = await prisma.client.findMany({
+      where: { client_status: 'Active' },
+      select: { id: true, company_name: true, brand_name: true }
+    });
+
+    // 2. Fetch today's DailyTrackers
+    const todayTrackers = await prisma.dailyTracker.findMany({
+      where: { date: todayStart }
+    });
+
+    // Determine brands with missing updates today
+    const updatedClientIds = new Set(todayTrackers.map(t => t.client_id));
+    const missingBrandNames = activeClients
+      .filter(c => !updatedClientIds.has(c.id))
+      .map(c => c.brand_name || c.company_name);
+
+    // 3. Fetch pending & overdue individual tasks
+    const pendingTasks = await prisma.task.findMany({
+      where: { status: { in: ['Pending', 'In Progress', 'Review'] } },
+      include: {
+        client: { select: { company_name: true, brand_name: true } },
+        assignee: { select: { name: true, email: true } }
+      },
+      orderBy: { due_date: 'asc' },
+      take: 15 // Limit to top 15 tasks to fit in notification
+    });
+
+    const formattedDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+    let message = `📊 *DAILY OPERATIONS REPORT* • ${formattedDate}\n\n`;
+
+    // Section 1: Brands Status Not Updated Today
+    if (missingBrandNames.length === 0) {
+      message += `🟢 *ALL BRANDS UPDATED TODAY!*\n\n`;
+    } else {
+      message += `🔴 *UNUPDATED BRANDS (${missingBrandNames.length})*\n`;
+      missingBrandNames.forEach(name => {
+        message += `  • ${name}\n`;
+      });
+      message += `\n`;
+    }
+
+    // Section 2: Pending / Overdue Individual Tasks
+    if (pendingTasks.length === 0) {
+      message += `✨ *NO PENDING TASKS*\n\n`;
+    } else {
+      const now = new Date();
+      message += `⚠️ *PENDING & OVERDUE TASKS (${pendingTasks.length})*\n`;
+      pendingTasks.forEach((task, idx) => {
+        const brand = task.client?.brand_name || task.client?.company_name || 'General';
+        const assignee = task.assignee?.name || 'Unassigned';
+        const isOverdue = task.due_date && new Date(task.due_date) < now;
+        const statusTag = isOverdue ? '🚨 *OVERDUE*' : `[${task.status}]`;
+        const dueDateStr = task.due_date ? new Date(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'No due date';
+
+        message += `${idx + 1}. *${task.title}*\n`;
+        message += `   └ *Brand:* ${brand}  |  *Owner:* ${assignee}  |  *Due:* ${dueDateStr}  ${statusTag}\n`;
+      });
+      message += `\n`;
+    }
+
+    message += `🔗 *Open Dashboard:* ${process.env.FRONTEND_URL || 'https://rds-db.vercel.app'}`;
+
+    await sendCliqNotification(message);
+    console.log('✅ Clean Detailed Daily Report dispatched to Zoho Cliq!');
+  } catch (err) {
+    console.error('Error generating detailed daily report for Zoho Cliq:', err);
+  }
+};
+
+
 module.exports = {
   startCronJobs,
   sendWeeklyReportsNow,
-  generateReportHtmlForClient
+  generateReportHtmlForClient,
+  sendDailyTaskSummaryToCliq,
+  sendDetailedDailyReportToCliq
 };
+
+

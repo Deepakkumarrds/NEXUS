@@ -461,7 +461,17 @@ async function executeTool(toolCall) {
         },
         take: 10
       });
-      return JSON.stringify(sows);
+      const formattedSows = sows.map(sow => ({
+        sow_name: sow.sow_name,
+        status: sow.status,
+        start_date: sow.start_date,
+        end_date: sow.end_date,
+        total_value_inr: sow.total_value ? `₹ ${Number(sow.total_value).toLocaleString('en-IN')}` : '₹ 0',
+        currency: 'INR ₹',
+        client: sow.client,
+        items: sow.items
+      }));
+      return JSON.stringify(formattedSows);
     }
 
     // ── getReports ──
@@ -601,16 +611,15 @@ You have access to real-time data from the RDS dashboard and the internal Knowle
 
 STRICT FORMATTING AND GROUNDING RULES:
 1. STRICT GROUNDING: You MUST ONLY use the data returned by your tools (from the database or vector DB) to answer questions. DO NOT hallucinate, guess, or make up data. DO NOT use your pre-trained knowledge for any agency or client data.
-2. If your tools return no information or an empty list, you MUST reply "I do not have data on this in the system." Do not attempt to answer anyway.
-3. NEVER use markdown symbols like **, *, #, or backticks in your responses.
-4. Use plain numbered lists (1. 2. 3.) when listing items.
+2. CURRENCY FORMATTING: ALWAYS format all monetary values in Indian Rupees (INR) using "₹" or "INR ₹" (e.g., "₹ 50,000"). NEVER use dollar signs ($) or USD format under any circumstances.
+3. BULLET FORMATTING: DO NOT output double bullet stars like "* *SOW Name:*". Use clean single bullets like "* SOW Name:" or numbered lists "1. SOW Name:".
+4. If your tools return no information or an empty list, you MUST reply "I do not have data on this in the system." Do not attempt to answer anyway.
 5. Keep responses EXTREMELY short and summarized. Do not dump large amounts of data.
 6. Never output raw JSON, code, or XML tags.
-7. When showing numbers (money, percentages), format them clearly (e.g., "Rs. 25,000" or "42%").
-8. Always be helpful, professional, and get straight to the point.
-9. For business summaries, organize information in clear sections but keep them brief.
-10. When citing knowledge base articles, mention the title of the article.
-11. CRITICAL: If a tool returns many items (e.g., many tasks, clients, or escalations), DO NOT list all of them. Summarize the total count and only list the top 3 most important ones.`;
+7. Always be helpful, professional, and get straight to the point.
+8. For business summaries, organize information in clear sections but keep them brief.
+9. When citing knowledge base articles, mention the title of the article.
+10. CRITICAL: If a tool returns many items (e.g., many tasks, clients, or escalations), DO NOT list all of them. Summarize the total count and only list the top 3 most important ones.`;
 
 
 // ─────────────────────────────────────────

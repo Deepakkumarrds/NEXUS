@@ -7,16 +7,11 @@ export default function DefinedDetailsTab({ client }: any) {
     <div className="space-y-6">
       {/* SOW Scope Tracker Card (Defined / Delivered / Pending) */}
       <div className="bg-white p-6 rounded-xl border border-slate-200/60 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-100 pb-4 gap-2">
-          <div>
-            <h3 className="font-bold text-slate-900 text-lg">
-              SOW Scope & Deliverable Quotas (Current Month)
-            </h3>
-            <p className="text-xs text-slate-500 mt-1">Tracks Utkarsh's defined contract deliverables against live completed team tasks.</p>
-          </div>
-          <Link href="/sows" className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-3 py-1.5 rounded-md border border-indigo-100 transition-colors">
-            Manage SOW Contracts &rarr;
-          </Link>
+        <div className="border-b border-slate-100 pb-4">
+          <h3 className="font-bold text-slate-900 text-lg">
+            SOW Scope & Deliverable Quotas (Current Month)
+          </h3>
+          <p className="text-xs text-slate-500 mt-1">Tracks Utkarsh's defined contract deliverables against live completed team tasks.</p>
         </div>
 
         {/* 3 KPI Summary Cards */}

@@ -216,10 +216,12 @@ model Task {
   review_at             DateTime?
   completed_at          DateTime?
 
-  department  String?
-  is_sow      Boolean @default(false)
-  sow_id      String? @db.Uuid
-  sow_item_id String? @db.Uuid
+  department       String?
+  deliverable_type String?
+  is_sow           Boolean @default(false)
+  sow_id           String? @db.Uuid
+  sow_item_id      String? @db.Uuid
+
 
   client   Client   @relation(fields: [client_id], references: [id], onDelete: Cascade)
   assignee User?    @relation("TaskAssignee", fields: [assigned_to], references: [id])
@@ -325,6 +327,9 @@ model SowItem {
   sow_id           String    @db.Uuid
   sow_month_id     String?   @db.Uuid
   deliverable_name String
+  deliverable_type String?   // "social_posts", "seo_audit", "blogs", "reels", "landing_pages", "general"
+  committed_qty    Int       @default(1)
+  period           String?   @default("monthly") // "monthly", "quarterly", "weekly"
   frequency        String? // Weekly, Monthly
   owner_id         String?   @db.Uuid
   due_date         DateTime?
@@ -336,6 +341,7 @@ model SowItem {
   sow_month SowMonth? @relation(fields: [sow_month_id], references: [id])
   tasks     Task[]
 }
+
 
 model Report {
   id           String   @id @default(uuid()) @db.Uuid

@@ -1,9 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const chatService = require('../services/chatService');
+const sowPredictorService = require('../services/sowPredictorService');
 const { protect } = require('../middleware/authMiddleware');
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+
 
 // POST /api/chat
 router.post('/', protect, async (req, res) => {
@@ -41,7 +43,14 @@ router.post('/zoho', async (req, res) => {
       return res.json({ text: "Hi! Ask me anything about clients, tasks, or escalations." });
     }
 
+    // 0.5 Direct DB Query Handler: SOW Breach Predictor
+    if (q.includes('sow breach') || q.includes('sow alert') || q.includes('sow report') || q === 'sow') {
+      const sowReport = await sowPredictorService.getSowBreachReport();
+      return res.json({ text: sowReport });
+    }
+
     // 0. Direct DB Query Handler: Daily Summary & Brand Work Logs
+
     if (q.includes('summary') || q.includes('daily summary') || q.includes('client summary') || q.includes('clients summary') || q.includes('cleints summary') || q.includes('each client')) {
       const todayStart = new Date();
       todayStart.setUTCHours(0, 0, 0, 0);

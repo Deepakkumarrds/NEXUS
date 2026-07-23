@@ -4,13 +4,25 @@ const emailService = require('./emailService');
 const reportGenerator = require('../utils/reportGenerator');
 const { sendMessage } = require('./whatsappService');
 const { sendCliqNotification } = require('./cliqService');
+const sowPredictorService = require('./sowPredictorService');
 
 const prisma = new PrismaClient();
 
 const startCronJobs = () => {
   console.log('🕒 Initializing Cron Jobs...');
 
+  // Daily SOW Breach Check (9:30 AM, Mon-Fri)
+  cron.schedule('30 9 * * 1-5', async () => {
+    console.log('🛡️ Running Daily SOW Breach Check...');
+    try {
+      await sowPredictorService.checkSowBreaches();
+    } catch (e) {
+      console.error('Error running SOW Breach check:', e);
+    }
+  });
+
   // Dynamic Morning Tracker Reminders (Every 5 mins, Mon-Fri)
+
   cron.schedule('*/5 * * * 1-5', async () => {
     await evaluateAndSendTrackerReminders('Morning');
   });

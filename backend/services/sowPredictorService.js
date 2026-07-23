@@ -98,57 +98,111 @@ async function checkSowBreaches() {
 }
 
 /**
- * Format SOW Breach report for interactive Zoho Cliq queries
+ * Format SOW Scope & Deliverable Comparison report for interactive Zoho Cliq queries
  */
-async function getSowBreachReport() {
+async function getSowBreachReport(clientQuery = null) {
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
 
-  const sowItems = await prisma.sowItem.findMany({
+  let sowWhere = {};
+  if (clientQuery && typeof clientQuery === 'string' && clientQuery.trim() !== '') {
+    const qTrim = clientQuery.trim();
+    sowWhere = {
+      client: {
+        OR: [
+          { company_name: { contains: qTrim, mode: 'insensitive' } },
+          { brand_name: { contains: qTrim, mode: 'insensitive' } }
+        ]
+      }
+    };
+  }
+
+  const sows = await prisma.sow.findMany({
+    where: sowWhere,
     include: {
-      sow: {
+      client: { select: { company_name: true, brand_name: true } },
+      months: {
         include: {
-          client: { select: { company_name: true, brand_name: true } }
-        }
-      },
-      tasks: {
-        where: {
-          status: 'Completed',
-          completed_at: {
-            gte: startOfMonth,
-            lte: endOfMonth
+          items: {
+            include: {
+              tasks: true
+            }
           }
         }
       }
-    }
+    },
+    orderBy: { created_at: 'desc' },
+    take: clientQuery ? 5 : 10
   });
 
-  if (sowItems.length === 0) {
-    return `🛡️ *SOW BREACH REPORT:* No active SOW deliverables defined in database yet.\n\n🔗 *Create SOW:* ${process.env.FRONTEND_URL || 'https://rds-db.vercel.app'}/sow`;
+  if (sows.length === 0) {
+    return `🛡️ *SOW SCOPE REPORT:* No SOW contracts found ${clientQuery ? `matching "${clientQuery}"` : 'in database'}.\n\n🔗 *Manage SOWs:* ${process.env.FRONTEND_URL || 'https://rds-db.vercel.app'}/sows`;
   }
 
-  let reply = `🛡️ *CURRENT MONTH SOW SCOPE TRACKER*\n=========================================\n\n`;
+  let reply = `🛡️ *SOW SCOPE & DELIVERABLES COMPARISON REPORT*\n=========================================\n\n`;
 
-  sowItems.forEach((item, idx) => {
-    const clientName = item.sow?.client?.brand_name || item.sow?.client?.company_name || 'Client';
-    const deliverableName = item.deliverable_name || 'Deliverable';
-    const committedQty = item.committed_qty || 1;
-    const completedCount = item.tasks ? item.tasks.length : 0;
-    const usagePercentage = Math.round((completedCount / committedQty) * 100);
+  sows.forEach((sow, sowIdx) => {
+    const brand = sow.client?.brand_name || sow.client?.company_name || 'Client';
+    const totalValStr = sow.total_value ? `₹ ${Number(sow.total_value).toLocaleString('en-IN')}` : '₹ 0';
+    const startDateStr = sow.start_date ? new Date(sow.start_date).toLocaleDateString('en-IN') : 'N/A';
+    const endDateStr = sow.end_date ? new Date(sow.end_date).toLocaleDateString('en-IN') : 'N/A';
 
-    let statusTag = '🟢 [In Scope]';
-    if (completedCount > committedQty) {
-      statusTag = '🚨 *[SOW EXCEEDED]*';
-    } else if (usagePercentage >= 80) {
-      statusTag = '⚠️ *[APPROACHING LIMIT]*';
+    reply += `🏢 *Client:* ${brand}\n`;
+    reply += `📋 *SOW Name:* ${sow.sow_name}\n`;
+    reply += `• *Status:* ${sow.status}\n`;
+    reply += `• *Contract Period:* ${startDateStr} to ${endDateStr}\n`;
+    reply += `• *Total Value:* ${totalValStr}\n\n`;
+
+    let totalDefined = 0;
+    let totalDelivered = 0;
+    const itemSummaries = [];
+
+    if (sow.months && sow.months.length > 0) {
+      sow.months.forEach(m => {
+        if (m.items) {
+          m.items.forEach(item => {
+            const defined = item.committed_qty || 1;
+            const delivered = item.tasks ? item.tasks.filter(t => t.status === 'Completed').length : 0;
+            const pending = Math.max(0, defined - delivered);
+            totalDefined += defined;
+            totalDelivered += delivered;
+
+            let tag = '🟢 In Scope';
+            if (delivered > defined) tag = '🚨 SOW Exceeded';
+            else if (defined > 0 && (delivered / defined) >= 0.8) tag = '⚠️ Approaching Limit';
+
+            itemSummaries.push({
+              name: item.deliverable_name,
+              defined,
+              delivered,
+              pending,
+              tag
+            });
+          });
+        }
+      });
     }
 
-    reply += `${idx + 1}. *${clientName}* — ${deliverableName}\n`;
-    reply += `   └ *Completed:* ${completedCount} / ${committedQty} (${usagePercentage}%) ${statusTag}\n\n`;
+    reply += `📊 *MONTHLY COMPARISON SUMMARY:*\n`;
+    reply += `  └ *1. Defined Scope:* ${totalDefined} items\n`;
+    reply += `  └ *2. Delivered (Completed):* ${totalDelivered} items\n`;
+    reply += `  └ *3. Pending / Active:* ${Math.max(0, totalDefined - totalDelivered)} items\n\n`;
+
+    if (itemSummaries.length > 0) {
+      reply += `📝 *DELIVERABLE QUOTA BREAKDOWN:*\n`;
+      itemSummaries.forEach((item, idx) => {
+        reply += `${idx + 1}. *${item.name}*\n`;
+        reply += `   └ Defined: ${item.defined} | Delivered: ${item.delivered} | Pending: ${item.pending} [${item.tag}]\n`;
+      });
+    }
+
+    if (sowIdx < sows.length - 1) {
+      reply += `\n-----------------------------------------\n\n`;
+    }
   });
 
-  reply += `🔗 *Open SOW Manager:* ${process.env.FRONTEND_URL || 'https://rds-db.vercel.app'}/sow`;
+  reply += `\n🔗 *Open SOW Dashboard:* ${process.env.FRONTEND_URL || 'https://rds-db.vercel.app'}/sows`;
   return reply;
 }
 

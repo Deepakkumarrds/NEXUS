@@ -43,9 +43,10 @@ router.post('/zoho', async (req, res) => {
       return res.json({ text: "Hi! Ask me anything about clients, tasks, or escalations." });
     }
 
-    // 0.5 Direct DB Query Handler: SOW Breach Predictor
-    if (q.includes('sow breach') || q.includes('sow alert') || q.includes('sow report') || q === 'sow') {
-      const sowReport = await sowPredictorService.getSowBreachReport();
+    // 0.5 Direct DB Query Handler: SOW Comparison & Breach Tracker
+    if (q.startsWith('sow') || q.includes('sow breach') || q.includes('sow alert') || q.includes('sow report') || q.includes('sow status')) {
+      let clientQuery = q.replace(/^sow\s*/, '').replace(/sow breach|sow alert|sow report|sow status|sow/gi, '').trim();
+      const sowReport = await sowPredictorService.getSowBreachReport(clientQuery || null);
       return res.json({ text: sowReport });
     }
 

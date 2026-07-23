@@ -273,31 +273,14 @@ export default function NewMeetingPage() {
           <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-3">
             <div className="flex justify-between items-center">
               <label className="font-medium text-slate-700">Meeting Notes / Speech Transcript</label>
-              <div className="flex space-x-2">
-                <label className="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-medium rounded cursor-pointer transition-colors">
-                  Upload File
-                  <input type="file" accept=".txt,.md" onChange={handleFileUpload} className="hidden" />
-                </label>
-                <button
-                  type="button"
-                  onClick={toggleRecording}
-                  className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
-                    isRecording 
-                      ? 'bg-red-600 hover:bg-red-700 text-white' 
-                      : 'bg-slate-200 hover:bg-slate-300 text-slate-700'
-                  }`}
-                >
-                  {isRecording ? 'Stop Transcribe' : 'Voice Transcribe'}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleExtractMom}
-                  disabled={isExtracting || !transcript.trim()}
-                  className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-medium rounded transition-colors"
-                >
-                  {isExtracting ? 'Extracting...' : 'Extract MOM with AI'}
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={handleExtractMom}
+                disabled={isExtracting || !transcript.trim()}
+                className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-medium rounded transition-colors"
+              >
+                {isExtracting ? 'Extracting...' : 'Extract MOM with AI'}
+              </button>
             </div>
 
             {speechNotice && (

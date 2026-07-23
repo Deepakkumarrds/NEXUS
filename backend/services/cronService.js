@@ -23,9 +23,9 @@ const startCronJobs = () => {
     }
   }, IST);
 
-  // Dynamic Morning Tracker Reminders (Every 5 mins, Mon-Fri, IST)
-  cron.schedule('*/5 * * * 1-5', async () => {
-    await evaluateAndSendTrackerReminders('Morning');
+  // 11:00 AM IST Daily Summary Deadline Check & SPOC Tagging (Mon-Sat)
+  cron.schedule('0 11 * * 1-6', async () => {
+    await send11AmDailySummaryCheck();
   }, IST);
 
   // Static Evening Tracker & Task Closing Reminders (6:00 PM, 6:30 PM, 7:00 PM IST, Mon-Sat)
@@ -446,12 +446,78 @@ const sendDetailedDailyReportToCliq = async () => {
 };
 
 
+const send11AmDailySummaryCheck = async () => {
+  console.log('🕒 Running 11:00 AM IST Daily Summary Check & SPOC Tagging...');
+  try {
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+
+    const activeClients = await prisma.client.findMany({
+      where: { client_status: 'Active' },
+      include: {
+        spocs: {
+          include: {
+            user: { select: { id: true, name: true, email: true } }
+          }
+        },
+        daily_trackers: {
+          where: { date: today }
+        }
+      },
+      orderBy: { company_name: 'asc' }
+    });
+
+    const unupdatedClients = activeClients.filter(c => c.daily_trackers.length === 0);
+
+    if (unupdatedClients.length === 0) {
+      const msg = `🟢 *ALL BRANDS UPDATED!* All active client daily summaries have been updated for today (${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}). Excellent work team!`;
+      await sendCliqNotification(msg);
+      return;
+    }
+
+    let cliqMsg = `⚠️ *DAILY SUMMARY NOT UPDATED (11:00 AM IST DEADLINE)*\n`;
+    cliqMsg += `=========================================\n`;
+    cliqMsg += `The following ${unupdatedClients.length} brand(s) have NOT updated their daily summary today. SPOC Leads, please update immediately!\n\n`;
+
+    const { createNotification } = require('../utils/notificationHelper');
+
+    unupdatedClients.forEach((client, idx) => {
+      const brandName = client.brand_name || client.company_name;
+      const spocNames = client.spocs.length > 0
+        ? client.spocs.map(s => `@${s.user?.name}`).join(', ')
+        : 'Unassigned SPOC';
+
+      cliqMsg += `${idx + 1}. 🏢 *${brandName}*\n`;
+      cliqMsg += `   └ 👤 *SPOC Lead:* ${spocNames}\n`;
+      cliqMsg += `   └ 🚨 *Status:* Daily summary is not updated yet, please update it!\n\n`;
+
+      // Trigger In-App Notification for SPOC users
+      client.spocs.forEach(async (spoc) => {
+        if (spoc.user?.id) {
+          await createNotification(
+            `Daily Summary Pending: ${brandName}`,
+            `Hi ${spoc.user.name}, the daily summary for ${brandName} is not updated yet for 11:00 AM deadline. Please update it now!`
+          );
+        }
+      });
+    });
+
+    cliqMsg += `🔗 *Update Tracker Now:* ${process.env.FRONTEND_URL || 'https://rds-db.vercel.app'}/tracker`;
+
+    await sendCliqNotification(cliqMsg);
+    console.log(`✅ 11:00 AM IST Daily summary check complete. Tagged SPOCs for ${unupdatedClients.length} unupdated brands.`);
+  } catch (err) {
+    console.error('Error running 11:00 AM Daily Summary check:', err);
+  }
+};
+
 module.exports = {
   startCronJobs,
   sendWeeklyReportsNow,
   generateReportHtmlForClient,
   sendDailyTaskSummaryToCliq,
-  sendDetailedDailyReportToCliq
+  sendDetailedDailyReportToCliq,
+  send11AmDailySummaryCheck
 };
 
 

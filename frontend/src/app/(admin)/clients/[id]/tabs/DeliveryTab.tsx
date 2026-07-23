@@ -77,27 +77,43 @@ export default function DeliveryTab({ client, clientId, fetchClientDetails }: an
 
   return (
     <div className="space-y-6">
-      {/* SOW Deliverables Table */}
-      <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-        <div className="mb-6 border-b border-slate-100 pb-4">
-          <h2 className="text-xl font-bold text-slate-900 font-heading">
-            SOW Deliverables (Defined vs Delivered)
-          </h2>
-          <p className="text-xs text-slate-500 mt-1">
-            Track specific deliverables agreed upon in the SOW against actual delivery status.
-          </p>
+      {/* SOW Deliverables Table (Defined vs Delivered vs Pending) */}
+      <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-100 pb-4 gap-2">
+          <div>
+            <h2 className="text-xl font-bold text-slate-900 font-heading">
+              🛡️ SOW Deliverables Tracker (Defined vs Delivered)
+            </h2>
+            <p className="text-xs text-slate-500 mt-1">
+              Compares Utkarsh's defined contract deliverables against real-time completed team tasks for the month.
+            </p>
+          </div>
+          {client.sow_summary && (
+            <div className="flex items-center gap-3 text-xs font-semibold">
+              <span className="bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-lg border border-indigo-100">
+                Defined: <b>{client.sow_summary.total_defined || 0}</b>
+              </span>
+              <span className="bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg border border-emerald-100">
+                Delivered: <b>{client.sow_summary.total_delivered || 0}</b>
+              </span>
+              <span className="bg-amber-50 text-amber-700 px-3 py-1.5 rounded-lg border border-amber-100">
+                Pending: <b>{client.sow_summary.total_pending || 0}</b>
+              </span>
+            </div>
+          )}
         </div>
-
 
         {client.sows && client.sows.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm border-collapse">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 font-semibold">
-                  <th className="p-4">SOW Name</th>
-                  <th className="p-4">Month</th>
-                  <th className="p-4">Defined Deliverable</th>
-                  <th className="p-4 min-w-[300px]">Weekly Targets & Summary</th>
+                  <th className="p-4">Deliverable Name (Utkarsh)</th>
+                  <th className="p-4">SOW Contract & Month</th>
+                  <th className="p-4 text-center">Defined Quota</th>
+                  <th className="p-4 text-center">Delivered (Completed)</th>
+                  <th className="p-4 text-center">Pending / Remaining</th>
+                  <th className="p-4 text-center">Scope Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -116,63 +132,52 @@ export default function DeliveryTab({ client, clientId, fetchClientDetails }: an
                   if (allItems.length === 0) {
                     return (
                       <tr>
-                        <td colSpan={4} className="p-8 text-center text-slate-500 italic">
-                          No specific deliverables have been defined for these SOWs yet.
+                        <td colSpan={6} className="p-8 text-center text-slate-500 italic">
+                          No SOW contract deliverables defined for this client yet.
                         </td>
                       </tr>
                     );
                   }
 
-                  return allItems.map(({ sow, month, item, idx }: any) => (
-                    <tr key={`${sow.id}-${month.id}-${item.id || idx}`} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="p-4 font-medium text-slate-900">
-                        {sow.sow_name}
-                        <div className="text-[10px] text-slate-400 font-normal mt-0.5">₹{sow.total_value?.toLocaleString() || 'N/A'}</div>
-                      </td>
-                      <td className="p-4 text-slate-600 font-medium whitespace-nowrap">
-                        {month.month_year}
-                      </td>
-                      <td className="p-4 text-slate-800">
-                        {item.deliverable_name}
-                      </td>
-                      <td className="p-4">
-                        <div className="flex flex-col gap-3">
-                          {/* List of Weekly Targets */}
-                          {item.tasks && item.tasks.filter((t: any) => t.is_weekly_target).length > 0 ? (
-                            <ul className="space-y-2 mb-2">
-                              {item.tasks.filter((t: any) => t.is_weekly_target).map((t: any) => (
-                                <li key={t.id} className="flex items-center gap-2 text-xs">
-                                  <span className={`w-2 h-2 rounded-full ${t.status === 'Completed' ? 'bg-emerald-500' : 'bg-amber-400'}`}></span>
-                                  <span className={t.status === 'Completed' ? 'line-through text-slate-400' : 'text-slate-700 font-medium'}>
-                                    {t.title}
-                                  </span>
-                                </li>
-                              ))}
-                            </ul>
-                          ) : (
-                            <p className="text-[10px] text-slate-400 italic">No weekly targets linked.</p>
-                          )}
-                          
-                          {/* Client Summary Area */}
-                          <div className="flex flex-col gap-1.5">
-                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Client Summary</label>
-                            <textarea
-                              className="w-full text-xs border border-slate-300 rounded p-2 focus:ring-1 focus:ring-indigo-500 outline-none resize-none"
-                              rows={2}
-                              placeholder="Enter summary of deliverables..."
-                              defaultValue={item.remarks || ''}
-                              onBlur={(e) => {
-                                if (e.target.value !== (item.remarks || '')) {
-                                  handleSaveRemarks(item.id, e.target.value);
-                                }
-                              }}
-                            />
-                            <p className="text-[9px] text-slate-400">Autosaves on click away</p>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  ));
+                  return allItems.map(({ sow, month, item, idx }: any) => {
+                    const definedQty = item.committed_qty || 1;
+                    const deliveredQty = item.tasks ? item.tasks.filter((t: any) => t.status === 'Completed').length : 0;
+                    const pendingQty = Math.max(0, definedQty - deliveredQty);
+                    const usagePct = Math.round((deliveredQty / definedQty) * 100);
+
+                    let statusTag = { text: 'In Scope', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+                    if (deliveredQty > definedQty) {
+                      statusTag = { text: '🚨 SOW Exceeded', cls: 'bg-rose-50 text-rose-700 border-rose-200 font-bold' };
+                    } else if (usagePct >= 80) {
+                      statusTag = { text: '⚠️ Approaching Limit', cls: 'bg-amber-50 text-amber-800 border-amber-200 font-bold' };
+                    }
+
+                    return (
+                      <tr key={`${sow.id}-${month.id}-${item.id || idx}`} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="p-4 font-semibold text-slate-900">
+                          📌 {item.deliverable_name}
+                        </td>
+                        <td className="p-4 text-slate-600 text-xs">
+                          <span className="font-medium text-slate-800 block">{sow.sow_name}</span>
+                          <span className="text-slate-400">{month.month_year}</span>
+                        </td>
+                        <td className="p-4 text-center font-bold text-indigo-950">
+                          {definedQty}
+                        </td>
+                        <td className="p-4 text-center font-bold text-emerald-700">
+                          {deliveredQty}
+                        </td>
+                        <td className="p-4 text-center font-bold text-amber-700">
+                          {pendingQty}
+                        </td>
+                        <td className="p-4 text-center">
+                          <span className={`px-2.5 py-1 rounded-full text-xs border ${statusTag.cls}`}>
+                            {statusTag.text}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  });
                 })()}
               </tbody>
             </table>
@@ -183,6 +188,7 @@ export default function DeliveryTab({ client, clientId, fetchClientDetails }: an
           </div>
         )}
       </div>
+
     </div>
   );
 }

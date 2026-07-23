@@ -40,15 +40,18 @@ export default function NotificationBell() {
 
   const fetchNotifications = async () => {
     try {
-      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com') + '/api/notifications');
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com';
+      const res = await fetch(`${baseUrl}/api/notifications`);
+      if (!res || !res.ok) return;
       const data = await res.json();
       if (data && data.data) {
         setNotifications(data.data);
       }
     } catch (error) {
-      console.error('Failed to fetch notifications:', error);
+      // Gracefully handle backend sleep / temporary offline states without throwing
     }
   };
+
 
   const markAllAsRead = async () => {
     try {

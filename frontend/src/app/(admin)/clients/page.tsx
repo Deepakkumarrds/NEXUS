@@ -42,19 +42,23 @@ export default function ClientsPage() {
   });
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
-  const fetchClients = () => {
-    fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com') + '/api/clients')
-      .then(res => res.json())
-      .then(data => {
-        if (data && data.data) {
-          setClients(data.data);
-        }
+  const fetchClients = async () => {
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com';
+      const res = await fetch(`${baseUrl}/api/clients`);
+      if (!res || !res.ok) {
         setLoading(false);
-      })
-      .catch(error => {
-        console.error('Error fetching clients:', error);
-        setLoading(false);
-      });
+        return;
+      }
+      const data = await res.json();
+      if (data && data.data) {
+        setClients(data.data);
+      }
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching clients:', error);
+      setLoading(false);
+    }
   };
 
   useEffect(() => {

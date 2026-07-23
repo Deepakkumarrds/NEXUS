@@ -164,13 +164,15 @@ exports.deleteTaskFromBot = async (req, res) => {
       });
 
       taskToDelete = matchingTasks.find(t => {
-        const titleMatch = t.title.toLowerCase().includes(cleanTitle);
+        const titleMatch = t.title.toLowerCase().trim().includes(cleanTitle);
         if (!brand_name) return titleMatch;
+        
         const brandStr = brand_name.toLowerCase().trim();
-        const brandMatch = (t.client?.brand_name && t.client.brand_name.toLowerCase().includes(brandStr)) ||
-                           (t.client?.company_name && t.client.company_name.toLowerCase().includes(brandStr));
+        const cName = (t.client?.brand_name || t.client?.company_name || '').toLowerCase();
+        const brandMatch = cName.includes(brandStr) || brandStr.includes(cName);
+        
         return titleMatch && brandMatch;
-      }) || matchingTasks.find(t => t.title.toLowerCase().includes(cleanTitle));
+      }) || matchingTasks.find(t => t.title.toLowerCase().trim().includes(cleanTitle));
     }
 
     if (!taskToDelete) {

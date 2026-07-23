@@ -87,6 +87,32 @@ router.post('/zoho', async (req, res) => {
       return taskController.createTaskFromBot(req, res);
     }
 
+    // 0.45 Direct DB Action Handler: Natural Language Task Deletion via Cliq Bot
+    if (q.includes('delete task') || q.includes('remove task') || q.includes('cancel task')) {
+      const taskController = require('../controllers/taskController');
+      
+      let brandName = '';
+      let title = '';
+
+      const brandMatch = userQuery.match(/for\s+([^:\n,]+)/i) || userQuery.match(/brand\s+([^:\n,]+)/i);
+      if (brandMatch) {
+        brandName = brandMatch[1].split(/title|task/i)[0].trim();
+      }
+
+      if (userQuery.includes(':')) {
+        title = userQuery.split(':')[1].trim();
+      } else {
+        title = userQuery.replace(/delete task|remove task|cancel task/gi, '').split(/for|brand/i)[0].trim();
+      }
+
+      req.body = {
+        brand_name: brandName,
+        title: title
+      };
+
+      return taskController.deleteTaskFromBot(req, res);
+    }
+
     // 0.5 Direct DB Query Handler: SOW Scope & Deliverables Tracker
     if (q.includes('sow') || q.includes('scope')) {
       let clientQuery = q.replace(/\b(sows|sow|scope|breach|alert|report|status|for|of|the|about|details)\b/gi, '').trim();

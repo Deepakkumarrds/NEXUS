@@ -133,6 +133,61 @@ exports.createTaskFromBot = async (req, res) => {
   }
 };
 
+// Delete Task from Bot / Webhook (POST /api/tasks/bot-delete)
+exports.deleteTaskFromBot = async (req, res) => {
+  try {
+    const { task_id, title, brand_name } = req.body;
+
+    const prisma = require('../config/prisma');
+    let taskToDelete = null;
+
+    if (task_id) {
+      taskToDelete = await prisma.task.findUnique({
+        where: { id: task_id },
+        include: { client: { select: { company_name: true, brand_name: true } } }
+      });
+    } else if (title) {
+      const cleanTitle = title.toLowerCase().trim();
+      const matchingTasks = await prisma.task.findMany({
+        include: { client: { select: { company_name: true, brand_name: true } } }
+      });
+
+      taskToDelete = matchingTasks.find(t => {
+        const titleMatch = t.title.toLowerCase().includes(cleanTitle);
+        if (!brand_name) return titleMatch;
+        const brandStr = brand_name.toLowerCase().trim();
+        const brandMatch = (t.client?.brand_name && t.client.brand_name.toLowerCase().includes(brandStr)) ||
+                           (t.client?.company_name && t.client.company_name.toLowerCase().includes(brandStr));
+        return titleMatch && brandMatch;
+      }) || matchingTasks.find(t => t.title.toLowerCase().includes(cleanTitle));
+    }
+
+    if (!taskToDelete) {
+      return res.json({
+        status: 'error',
+        text: `⚠️ *TASK NOT FOUND:* Could not find any task matching "${title || task_id}".`
+      });
+    }
+
+    await prisma.task.delete({ where: { id: taskToDelete.id } });
+
+    const clientDisplayName = taskToDelete.client?.brand_name || taskToDelete.client?.company_name || 'Client';
+
+    let responseMsg = `🗑️ *TASK DELETED SUCCESSFULLY VIA BOT*\n=========================================\n`;
+    responseMsg += `• *Task:* "${taskToDelete.title}"\n`;
+    responseMsg += `• *Brand:* ${clientDisplayName}\n\n`;
+    responseMsg += `🔗 *Open Task Manager:* ${process.env.FRONTEND_URL || 'https://rds-db.vercel.app'}/tasks`;
+
+    res.status(200).json({
+      status: 'success',
+      text: responseMsg
+    });
+  } catch (error) {
+    console.error('Error deleting task from bot:', error);
+    res.status(500).json({ status: 'error', message: error.message || 'Failed to delete task from bot' });
+  }
+};
+
 // Get all tasks (with optional client filtering)
 exports.getAllTasks = async (req, res) => {
   try {

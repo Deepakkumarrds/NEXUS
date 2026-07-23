@@ -145,8 +145,10 @@ async function getSowBreachReport(clientQuery = null) {
       });
     }
 
+    const frontendUrl = (process.env.FRONTEND_URL || 'https://rds-db.vercel.app').replace(/\/+$/, '');
+
     if (sows.length === 0) {
-      return `🛡️ *SOW SCOPE REPORT:* No SOW contracts found ${cleanBrand ? `matching "${cleanBrand}"` : 'in database'}.\n\n🔗 *Manage SOWs:* ${process.env.FRONTEND_URL || 'https://rds-db.vercel.app'}/sows`;
+      return `🛡️ *SOW SCOPE REPORT:* No SOW contracts found ${cleanBrand ? `matching "${cleanBrand}"` : 'in database'}.\n\n🔗 *Manage SOWs:* ${frontendUrl}/sows`;
     }
 
   let reply = `🛡️ *SOW SCOPE & DELIVERABLES COMPARISON REPORT*\n=========================================\n\n`;

@@ -45,7 +45,9 @@ router.post('/zoho', async (req, res) => {
 
     // 0.5 Direct DB Query Handler: SOW Comparison & Breach Tracker
     if (q.startsWith('sow') || q.includes('sow breach') || q.includes('sow alert') || q.includes('sow report') || q.includes('sow status')) {
-      let clientQuery = q.replace(/^sow\s*/, '').replace(/sow breach|sow alert|sow report|sow status|sow/gi, '').trim();
+      let clientQuery = q.replace(/^(sow|sows|show sow|get sow)\b/gi, '')
+                         .replace(/\b(for|of|the|about|status|report|breach|alert|details)\b/gi, '')
+                         .trim();
       const sowReport = await sowPredictorService.getSowBreachReport(clientQuery || null);
       return res.json({ text: sowReport });
     }

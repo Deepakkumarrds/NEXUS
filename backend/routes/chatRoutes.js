@@ -41,7 +41,36 @@ router.post('/zoho', async (req, res) => {
       return res.json({ text: "Hi! Ask me anything about clients, tasks, or escalations." });
     }
 
+    // 0. Direct DB Query Handler: Each Client Summary
+    if (q.includes('client summary') || q.includes('clients summary') || q.includes('cleints summary') || q.includes('each client')) {
+      const clients = await prisma.client.findMany({
+        where: { client_status: 'Active' },
+        include: {
+          tasks: { where: { status: { in: ['Pending', 'In Progress'] } } },
+          escalations: { where: { status: 'Open' } }
+        },
+        take: 10
+      });
+      if (clients.length === 0) {
+        return res.json({ text: "🏢 *CLIENT SUMMARY:* No active clients found." });
+      }
+      let reply = `📊 *ACTIVE CLIENTS SUMMARY (${clients.length} Active Brands)*\n\n`;
+      clients.forEach((c, idx) => {
+        const name = c.brand_name || c.company_name;
+        const pendingTasks = c.tasks ? c.tasks.length : 0;
+        const openEscalations = c.escalations ? c.escalations.length : 0;
+        const health = c.health_status || 'Green';
+        const healthIcon = health === 'Red' ? '🔴' : health === 'Yellow' ? '🟡' : '🟢';
+
+        reply += `${idx + 1}. ${healthIcon} *${name}*\n`;
+        reply += `   └ *Service:* ${c.service_type || 'Retainer'}  |  *Pending Tasks:* ${pendingTasks}  |  *Escalations:* ${openEscalations}\n`;
+      });
+      reply += `\n🔗 *Full Dashboard:* ${process.env.FRONTEND_URL || 'https://rds-db.vercel.app'}`;
+      return res.json({ text: reply });
+    }
+
     // 1. Direct DB Query Handler: Active Clients
+
     if (q.includes('active client') || q.includes('client list') || q.includes('clients list') || q.includes('what client')) {
       const clients = await prisma.client.findMany({
         where: { client_status: 'Active' },

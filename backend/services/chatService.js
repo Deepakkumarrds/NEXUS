@@ -120,7 +120,7 @@ const tools = [
         type: 'object',
         properties: {
           clientName: {
-            type: ['string', 'null'],
+            type: 'string',
             description: 'Optional client company name to filter meetings'
           },
           limit: {
@@ -140,11 +140,11 @@ const tools = [
         type: 'object',
         properties: {
           clientName: {
-            type: ['string', 'null'],
+            type: 'string',
             description: 'Optional client company name to filter communications'
           },
           type: {
-            type: ['string', 'null'],
+            type: 'string',
             description: 'Optional communication type filter (e.g., Call, Email, WhatsApp, Meeting)'
           },
           limit: {
@@ -164,7 +164,7 @@ const tools = [
         type: 'object',
         properties: {
           clientName: {
-            type: ['string', 'null'],
+            type: 'string',
             description: 'Optional client company name to filter campaigns'
           },
           limit: {
@@ -184,11 +184,11 @@ const tools = [
         type: 'object',
         properties: {
           riskLevel: {
-            type: ['string', 'null'],
+            type: 'string',
             description: 'Optional risk level filter (e.g., Excellent, Stable, Risk, Critical)'
           },
           clientName: {
-            type: ['string', 'null'],
+            type: 'string',
             description: 'Optional client company name to get health score for a specific client'
           }
         }
@@ -204,11 +204,11 @@ const tools = [
         type: 'object',
         properties: {
           clientName: {
-            type: ['string', 'null'],
+            type: 'string',
             description: 'Optional client company name to filter SOWs'
           },
           status: {
-            type: ['string', 'null'],
+            type: 'string',
             description: 'Optional deliverable status filter (e.g., Pending, In Progress, Completed)'
           }
         }
@@ -224,11 +224,11 @@ const tools = [
         type: 'object',
         properties: {
           clientName: {
-            type: ['string', 'null'],
+            type: 'string',
             description: 'Optional client company name to filter reports'
           },
           reportType: {
-            type: ['string', 'null'],
+            type: 'string',
             description: 'Optional report type filter (e.g., SEO, Ads, Social)'
           }
         }

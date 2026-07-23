@@ -255,3 +255,22 @@ exports.createMeetingWithTasks = async (req, res) => {
     res.status(500).json({ status: 'error', message: error.message || 'Failed to create meeting' });
   }
 };
+
+// Update action item status
+exports.updateActionItemStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const prisma = require('../config/prisma');
+    const updatedItem = await prisma.meetingActionItem.update({
+      where: { id },
+      data: { status }
+    });
+
+    res.status(200).json({ status: 'success', data: updatedItem });
+  } catch (error) {
+    console.error('Error updating action item:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to update action item status' });
+  }
+};

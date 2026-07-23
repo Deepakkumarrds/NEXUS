@@ -57,12 +57,23 @@ exports.createTaskFromBot = async (req, res) => {
     // 1. Resolve Client
     let client = null;
     if (brand_name || company_name) {
-      const queryStr = (brand_name || company_name).toLowerCase().trim();
+      const rawQuery = (brand_name || company_name).toLowerCase().replace(/[^a-z0-9]/g, '');
+      const queryTokens = (brand_name || company_name).toLowerCase().split(/\s+/).filter(t => t.length > 2);
+      
       const allClients = await prisma.client.findMany({ where: { client_status: 'Active' } });
-      client = allClients.find(c => 
-        (c.brand_name && c.brand_name.toLowerCase().includes(queryStr)) ||
-        (c.company_name && c.company_name.toLowerCase().includes(queryStr))
-      );
+      
+      client = allClients.find(c => {
+        const cName = (c.brand_name || c.company_name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        if (cName.includes(rawQuery) || rawQuery.includes(cName)) return true;
+        
+        // Fuzzy vowel match (e.g. gauraanga vs gauranga)
+        const normQuery = rawQuery.replace(/aa/g, 'a');
+        const normName = cName.replace(/aa/g, 'a');
+        if (normName.includes(normQuery) || normQuery.includes(normName)) return true;
+        
+        // Token match (e.g. "gauraanga" or "global")
+        return queryTokens.some(tok => normName.includes(tok.replace(/aa/g, 'a')));
+      });
     }
     if (!client) {
       client = await prisma.client.findFirst({ where: { client_status: 'Active' } });

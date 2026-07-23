@@ -14,7 +14,7 @@ export default function DefinedDetailsTab({ client }: any) {
             </h3>
             <p className="text-xs text-slate-500 mt-1">Tracks Utkarsh's defined contract deliverables against live completed team tasks.</p>
           </div>
-          <Link href="/client/sows" className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-3 py-1.5 rounded-md border border-indigo-100 transition-colors">
+          <Link href="/sows" className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-3 py-1.5 rounded-md border border-indigo-100 transition-colors">
             Manage SOW Contracts &rarr;
           </Link>
         </div>

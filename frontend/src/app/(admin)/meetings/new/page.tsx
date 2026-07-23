@@ -75,14 +75,33 @@ export default function NewMeetingPage() {
         };
 
         recognition.onerror = (event: any) => {
-          console.error('Speech recognition error:', event.error);
+          if (event.error !== 'no-speech') {
+            console.warn('Speech recognition status:', event.error);
+          }
           setIsRecording(false);
+          if (event.error === 'network') {
+            alert('Live voice recognition network timeout. You can directly paste or upload your meeting notes/transcript in the text box below!');
+          }
         };
 
         recognitionRef.current = recognition;
       }
     }
   }, []);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result as string;
+      if (content) {
+        setTranscript(prev => (prev ? prev + '\n' + content : content));
+      }
+    };
+    reader.readAsText(file);
+  };
 
   const toggleRecording = () => {
     if (!recognitionRef.current) {
@@ -91,14 +110,17 @@ export default function NewMeetingPage() {
     }
 
     if (isRecording) {
-      recognitionRef.current.stop();
+      try {
+        recognitionRef.current.stop();
+      } catch (e) {}
       setIsRecording(false);
     } else {
       try {
         recognitionRef.current.start();
         setIsRecording(true);
       } catch (err) {
-        console.error('Failed to start recording:', err);
+        console.warn('Speech start error:', err);
+        setIsRecording(false);
       }
     }
   };

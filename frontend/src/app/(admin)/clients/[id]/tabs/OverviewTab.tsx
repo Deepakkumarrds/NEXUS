@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 
@@ -13,99 +12,101 @@ export default function OverviewTab({ client, openEditModal }: any) {
 
   return (
     <div className="space-y-6">
-      {/* Overview Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Column 1: Profile Details */}
-        <div className="space-y-8 lg:col-span-5">
-          <div className="bg-white p-6 rounded-xl border border-slate-200/60 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)]">
-            <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
-              <h3 className="font-semibold text-slate-900">Client Profile Details</h3>
-              <button onClick={() => openEditModal()} className="px-3 py-1.5 bg-indigo-50 border border-indigo-100 text-indigo-700 hover:bg-indigo-600 hover:text-white rounded-md text-xs font-semibold transition-colors flex items-center shadow-sm">
-                Edit Profile
-              </button>
-            </div>
-            <div className="space-y-3 text-sm">
-              <div>
-                <span className="block text-slate-500 text-[10px] uppercase tracking-wide font-bold">Brand Code</span>
-                <span className="font-medium text-slate-800 flex items-center gap-2">
-                  {client.brand_shortcode ? (
-                    <span className="bg-slate-100 text-slate-600 text-[10px] font-bold px-1.5 py-0.5 rounded border border-slate-200">
-                      {client.brand_shortcode}
-                    </span>
-                  ) : (
-                    <span className="text-slate-400">N/A</span>
-                  )}
-                </span>
-              </div>
-              <div>
-                <span className="block text-slate-500 text-[10px] uppercase tracking-wide font-bold">Industry</span>
-                <span className="font-medium text-slate-800">{client.industry || 'N/A'}</span>
-              </div>
-              <div>
-                <span className="block text-slate-500 text-[10px] uppercase tracking-wide font-bold">Primary Email</span>
-                <span className="font-medium text-slate-800 flex items-center gap-2">
-                  {client.email || 'N/A'}
-                  {client.email && <button onClick={() => copyToClipboard(client.email)} className="text-slate-400 hover:text-indigo-600">Copy</button>}
-                </span>
-              </div>
-              <div>
-                <span className="block text-slate-500 text-[10px] uppercase tracking-wide font-bold">Phone</span>
-                <span className="font-medium text-slate-800 flex items-center gap-2">
-                  {client.phone || 'N/A'}
-                  {client.phone && <button onClick={() => copyToClipboard(client.phone)} className="text-slate-400 hover:text-indigo-600">Copy</button>}
-                </span>
-              </div>
-              <div>
-                <span className="block text-slate-500 text-[10px] uppercase tracking-wide font-bold">Website</span>
-                {client.website ? (
-                  <span className="flex items-center gap-2">
-                    <a href={client.website} target="_blank" rel="noreferrer" className="font-medium text-indigo-600 hover:underline">
-                      {client.website}
-                    </a>
-                  </span>
-                ) : (
-                  <span className="font-medium text-slate-800">N/A</span>
-                )}
-              </div>
-              <div>
-                <span className="block text-slate-500 text-[10px] uppercase tracking-wide font-bold">Retainer Value</span>
-                <span className="font-medium text-slate-800">
-                  {client.monthly_retainer_value ? `₹${client.monthly_retainer_value.toLocaleString()}/mo` : 'N/A'}
-                </span>
-              </div>
-              <div>
-                <span className="block text-slate-500 text-[10px] uppercase tracking-wide font-bold">Account Manager (SPOC)</span>
-                <span className="font-medium text-slate-800">{client.spoc_name || 'Unassigned'}</span>
-              </div>
-              <div>
-                <span className="block text-slate-500 text-[10px] uppercase tracking-wide font-bold">Primary Client Contact</span>
-                <span className="font-medium text-slate-800">{client.primary_contact_name || 'N/A'}</span>
-              </div>
-            </div>
-          </div>
+      {/* Client Profile Details (Horizontal Grid / Table Layout) */}
+      <div className="bg-white p-6 rounded-xl border border-slate-200/60 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] space-y-4">
+        <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+          <h3 className="font-bold text-slate-900 text-base flex items-center gap-2">
+            🏢 Client Profile Details
+          </h3>
+          <button onClick={() => openEditModal()} className="px-3 py-1.5 bg-indigo-50 border border-indigo-100 text-indigo-700 hover:bg-indigo-600 hover:text-white rounded-md text-xs font-semibold transition-colors flex items-center shadow-sm">
+            Edit Profile
+          </button>
         </div>
 
-        {/* Column 2: Recent Active Tasks */}
-        <div className="space-y-8 lg:col-span-7">
-          <div className="bg-white p-6 rounded-xl border border-slate-200/60 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)]">
-            <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
-              <h3 className="font-semibold text-slate-900">Recent Client Tasks</h3>
-              <Link href="/tasks" className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">View All Tasks &rarr;</Link>
-            </div>
-            {client.tasks && client.tasks.length > 0 ? (
-              <div className="space-y-2">
-                {client.tasks.map((task: any) => (
-                  <div key={task.id} className="flex justify-between items-center text-sm p-3 hover:bg-slate-50 rounded-lg border border-slate-100">
-                    <Link href={`/tasks/${task.id}`} className="font-semibold text-slate-800 hover:text-indigo-600">{task.title}</Link>
-                    <span className={`px-2 py-0.5 rounded text-xs border ${task.status === 'Completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200 font-semibold' : 'bg-slate-50 text-slate-600 border-slate-200'}`}>{task.status}</span>
-                  </div>
-                ))}
-              </div>
+        {/* 4-Column Horizontal Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm pt-1">
+          <div className="bg-slate-50/60 p-3.5 rounded-xl border border-slate-100">
+            <span className="block text-slate-400 text-[10px] uppercase tracking-wide font-bold">Brand Code</span>
+            <span className="font-semibold text-slate-900 flex items-center gap-2 mt-1">
+              {client.brand_shortcode ? (
+                <span className="bg-indigo-50 text-indigo-700 text-xs font-bold px-2 py-0.5 rounded border border-indigo-100">
+                  {client.brand_shortcode}
+                </span>
+              ) : (
+                <span className="text-slate-400">N/A</span>
+              )}
+            </span>
+          </div>
+
+          <div className="bg-slate-50/60 p-3.5 rounded-xl border border-slate-100">
+            <span className="block text-slate-400 text-[10px] uppercase tracking-wide font-bold">Industry</span>
+            <span className="font-semibold text-slate-900 block mt-1">{client.industry || 'N/A'}</span>
+          </div>
+
+          <div className="bg-slate-50/60 p-3.5 rounded-xl border border-slate-100">
+            <span className="block text-slate-400 text-[10px] uppercase tracking-wide font-bold">Account Manager (SPOC)</span>
+            <span className="font-semibold text-slate-900 block mt-1">{client.spoc_name || 'Unassigned'}</span>
+          </div>
+
+          <div className="bg-slate-50/60 p-3.5 rounded-xl border border-slate-100">
+            <span className="block text-slate-400 text-[10px] uppercase tracking-wide font-bold">Primary Client Contact</span>
+            <span className="font-semibold text-slate-900 block mt-1">{client.primary_contact_name || 'N/A'}</span>
+          </div>
+
+          <div className="bg-slate-50/60 p-3.5 rounded-xl border border-slate-100">
+            <span className="block text-slate-400 text-[10px] uppercase tracking-wide font-bold">Primary Email</span>
+            <span className="font-semibold text-slate-900 flex items-center justify-between gap-2 mt-1 truncate">
+              <span className="truncate">{client.email || 'N/A'}</span>
+              {client.email && <button onClick={() => copyToClipboard(client.email)} className="text-[10px] text-indigo-600 font-bold hover:underline shrink-0">Copy</button>}
+            </span>
+          </div>
+
+          <div className="bg-slate-50/60 p-3.5 rounded-xl border border-slate-100">
+            <span className="block text-slate-400 text-[10px] uppercase tracking-wide font-bold">Phone</span>
+            <span className="font-semibold text-slate-900 flex items-center justify-between gap-2 mt-1">
+              <span>{client.phone || 'N/A'}</span>
+              {client.phone && <button onClick={() => copyToClipboard(client.phone)} className="text-[10px] text-indigo-600 font-bold hover:underline shrink-0">Copy</button>}
+            </span>
+          </div>
+
+          <div className="bg-slate-50/60 p-3.5 rounded-xl border border-slate-100">
+            <span className="block text-slate-400 text-[10px] uppercase tracking-wide font-bold">Website</span>
+            {client.website ? (
+              <a href={client.website} target="_blank" rel="noreferrer" className="font-semibold text-indigo-600 hover:underline block mt-1 truncate">
+                {client.website}
+              </a>
             ) : (
-              <p className="text-sm text-slate-500 italic py-4 text-center">No recent tasks logged for this client.</p>
+              <span className="font-semibold text-slate-900 block mt-1">N/A</span>
             )}
           </div>
+
+          <div className="bg-slate-50/60 p-3.5 rounded-xl border border-slate-100">
+            <span className="block text-slate-400 text-[10px] uppercase tracking-wide font-bold">Retainer Value</span>
+            <span className="font-semibold text-slate-900 block mt-1">
+              {client.monthly_retainer_value ? `₹${client.monthly_retainer_value.toLocaleString()}/mo` : 'N/A'}
+            </span>
+          </div>
         </div>
+      </div>
+
+      {/* Recent Client Tasks */}
+      <div className="bg-white p-6 rounded-xl border border-slate-200/60 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)]">
+        <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
+          <h3 className="font-bold text-slate-900 text-base">Recent Client Tasks</h3>
+          <Link href="/tasks" className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">View All Tasks &rarr;</Link>
+        </div>
+        {client.tasks && client.tasks.length > 0 ? (
+          <div className="space-y-2">
+            {client.tasks.map((task: any) => (
+              <div key={task.id} className="flex justify-between items-center text-sm p-3 hover:bg-slate-50 rounded-lg border border-slate-100">
+                <Link href={`/tasks/${task.id}`} className="font-semibold text-slate-800 hover:text-indigo-600">{task.title}</Link>
+                <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${task.status === 'Completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-50 text-slate-600 border-slate-200'}`}>{task.status}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-slate-500 italic py-4 text-center">No recent tasks logged for this client.</p>
+        )}
       </div>
     </div>
   );

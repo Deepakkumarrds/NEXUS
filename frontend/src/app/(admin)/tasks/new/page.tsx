@@ -196,19 +196,6 @@ function NewTaskForm() {
                 Link to Scope of Work (SOW)
               </label>
             </div>
-            <div className="flex items-center mt-6">
-              <input 
-                type="checkbox" 
-                id="is_weekly_target"
-                name="is_weekly_target" 
-                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                onChange={handleChange}
-                checked={formData.is_weekly_target}
-              />
-              <label htmlFor="is_weekly_target" className="ml-2 block text-sm font-medium text-slate-700">
-                Mark as Weekly Target
-              </label>
-            </div>
           </div>
 
           <div>

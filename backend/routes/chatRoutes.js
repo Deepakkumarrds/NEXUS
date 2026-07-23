@@ -167,12 +167,12 @@ router.post('/zoho', async (req, res) => {
       return res.json({ text: reply });
     }
 
-    // 4. Direct DB Query Handler: Status of Specific Brand
-    if (q.startsWith('status of ') || q.includes('status of ') || q.includes('status for ') || q.startsWith('status for ')) {
-      let brandQuery = q.replace('status of ', '').replace('status for ', '').trim();
+    // 4. Direct DB Query Handler: Status of Specific Brand (e.g., "dezinepro status", "status of dezinepro")
+    if (q.includes('status')) {
+      let brandQuery = q.replace('status of', '').replace('status for', '').replace('status', '').trim();
       if (brandQuery.endsWith('?')) brandQuery = brandQuery.slice(0, -1).trim();
 
-      if (brandQuery) {
+      if (brandQuery && brandQuery.length > 1) {
         const client = await prisma.client.findFirst({
           where: {
             OR: [
@@ -183,7 +183,7 @@ router.post('/zoho', async (req, res) => {
           include: {
             tasks: { where: { status: { in: ['Pending', 'In Progress', 'Review'] } } },
             escalations: { where: { status: 'Open' } },
-            daily_trackers: { orderBy: { date: 'desc' }, take: 2 }
+            daily_trackers: { orderBy: { date: 'desc' }, take: 3 }
           }
         });
 
@@ -191,7 +191,7 @@ router.post('/zoho', async (req, res) => {
           const brandName = client.brand_name || client.company_name;
           const healthIcon = client.health_status === 'Red' ? '🔴' : client.health_status === 'Yellow' ? '🟡' : '🟢';
 
-          let reply = `🏢 *${brandName.toUpperCase()} STATUS*\n-----------------------------------------\n`;
+          let reply = `🏢 *${brandName.toUpperCase()} BRAND STATUS*\n-----------------------------------------\n`;
           reply += `• *Account Status:* ${client.client_status} ${healthIcon}\n`;
           reply += `• *Service Type:* ${client.service_type || 'Retainer'}\n`;
           reply += `• *Active Tasks:* ${client.tasks.length} pending\n`;
@@ -203,10 +203,12 @@ router.post('/zoho', async (req, res) => {
           }
 
           if (client.daily_trackers && client.daily_trackers.length > 0) {
-            reply += `\n📝 *RECENT TRACKER LOGS:*\n`;
+            reply += `\n📝 *TRACKING HUB WORK LOGS:*\n`;
             client.daily_trackers.forEach(t => {
               reply += `   └ *[${t.department || 'General'}]:* ${t.summary_text || 'In Progress'}\n`;
             });
+          } else {
+            reply += `\n📝 *TRACKING HUB WORK LOGS:* No updates logged today yet.\n`;
           }
 
           reply += `\n🔗 *Open Brand in Dashboard:* ${process.env.FRONTEND_URL || 'https://rds-db.vercel.app'}`;
@@ -214,6 +216,7 @@ router.post('/zoho', async (req, res) => {
         }
       }
     }
+
 
 
     // Fallback to Groq AI Assistant if available

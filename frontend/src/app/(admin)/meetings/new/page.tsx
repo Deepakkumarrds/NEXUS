@@ -7,6 +7,7 @@ interface Client {
   id: string;
   company_name: string;
   brand_name?: string;
+  email?: string;
 }
 
 interface User {
@@ -38,7 +39,8 @@ export default function NewMeetingPage() {
     meeting_date: new Date().toISOString().slice(0, 16),
     attendees: '',
     agenda: '',
-    discussion_points: ''
+    discussion_points: '',
+    recipient_emails: ''
   });
 
   const [actionItems, setActionItems] = useState<ActionItem[]>([
@@ -91,6 +93,16 @@ export default function NewMeetingPage() {
       }
     }
   }, []);
+
+  const handleClientSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const clientId = e.target.value;
+    const selectedClient = clients.find(c => c.id === clientId);
+    setFormData(prev => ({
+      ...prev,
+      client_id: clientId,
+      recipient_emails: selectedClient?.email ? selectedClient.email : prev.recipient_emails
+    }));
+  };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -201,10 +213,13 @@ export default function NewMeetingPage() {
     setActionItems(actionItems.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSaveAndDispatch = async (sendMode: 'instant' | 'schedule_30min') => {
     if (!formData.client_id) {
-      alert('Please select a Client!');
+      alert('Please select a Client brand!');
+      return;
+    }
+    if (!formData.meeting_title.trim()) {
+      alert('Please enter a Meeting Title!');
       return;
     }
 
@@ -212,6 +227,7 @@ export default function NewMeetingPage() {
     try {
       const payload = {
         ...formData,
+        send_mode: sendMode,
         action_items: actionItems.filter(ai => ai.action_item.trim() !== '')
       };
 
@@ -223,7 +239,11 @@ export default function NewMeetingPage() {
 
       const json = await response.json();
       if (response.ok && json.status === 'success') {
-        alert(`Meeting MOM Saved Successfully! Auto-created ${json.tasks_created || 0} tasks in Task Manager & sent Cliq notification.`);
+        if (sendMode === 'instant') {
+          alert(`✅ Meeting MOM Saved & Dispatched Instantly!\n\nTasks Created: ${json.tasks_created || 0}\nNotification sent to Cliq & ${formData.recipient_emails || 'Team'}.`);
+        } else {
+          alert(`⏰ Meeting MOM Saved & Scheduled!\n\nTasks Created: ${json.tasks_created || 0}\nScheduled to automatically send to recipient emails/Cliq in 30 MINUTES.\nYou have 30 minutes to review or edit if needed!`);
+        }
         window.location.href = '/meetings';
       } else {
         alert(json.message || 'Failed to save meeting.');
@@ -246,12 +266,12 @@ export default function NewMeetingPage() {
         <div className="flex justify-between items-center mt-3">
           <div>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">AI Speech-to-MOM & Task Generator</h1>
-            <p className="text-sm text-slate-500 mt-1">Live transcribe voice or paste raw notes to auto-generate structured MOM & tasks in 1-click.</p>
+            <p className="text-sm text-slate-500 mt-1">Transcribe speech or paste raw notes to extract MOM, assign tasks & schedule email dispatches.</p>
           </div>
         </div>
       </div>
 
-      {/* STEP 1: Live Voice Recording & Notes Box */}
+      {/* STEP 1: Voice Recording & Notes Box */}
       <div className="bg-gradient-to-r from-indigo-900 to-slate-900 text-white p-6 rounded-xl shadow-md mb-8">
         <div className="flex justify-between items-center mb-3">
           <div className="flex items-center space-x-2">
@@ -259,21 +279,27 @@ export default function NewMeetingPage() {
               {isRecording && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>}
               <span className={`relative inline-flex rounded-full h-3 w-3 ${isRecording ? 'bg-red-500' : 'bg-emerald-400'}`}></span>
             </span>
-            <h2 className="font-semibold text-lg">Step 1: Live Voice / Transcript Input</h2>
+            <h2 className="font-semibold text-lg">Step 1: Speech Transcript / Rough Notes</h2>
           </div>
 
-          <div className="flex space-x-3">
+          <div className="flex space-x-3 items-center">
+            <label className="bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold px-3 py-2 rounded-lg cursor-pointer transition-all flex items-center">
+              <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+              Upload Transcript File
+              <input type="file" accept=".txt,.md" onChange={handleFileUpload} className="hidden" />
+            </label>
+
             <button
               type="button"
               onClick={toggleRecording}
-              className={`px-4 py-2 text-xs font-semibold rounded-lg shadow transition-all flex items-center ${
+              className={`px-3.5 py-2 text-xs font-semibold rounded-lg shadow transition-all flex items-center ${
                 isRecording 
                   ? 'bg-red-600 hover:bg-red-700 text-white animate-pulse' 
                   : 'bg-emerald-600 hover:bg-emerald-500 text-white'
               }`}
             >
               <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
-              {isRecording ? '🛑 Stop Recording' : '🎙️ Start Live Voice Transcribe'}
+              {isRecording ? '🛑 Stop Recording' : '🎙️ Start Voice Transcribe'}
             </button>
 
             <button
@@ -297,6 +323,13 @@ export default function NewMeetingPage() {
           </div>
         </div>
 
+        {speechNotice && (
+          <div className="bg-amber-500/20 border border-amber-500/40 text-amber-200 text-xs px-3 py-2 rounded-lg mb-3 flex items-center">
+            <svg className="w-4 h-4 mr-1.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            {speechNotice}
+          </div>
+        )}
+
         <textarea
           rows={4}
           value={transcript}
@@ -306,10 +339,10 @@ export default function NewMeetingPage() {
         />
       </div>
 
-      {/* STEP 2: Interactive Review & Edit Form */}
-      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
+      {/* STEP 2: Interactive MOM Form & Recipient Dispatch */}
+      <form onSubmit={(e) => e.preventDefault()} className="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
         <div className="flex items-center justify-between pb-4 mb-6 border-b border-slate-100">
-          <h2 className="font-semibold text-lg text-slate-900">Step 2: Review & Save Structured MOM</h2>
+          <h2 className="font-semibold text-lg text-slate-900">Step 2: Review MOM & Configure Recipients</h2>
           <span className="text-xs bg-indigo-50 text-indigo-700 font-medium px-2.5 py-1 rounded-full">Interactive Form</span>
         </div>
 
@@ -322,7 +355,7 @@ export default function NewMeetingPage() {
                 required
                 value={formData.client_id}
                 className="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow bg-white text-slate-900"
-                onChange={handleChange}
+                onChange={handleClientSelect}
               >
                 <option value="">Select client brand...</option>
                 {clients.map(c => (
@@ -347,6 +380,19 @@ export default function NewMeetingPage() {
 
           <div className="grid grid-cols-2 gap-6">
             <div>
+              <label className="block font-medium text-slate-700 mb-1.5">Whom to Send (Recipient Email IDs)</label>
+              <input 
+                type="text" 
+                name="recipient_emails"
+                value={formData.recipient_emails}
+                placeholder="e.g. client@brand.com, manager@rds.com (comma separated)"
+                className="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow text-slate-900 font-medium"
+                onChange={handleChange}
+              />
+              <p className="text-xs text-slate-500 mt-1">Pre-filled with selected client email. You can add extra email IDs separated by commas.</p>
+            </div>
+
+            <div>
               <label className="block font-medium text-slate-700 mb-1.5">Date & Time *</label>
               <input 
                 type="datetime-local" 
@@ -357,6 +403,9 @@ export default function NewMeetingPage() {
                 onChange={handleChange}
               />
             </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-6">
             <div>
               <label className="block font-medium text-slate-700 mb-1.5">Attendees</label>
               <input 
@@ -368,18 +417,17 @@ export default function NewMeetingPage() {
                 onChange={handleChange}
               />
             </div>
-          </div>
-
-          <div>
-            <label className="block font-medium text-slate-700 mb-1.5">Agenda / Goal</label>
-            <input 
-              type="text"
-              name="agenda"
-              value={formData.agenda}
-              placeholder="What was the purpose of the meeting?"
-              className="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow text-slate-900"
-              onChange={handleChange}
-            />
+            <div>
+              <label className="block font-medium text-slate-700 mb-1.5">Agenda / Purpose</label>
+              <input 
+                type="text"
+                name="agenda"
+                value={formData.agenda}
+                placeholder="What was the purpose of the meeting?"
+                className="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow text-slate-900"
+                onChange={handleChange}
+              />
+            </div>
           </div>
 
           <div>
@@ -463,20 +511,36 @@ export default function NewMeetingPage() {
           </div>
         </div>
 
-        <div className="mt-8 pt-6 border-t border-slate-200 flex justify-end space-x-4">
+        {/* Action Buttons */}
+        <div className="mt-8 pt-6 border-t border-slate-200 flex items-center justify-between">
           <Link
             href="/meetings"
             className="px-5 py-2.5 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
           >
             Cancel
           </Link>
-          <button
-            type="submit"
-            disabled={isSaving}
-            className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm rounded-lg shadow transition-colors flex items-center"
-          >
-            {isSaving ? 'Saving & Creating Tasks...' : '💾 Save MOM & Create Tasks'}
-          </button>
+
+          <div className="flex space-x-3">
+            <button
+              type="button"
+              disabled={isSaving}
+              onClick={() => handleSaveAndDispatch('schedule_30min')}
+              className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white font-semibold text-sm rounded-lg shadow transition-colors flex items-center"
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              ⏰ Save & Schedule Send in 30 Mins
+            </button>
+
+            <button
+              type="button"
+              disabled={isSaving}
+              onClick={() => handleSaveAndDispatch('instant')}
+              className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-semibold text-sm rounded-lg shadow transition-colors flex items-center"
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+              ⚡ Send MOM Instantly Now
+            </button>
+          </div>
         </div>
       </form>
     </div>

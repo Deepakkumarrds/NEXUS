@@ -49,6 +49,11 @@ const startCronJobs = () => {
     await checkTaskOverrunAlerts();
   }, IST);
 
+  // Check & Process 30-minute scheduled MOM dispatches (Every 5 mins)
+  cron.schedule('*/5 * * * *', async () => {
+    await processScheduledMomDispatches();
+  }, IST);
+
   // Daily Asset Deadline Check (9:00 AM IST)
   cron.schedule('0 9 * * *', async () => {
     console.log('🕒 Running Daily Asset Deadline Check (IST)...');
@@ -511,13 +516,75 @@ const send11AmDailySummaryCheck = async () => {
   }
 };
 
+const processScheduledMomDispatches = async () => {
+  try {
+    const now = new Date();
+    const scheduledMeetings = await prisma.meeting.findMany({
+      where: {
+        is_sent: false,
+        scheduled_send_at: { lte: now }
+      },
+      include: {
+        client: { select: { company_name: true, brand_name: true } },
+        action_items: { include: { assignee: { select: { name: true, email: true } } } }
+      }
+    });
+
+    for (const meeting of scheduledMeetings) {
+      console.log(`🕒 Dispatching 30-minute scheduled MOM for "${meeting.meeting_title}"...`);
+      
+      const brandName = meeting.client?.brand_name || meeting.client?.company_name || 'Client';
+      
+      let cliqMsg = `📝 *SCHEDULED MEETING MINUTES (MOM) DISPATCHED*\n`;
+      cliqMsg += `=========================================\n`;
+      cliqMsg += `• *Meeting:* "${meeting.meeting_title}"\n`;
+      cliqMsg += `• *Brand:* ${brandName}\n`;
+      cliqMsg += `• *Date:* ${new Date(meeting.meeting_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}\n`;
+      if (meeting.attendees) cliqMsg += `• *Attendees:* ${meeting.attendees}\n`;
+      if (meeting.recipient_emails) cliqMsg += `• *Recipients:* ${meeting.recipient_emails}\n`;
+      cliqMsg += `\n📌 *KEY DISCUSSION POINTS:*\n${meeting.discussion_points || 'No discussion points logged'}\n\n`;
+
+      if (meeting.action_items.length > 0) {
+        cliqMsg += `📋 *ASSIGNED ACTION ITEMS:*\n`;
+        meeting.action_items.forEach((item, idx) => {
+          const assigneeName = item.assignee?.name ? `@${item.assignee.name}` : 'Unassigned';
+          const dueStr = item.deadline ? new Date(item.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'No due date';
+          cliqMsg += `${idx + 1}. *${item.action_item}*\n   └ Owner: ${assigneeName} | Due: ${dueStr}\n`;
+        });
+      }
+
+      cliqMsg += `\n🔗 *Open Meetings Dashboard:* ${process.env.FRONTEND_URL || 'https://rds-db.vercel.app'}/meetings/${meeting.id}`;
+      await sendCliqNotification(cliqMsg);
+
+      if (meeting.recipient_emails) {
+        const emails = meeting.recipient_emails.split(',').map(e => e.trim()).filter(Boolean);
+        for (const email of emails) {
+          await emailService.sendDeadlineReminder(
+            email,
+            `Minutes of Meeting (MOM): ${meeting.meeting_title}`,
+            `${process.env.FRONTEND_URL || 'https://rds-db.vercel.app'}/meetings/${meeting.id}`
+          );
+        }
+      }
+
+      await prisma.meeting.update({
+        where: { id: meeting.id },
+        data: { is_sent: true, sent_at: now }
+      });
+    }
+  } catch (err) {
+    console.error('Error processing scheduled MOM dispatches:', err);
+  }
+};
+
 module.exports = {
   startCronJobs,
   sendWeeklyReportsNow,
   generateReportHtmlForClient,
   sendDailyTaskSummaryToCliq,
   sendDetailedDailyReportToCliq,
-  send11AmDailySummaryCheck
+  send11AmDailySummaryCheck,
+  processScheduledMomDispatches
 };
 
 

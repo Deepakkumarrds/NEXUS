@@ -165,14 +165,17 @@ Return STRICT JSON only matching this format:
   }
 };
 
-// Create Meeting and Auto-Create Tasks in Task Manager + Send Cliq Alert
+// Create Meeting and Auto-Create Tasks in Task Manager + Send or Schedule MOM
 exports.createMeetingWithTasks = async (req, res) => {
   try {
-    const { client_id, meeting_title, meeting_date, attendees, agenda, discussion_points, action_items } = req.body;
+    const { client_id, meeting_title, meeting_date, attendees, agenda, discussion_points, action_items, recipient_emails, send_mode } = req.body;
 
     const prisma = require('../config/prisma');
     let user = await prisma.user.findFirst();
     if (!user) throw new Error('No user found');
+
+    const isInstant = send_mode === 'instant';
+    const scheduledSendAt = isInstant ? null : new Date(Date.now() + 30 * 60 * 1000); // 30 mins grace period
 
     // 1. Create Meeting Record
     const meeting = await prisma.meeting.create({
@@ -183,6 +186,10 @@ exports.createMeetingWithTasks = async (req, res) => {
         attendees,
         agenda,
         discussion_points,
+        recipient_emails: recipient_emails || null,
+        scheduled_send_at: scheduledSendAt,
+        is_sent: isInstant,
+        sent_at: isInstant ? new Date() : null,
         created_by: user.id,
         action_items: {
           create: action_items && Array.isArray(action_items) ? action_items.map(item => ({
@@ -221,32 +228,48 @@ exports.createMeetingWithTasks = async (req, res) => {
       }
     }
 
-    // 3. Dispatch MOM Summary to Zoho Cliq
-    try {
-      const { sendCliqNotification } = require('../services/cliqService');
-      const brandName = meeting.client?.brand_name || meeting.client?.company_name || 'Client';
-      
-      let cliqMsg = `📝 *NEW MEETING MINUTES (MOM) LOGGED*\n`;
-      cliqMsg += `=========================================\n`;
-      cliqMsg += `• *Meeting:* "${meeting_title}"\n`;
-      cliqMsg += `• *Brand:* ${brandName}\n`;
-      cliqMsg += `• *Date:* ${new Date(meeting.meeting_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}\n`;
-      if (attendees) cliqMsg += `• *Attendees:* ${attendees}\n`;
-      cliqMsg += `\n📌 *KEY DISCUSSION POINTS:*\n${discussion_points || 'No discussion points logged'}\n\n`;
+    // 3. Dispatch MOM Summary immediately if send_mode === 'instant'
+    if (isInstant) {
+      try {
+        const { sendCliqNotification } = require('../services/cliqService');
+        const emailService = require('../services/emailService');
+        const brandName = meeting.client?.brand_name || meeting.client?.company_name || 'Client';
+        
+        let cliqMsg = `📝 *NEW MEETING MINUTES (MOM) LOGGED*\n`;
+        cliqMsg += `=========================================\n`;
+        cliqMsg += `• *Meeting:* "${meeting_title}"\n`;
+        cliqMsg += `• *Brand:* ${brandName}\n`;
+        cliqMsg += `• *Date:* ${new Date(meeting.meeting_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}\n`;
+        if (attendees) cliqMsg += `• *Attendees:* ${attendees}\n`;
+        if (recipient_emails) cliqMsg += `• *Recipients:* ${recipient_emails}\n`;
+        cliqMsg += `\n📌 *KEY DISCUSSION POINTS:*\n${discussion_points || 'No discussion points logged'}\n\n`;
 
-      if (meeting.action_items.length > 0) {
-        cliqMsg += `📋 *ASSIGNED ACTION ITEMS (${createdTasksCount} Tasks Created):*\n`;
-        meeting.action_items.forEach((item, idx) => {
-          const assigneeName = item.assignee?.name ? `@${item.assignee.name}` : 'Unassigned';
-          const dueStr = item.deadline ? new Date(item.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'No due date';
-          cliqMsg += `${idx + 1}. *${item.action_item}*\n   └ Owner: ${assigneeName} | Due: ${dueStr}\n`;
-        });
+        if (meeting.action_items.length > 0) {
+          cliqMsg += `📋 *ASSIGNED ACTION ITEMS (${createdTasksCount} Tasks Created):*\n`;
+          meeting.action_items.forEach((item, idx) => {
+            const assigneeName = item.assignee?.name ? `@${item.assignee.name}` : 'Unassigned';
+            const dueStr = item.deadline ? new Date(item.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'No due date';
+            cliqMsg += `${idx + 1}. *${item.action_item}*\n   └ Owner: ${assigneeName} | Due: ${dueStr}\n`;
+          });
+        }
+
+        cliqMsg += `\n🔗 *Open Meetings Dashboard:* ${process.env.FRONTEND_URL || 'https://rds-db.vercel.app'}/meetings`;
+        await sendCliqNotification(cliqMsg);
+
+        // Send Email to recipient_emails if provided
+        if (recipient_emails) {
+          const emails = recipient_emails.split(',').map(e => e.trim()).filter(Boolean);
+          for (const email of emails) {
+            await emailService.sendDeadlineReminder(
+              email,
+              `Minutes of Meeting (MOM): ${meeting_title}`,
+              `${process.env.FRONTEND_URL || 'https://rds-db.vercel.app'}/meetings/${meeting.id}`
+            );
+          }
+        }
+      } catch (e) {
+        console.error('Error posting MOM to Cliq/Email:', e);
       }
-
-      cliqMsg += `\n🔗 *Open Meetings Dashboard:* ${process.env.FRONTEND_URL || 'https://rds-db.vercel.app'}/meetings`;
-      await sendCliqNotification(cliqMsg);
-    } catch (e) {
-      console.error('Error posting MOM to Cliq:', e);
     }
 
     res.status(201).json({ status: 'success', data: meeting, tasks_created: createdTasksCount });

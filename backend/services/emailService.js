@@ -12,6 +12,9 @@ const initTransporter = async () => {
       host: process.env.SMTP_HOST,
       port: port,
       secure: port === 465,
+      pool: true,
+      maxConnections: 5,
+      maxMessages: 100,
       auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
     });
   } else {
@@ -31,31 +34,33 @@ const initTransporter = async () => {
   return transporter;
 };
 
-const sendEmail = async (to, subject, htmlContent) => {
-  try {
-    const mailTransporter = await initTransporter();
-    
-    const info = await mailTransporter.sendMail({
-      from: `"Nexus" <${process.env.SMTP_USER || 'gowthamrdsdigital@gmail.com'}>`,
-      to: to,
-      subject: subject,
-      html: htmlContent,
-    });
+const sendEmail = async (to, subject, htmlContent, retries = 3) => {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const mailTransporter = await initTransporter();
+      
+      const info = await mailTransporter.sendMail({
+        from: `"Nexus" <${process.env.SMTP_USER || 'gowthamrdsdigital@gmail.com'}>`,
+        to: to,
+        subject: subject,
+        html: htmlContent,
+      });
 
-    console.log('=============================================');
-    console.log(`✉️ EMAIL SENT`);
-    console.log(`To: ${to}`);
-    console.log(`Subject: ${subject}`);
-    if (info.messageId && nodemailer.getTestMessageUrl) {
-      console.log(`Preview URL: ${nodemailer.getTestMessageUrl(info)}`);
+      console.log('=============================================');
+      console.log(`✉️ EMAIL SENT (Attempt ${attempt}/${retries})`);
+      console.log(`To: ${to}`);
+      console.log(`Subject: ${subject}`);
+      console.log('=============================================');
+      
+      return true;
+    } catch (error) {
+      console.error(`Attempt ${attempt}/${retries} failed to send email to ${to}:`, error.message);
+      if (attempt < retries) {
+        await new Promise(res => setTimeout(res, 1500 * attempt));
+      }
     }
-    console.log('=============================================');
-    
-    return true;
-  } catch (error) {
-    console.error('Failed to send email:', error);
-    return false;
   }
+  return false;
 };
 
 const notifyClientAssetReady = async (clientEmail, assetTitle, portalLink) => {

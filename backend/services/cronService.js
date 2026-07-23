@@ -52,6 +52,7 @@ const startCronJobs = () => {
   // Check & Process 30-minute scheduled MOM dispatches (Every 5 mins)
   cron.schedule('*/5 * * * *', async () => {
     await processScheduledMomDispatches();
+    await checkAndRetryFailedMomDispatches();
   }, IST);
 
   // Daily Asset Deadline Check (9:00 AM IST)
@@ -618,6 +619,44 @@ const sendTaskClosingReminders = async (timeSlotStr) => {
   }
 };
 
+const checkAndRetryFailedMomDispatches = async () => {
+  try {
+    const unsentMeetings = await prisma.meeting.findMany({
+      where: {
+        is_sent: false,
+        recipient_emails: { not: null },
+        scheduled_send_at: null
+      },
+      include: {
+        client: { select: { company_name: true, brand_name: true } },
+        action_items: { include: { assignee: { select: { name: true } } } }
+      }
+    });
+
+    for (const meeting of unsentMeetings) {
+      if (!meeting.recipient_emails || meeting.recipient_emails.trim() === '') continue;
+
+      const emails = meeting.recipient_emails.split(',').map(e => e.trim()).filter(Boolean);
+      let allSuccess = true;
+
+      for (const email of emails) {
+        const success = await emailService.sendMomEmail(email, meeting);
+        if (!success) allSuccess = false;
+      }
+
+      if (allSuccess) {
+        await prisma.meeting.update({
+          where: { id: meeting.id },
+          data: { is_sent: true, sent_at: new Date() }
+        });
+        console.log(`🛡️ Safety Net Cron successfully auto-dispatched failed MOM email for meeting: "${meeting.meeting_title}"`);
+      }
+    }
+  } catch (err) {
+    console.error('Error in safety net MOM retry cron:', err);
+  }
+};
+
 module.exports = {
   startCronJobs,
   sendWeeklyReportsNow,
@@ -626,7 +665,8 @@ module.exports = {
   sendDetailedDailyReportToCliq,
   send11AmDailySummaryCheck,
   sendTaskClosingReminders,
-  processScheduledMomDispatches
+  processScheduledMomDispatches,
+  checkAndRetryFailedMomDispatches
 };
 
 

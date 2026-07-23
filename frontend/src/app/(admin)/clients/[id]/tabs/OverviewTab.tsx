@@ -89,25 +89,7 @@ export default function OverviewTab({ client, openEditModal }: any) {
         </div>
       </div>
 
-      {/* Recent Client Tasks */}
-      <div className="bg-white p-6 rounded-xl border border-slate-200/60 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)]">
-        <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
-          <h3 className="font-bold text-slate-900 text-base">Recent Client Tasks</h3>
-          <Link href="/tasks" className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">View All Tasks &rarr;</Link>
-        </div>
-        {client.tasks && client.tasks.length > 0 ? (
-          <div className="space-y-2">
-            {client.tasks.map((task: any) => (
-              <div key={task.id} className="flex justify-between items-center text-sm p-3 hover:bg-slate-50 rounded-lg border border-slate-100">
-                <Link href={`/tasks/${task.id}`} className="font-semibold text-slate-800 hover:text-indigo-600">{task.title}</Link>
-                <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${task.status === 'Completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-50 text-slate-600 border-slate-200'}`}>{task.status}</span>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm text-slate-500 italic py-4 text-center">No recent tasks logged for this client.</p>
-        )}
-      </div>
     </div>
   );
 }
+

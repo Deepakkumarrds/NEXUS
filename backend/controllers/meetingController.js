@@ -234,7 +234,7 @@ exports.createMeetingWithTasks = async (req, res) => {
         const { sendCliqNotification } = require('../services/cliqService');
         const emailService = require('../services/emailService');
         const brandName = meeting.client?.brand_name || meeting.client?.company_name || 'Client';
-        
+
         let cliqMsg = `📝 *NEW MEETING MINUTES (MOM) LOGGED*\n`;
         cliqMsg += `=========================================\n`;
         cliqMsg += `• *Meeting:* "${meeting_title}"\n`;

@@ -6,7 +6,7 @@ const { createNotification } = require('../utils/notificationHelper');
 exports.createTask = async (req, res) => {
   try {
     const { title, description, priority, due_date, client_id, assigned_to, is_recurring, recurrence_pattern, recurrence_end, resource_links, checklist, sow_id, sow_item_id, department, is_sow, estimated_hours, is_weekly_target } = req.body;
-    
+
     // Use the logged-in user as the creator
     const creatorId = req.user && req.user.id ? req.user.id : (await prisma.user.findFirst()).id;
 
@@ -59,18 +59,18 @@ exports.createTaskFromBot = async (req, res) => {
     if (brand_name || company_name) {
       const rawQuery = (brand_name || company_name).toLowerCase().replace(/[^a-z0-9]/g, '');
       const queryTokens = (brand_name || company_name).toLowerCase().split(/\s+/).filter(t => t.length > 2);
-      
+
       const allClients = await prisma.client.findMany({ where: { client_status: 'Active' } });
-      
+
       client = allClients.find(c => {
         const cName = (c.brand_name || c.company_name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
         if (cName.includes(rawQuery) || rawQuery.includes(cName)) return true;
-        
+
         // Fuzzy vowel match (e.g. gauraanga vs gauranga)
         const normQuery = rawQuery.replace(/aa/g, 'a');
         const normName = cName.replace(/aa/g, 'a');
         if (normName.includes(normQuery) || normQuery.includes(normName)) return true;
-        
+
         // Token match (e.g. "gauraanga" or "global")
         return queryTokens.some(tok => normName.includes(tok.replace(/aa/g, 'a')));
       });
@@ -166,11 +166,11 @@ exports.deleteTaskFromBot = async (req, res) => {
       taskToDelete = matchingTasks.find(t => {
         const titleMatch = t.title.toLowerCase().trim().includes(cleanTitle);
         if (!brand_name) return titleMatch;
-        
+
         const brandStr = brand_name.toLowerCase().trim();
         const cName = (t.client?.brand_name || t.client?.company_name || '').toLowerCase();
         const brandMatch = cName.includes(brandStr) || brandStr.includes(cName);
-        
+
         return titleMatch && brandMatch;
       }) || matchingTasks.find(t => t.title.toLowerCase().trim().includes(cleanTitle));
     }
@@ -205,7 +205,7 @@ exports.deleteTaskFromBot = async (req, res) => {
 exports.getAllTasks = async (req, res) => {
   try {
     const { client_id, assigned_to, is_sow, status } = req.query;
-    
+
     let whereClause = {};
     if (client_id) {
       whereClause.client_id = client_id;
@@ -256,7 +256,7 @@ exports.updateTaskStatus = async (req, res) => {
 
     const task = await prisma.task.update({
       where: { id },
-      data: { 
+      data: {
         status: finalStatus,
         completion_percentage: finalStatus === 'Completed' ? 100 : undefined,
         ...dateUpdate
@@ -358,19 +358,19 @@ exports.addTaskComment = async (req, res) => {
 exports.updateTask = async (req, res) => {
   try {
     const { id } = req.params;
-    const { 
-      title, 
-      description, 
-      priority, 
-      due_date, 
-      status, 
-      completion_percentage, 
-      assigned_to, 
-      delay_reason, 
-      delay_notes, 
-      original_due_date, 
-      is_recurring, 
-      recurrence_pattern, 
+    const {
+      title,
+      description,
+      priority,
+      due_date,
+      status,
+      completion_percentage,
+      assigned_to,
+      delay_reason,
+      delay_notes,
+      original_due_date,
+      is_recurring,
+      recurrence_pattern,
       recurrence_end,
       is_weekly_target,
       resource_links,
@@ -429,12 +429,12 @@ exports.bulkUpdateStatus = async (req, res) => {
     if (!taskIds || !taskIds.length || !status) {
       return res.status(400).json({ status: 'error', message: 'Invalid input' });
     }
-    
+
     await prisma.task.updateMany({
       where: { id: { in: taskIds } },
       data: { status, completion_percentage: status === 'Completed' ? 100 : undefined }
     });
-    
+
     // Log activities for all
     const user = await prisma.user.findFirst();
     if (user) {
@@ -464,7 +464,7 @@ exports.createTaskFromActionItem = async (req, res) => {
       include: { meeting: true }
     });
     if (!actionItem) return res.status(404).json({ status: 'error', message: 'Action item not found' });
-    
+
     const user = await prisma.user.findFirst();
     const task = await prisma.task.create({
       data: {
@@ -477,7 +477,7 @@ exports.createTaskFromActionItem = async (req, res) => {
         priority: 'Medium'
       }
     });
-    
+
     res.status(201).json({ status: 'success', data: task });
   } catch (error) {
     console.error('Error creating task from action item:', error);
@@ -491,12 +491,12 @@ exports.cloneTask = async (req, res) => {
     const { id } = req.params;
     const taskToClone = await prisma.task.findUnique({ where: { id } });
     if (!taskToClone) return res.status(404).json({ status: 'error', message: 'Task not found' });
-    
+
     const { id: _, created_at, updated_at, ...taskData } = taskToClone;
     taskData.title = `Copy of ${taskData.title}`;
     taskData.status = 'Pending';
     taskData.completion_percentage = 0;
-    
+
     const newTask = await prisma.task.create({ data: taskData });
     res.status(201).json({ status: 'success', data: newTask });
   } catch (error) {
@@ -511,7 +511,7 @@ exports.deleteTask = async (req, res) => {
     // Prisma does not automatically cascade unless defined, so we clean up related entities
     await prisma.taskComment.deleteMany({ where: { task_id: id } });
     await prisma.activityLog.deleteMany({ where: { module_name: 'Task', reference_id: id } });
-    
+
     await prisma.task.delete({ where: { id } });
     res.status(200).json({ status: 'success', message: 'Task deleted successfully' });
   } catch (error) {

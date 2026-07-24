@@ -581,9 +581,11 @@ export default function DraftSowTab() {
                 <div>
                   <div className="flex justify-between items-start">
                     <h4 className="font-bold text-slate-900 text-sm">{pkg.name}</h4>
-                    <span className="text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">
-                      ₹{pkg.monthlyValue.toLocaleString()}/mo
-                    </span>
+                    {canViewFinancials(user) && (
+                      <span className="text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">
+                        ₹{pkg.monthlyValue.toLocaleString()}/mo
+                      </span>
+                    )}
                   </div>
                   <ul className="mt-3 space-y-1">
                     {pkg.items.map((item, idx) => (
@@ -669,16 +671,18 @@ export default function DraftSowTab() {
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-2 self-start sm:self-auto bg-slate-50 p-1.5 rounded-lg border border-slate-200">
-                        <label className="text-xs font-bold text-slate-700 pl-1">Monthly Fee (₹):</label>
-                        <input 
-                          type="number" 
-                          value={month.value}
-                          onChange={(e) => handleMonthValueChange(monthIndex, e.target.value)}
-                          className="w-36 border border-slate-300 rounded-md p-1.5 text-xs font-extrabold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
-                          placeholder="e.g. 50000"
-                        />
-                      </div>
+                      {canViewFinancials(user) && (
+                        <div className="flex items-center gap-2 self-start sm:self-auto bg-slate-50 p-1.5 rounded-lg border border-slate-200">
+                          <label className="text-xs font-bold text-slate-700 pl-1">Monthly Fee (₹):</label>
+                          <input 
+                            type="number" 
+                            value={month.value}
+                            onChange={(e) => handleMonthValueChange(monthIndex, e.target.value)}
+                            className="w-36 border border-slate-300 rounded-md p-1.5 text-xs font-extrabold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+                            placeholder="e.g. 50000"
+                          />
+                        </div>
+                      )}
                     </div>
 
                     {/* Department Lists */}
@@ -824,16 +828,18 @@ export default function DraftSowTab() {
                   className="w-full border border-slate-300 rounded-lg p-2 text-xs outline-none focus:border-indigo-500"
                 />
               </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Monthly Value (₹)</label>
-                <input 
-                  type="number" 
-                  value={newTemplateValue}
-                  onChange={(e) => setNewTemplateValue(e.target.value)}
-                  placeholder={sowMonths[0]?.value || '50000'} 
-                  className="w-full border border-slate-300 rounded-lg p-2 text-xs outline-none focus:border-indigo-500"
-                />
-              </div>
+              {canViewFinancials(user) && (
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Monthly Value (₹)</label>
+                  <input 
+                    type="number" 
+                    value={newTemplateValue}
+                    onChange={(e) => setNewTemplateValue(e.target.value)}
+                    placeholder={sowMonths[0]?.value || '50000'} 
+                    className="w-full border border-slate-300 rounded-lg p-2 text-xs outline-none focus:border-indigo-500"
+                  />
+                </div>
+              )}
             </div>
             <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
               <button 

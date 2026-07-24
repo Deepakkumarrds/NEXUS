@@ -107,12 +107,12 @@ exports.getAllSows = async (req, res) => {
 
     let sows = await prisma.sow.findMany(queryOptions);
 
-    // Strict Financial Privacy: Only Admin and Utkarsh can view financial values
+    // Strict Financial Privacy: Strip values ONLY for non-admin Team Members
     const requesterRole = req.query.role || '';
     const requesterEmail = (req.query.email || '').toLowerCase();
-    const canViewFinancials = requesterRole === 'Super Admin' || requesterRole === 'Admin' || requesterEmail.includes('utkarsh') || requesterEmail.includes('gowtham');
+    const isRestrictedUser = requesterRole === 'Team Member' && !requesterEmail.includes('utkarsh') && !requesterEmail.includes('gowtham');
 
-    if (!canViewFinancials) {
+    if (isRestrictedUser) {
       sows = sows.map(sow => {
         return {
           ...sow,
@@ -145,12 +145,12 @@ exports.getSowById = async (req, res) => {
     });
     if (!sow) return res.status(404).json({ status: 'error', message: 'SOW not found' });
     
-    // Strict Financial Privacy: Only Admin and Utkarsh can view financial values
+    // Strict Financial Privacy: Strip values ONLY for non-admin Team Members
     const requesterRole = req.query.role || '';
     const requesterEmail = (req.query.email || '').toLowerCase();
-    const canViewFinancials = requesterRole === 'Super Admin' || requesterRole === 'Admin' || requesterEmail.includes('utkarsh') || requesterEmail.includes('gowtham');
+    const isRestrictedUser = requesterRole === 'Team Member' && !requesterEmail.includes('utkarsh') && !requesterEmail.includes('gowtham');
 
-    if (!canViewFinancials) {
+    if (isRestrictedUser) {
       sow.total_value = null;
       if (sow.months) {
         sow.months = sow.months.map(m => ({ ...m, value: 0 }));

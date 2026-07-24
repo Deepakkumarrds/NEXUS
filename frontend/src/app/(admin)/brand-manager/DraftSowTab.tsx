@@ -130,8 +130,19 @@ export default function DraftSowTab() {
   const [newTemplateName, setNewTemplateName] = useState('');
   const [newTemplateValue, setNewTemplateValue] = useState('');
   
-  const totalValue = sowMonths.reduce((acc, month) => acc + (parseFloat(month.value) || 0), 0);
+  const [totalValue, setTotalValue] = useState(0);
   const [user, setUser] = useState<any>(null);
+
+  const canViewFinancials = (u: any) => {
+    if (!u) return false;
+    const role = u.role?.role_name || u.role_name || u.role || '';
+    const email = (u.email || '').toLowerCase();
+    
+    if (role === 'Super Admin' || role === 'Admin') return true;
+    if (email.includes('utkarsh') || email.includes('admin') || email.includes('gowtham')) return true;
+    
+    return false;
+  };
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -157,6 +168,11 @@ export default function DraftSowTab() {
       try { setCustomPackages(JSON.parse(saved)); } catch (e) {}
     }
   }, []);
+
+  useEffect(() => {
+    const sum = sowMonths.reduce((acc, month) => acc + (parseFloat(month.value) || 0), 0);
+    setTotalValue(sum);
+  }, [sowMonths]);
 
   // Generate monthly blocks when dates change
   useEffect(() => {
@@ -504,15 +520,17 @@ export default function DraftSowTab() {
               onChange={handleChange}
             />
           </div>
-          <div>
-            <label className="block font-semibold text-slate-700 mb-1.5">Total Value (₹)</label>
-            <input 
-              type="text" 
-              value={`₹ ${totalValue.toLocaleString()}`}
-              readOnly
-              className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-bold text-slate-900 outline-none cursor-not-allowed"
-            />
-          </div>
+          {canViewFinancials(user) && (
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1.5">Total Value (₹)</label>
+              <input 
+                type="text" 
+                value={`₹ ${totalValue.toLocaleString()}`}
+                readOnly
+                className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 font-bold text-slate-900 outline-none cursor-not-allowed"
+              />
+            </div>
+          )}
         </div>
 
         {/* PACKAGE TEMPLATES SECTION */}

@@ -10,12 +10,26 @@ export default function SowResultsTab() {
   useEffect(() => {
     const userData = JSON.parse(localStorage.getItem('user') || '{}');
     setUser(userData);
-    fetchSows();
+    fetchSows(userData);
   }, []);
 
-  const fetchSows = () => {
+  const canViewFinancials = (u: any) => {
+    if (!u) return false;
+    const role = u.role?.role_name || u.role_name || u.role || '';
+    const email = (u.email || '').toLowerCase();
+    
+    if (role === 'Super Admin' || role === 'Admin') return true;
+    if (email.includes('utkarsh') || email.includes('admin') || email.includes('gowtham')) return true;
+    
+    return false;
+  };
+
+  const fetchSows = (u?: any) => {
+    const currentUser = u || user;
+    const role = currentUser?.role?.role_name || currentUser?.role_name || currentUser?.role || '';
+    const email = currentUser?.email || '';
     setLoading(true);
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-backend-nexus.onrender.com'}/api/sows`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-backend-nexus.onrender.com'}/api/sows?role=${encodeURIComponent(role)}&email=${encodeURIComponent(email)}`)
       .then(res => res.json())
       .then(data => {
         if (data && data.data) {
@@ -49,67 +63,79 @@ export default function SowResultsTab() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'Approved':
-        return <span className="px-2 py-1 bg-emerald-100 text-emerald-800 text-xs font-medium rounded-full">Approved</span>;
-      case 'Rejected':
-        return <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">Rejected</span>;
+        return <span className="bg-emerald-100 text-emerald-800 text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-full border border-emerald-200">Approved</span>;
       case 'Pending Approval':
-        return <span className="px-2 py-1 bg-amber-100 text-amber-800 text-xs font-medium rounded-full">Pending Approval</span>;
+        return <span className="bg-amber-100 text-amber-800 text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-full border border-amber-200">Pending Approval</span>;
+      case 'Rejected':
+        return <span className="bg-rose-100 text-rose-800 text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-full border border-rose-200">Rejected</span>;
       default:
-        return <span className="px-2 py-1 bg-slate-100 text-slate-800 text-xs font-medium rounded-full">{status || 'Draft'}</span>;
+        return <span className="bg-slate-100 text-slate-700 text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-full border border-slate-200">Draft</span>;
     }
   };
 
+  const showFinancials = canViewFinancials(user);
+
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+    <div className="bg-white p-6 rounded-xl shadow-xs border border-slate-200 space-y-6">
+      <div className="flex justify-between items-center pb-4 border-b border-slate-100">
+        <div>
+          <h2 className="font-heading text-lg font-bold text-slate-900">SOW Results & Active Scope</h2>
+          <p className="text-xs text-slate-500 mt-0.5">Overview of created SOWs, approval statuses, and monthly scopes.</p>
+        </div>
+      </div>
+
       {loading ? (
-        <div className="p-8 text-center text-slate-500">Loading your SOW results...</div>
+        <div className="p-8 text-center text-slate-400 text-xs animate-pulse">Loading SOW records...</div>
       ) : sows.length === 0 ? (
-        <div className="p-12 text-center text-slate-500">
-          <p>No SOWs found.</p>
+        <div className="p-12 text-center text-slate-500 bg-slate-50 rounded-xl border border-slate-200 text-xs">
+          No SOW records found.
         </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 font-semibold">
-                <th className="p-4">Brand</th>
-                <th className="p-4">SOW Name</th>
-                <th className="p-4">Month</th>
-                <th className="p-4">Value</th>
-                <th className="p-4">Status</th>
-                <th className="p-4 text-right">Actions</th>
+              <tr className="border-b border-slate-200 text-xs font-bold text-slate-600 bg-slate-50">
+                <th className="p-3.5">Brand Name</th>
+                <th className="p-3.5">SOW Title</th>
+                <th className="p-3.5">Month</th>
+                {showFinancials && <th className="p-3.5">Value</th>}
+                <th className="p-3.5">Status</th>
+                <th className="p-3.5 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 text-sm">
+            <tbody className="divide-y divide-slate-100 text-xs">
               {sows.map(sow => (
-                sow.months?.map((month: any, idx: number) => (
-                  <tr key={`${sow.id}-${idx}`} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="p-4 font-medium text-slate-900">
+                (sow.months || []).map((month: any, idx: number) => (
+                  <tr key={`${sow.id}-${idx}`} className="hover:bg-slate-50/60 transition-colors">
+                    <td className="p-3.5 font-bold text-slate-900">
                       {sow.client?.company_name || 'Unknown Client'}
                     </td>
-                    <td className="p-4 text-slate-700">
+                    <td className="p-3.5 font-medium text-slate-700">
                       {sow.sow_name}
                     </td>
-                    <td className="p-4 text-slate-600">
+                    <td className="p-3.5 font-medium text-slate-600">
                       {month.month_year}
                     </td>
-                    <td className="p-4 font-medium text-slate-900">
-                      ₹{parseFloat(month.value).toLocaleString()}
-                    </td>
-                    <td className="p-4">
+                    {showFinancials && (
+                      <td className="p-3.5 font-bold text-slate-900">
+                        ₹{(parseFloat(month.value) || 0).toLocaleString()}
+                      </td>
+                    )}
+                    <td className="p-3.5">
                       {getStatusBadge(month.approval_status)}
                     </td>
-                    <td className="p-4 text-right">
+                    <td className="p-3.5 text-right">
                       <div className="flex items-center justify-end gap-3">
                         <a 
                           href={`/sows/${sow.id}`} 
-                          className="text-xs font-medium text-indigo-600 hover:text-indigo-900 transition-colors"
+                          className="font-bold text-indigo-600 hover:text-indigo-900 transition-colors"
                         >
                           Edit
                         </a>
                         <button 
+                          type="button"
                           onClick={() => handleDelete(sow.id)}
-                          className="text-xs font-medium text-red-600 hover:text-red-900 transition-colors"
+                          className="font-bold text-rose-600 hover:text-rose-900 transition-colors"
                         >
                           Delete
                         </button>

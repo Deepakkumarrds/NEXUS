@@ -1,12 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 
 export default function SowApprovalsPage() {
   const [loading, setLoading] = useState(true);
   const [sows, setSows] = useState<any[]>([]);
   const [user, setUser] = useState<any>(null);
+  const [processingId, setProcessingId] = useState<string | null>(null);
 
   useEffect(() => {
     const userData = JSON.parse(localStorage.getItem('user') || '{}');
@@ -14,9 +14,22 @@ export default function SowApprovalsPage() {
     fetchSows();
   }, []);
 
+  const canViewFinancials = (user: any) => {
+    if (!user) return false;
+    const role = user.role?.role_name || user.role_name || user.role || '';
+    const email = (user.email || '').toLowerCase();
+    
+    if (role === 'Super Admin' || role === 'Admin') return true;
+    if (email.includes('utkarsh') || email.includes('admin') || email.includes('gowtham')) return true;
+    
+    return false;
+  };
+
   const fetchSows = () => {
     setLoading(true);
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com'}/api/sows?approval_status=Pending Approval`)
+    const role = user?.role?.role_name || user?.role_name || user?.role || '';
+    const email = user?.email || '';
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-backend-nexus.onrender.com'}/api/sows?approval_status=Pending Approval&role=${encodeURIComponent(role)}&email=${encodeURIComponent(email)}`)
       .then(res => res.json())
       .then(data => {
         if (data && data.data) {
@@ -31,15 +44,15 @@ export default function SowApprovalsPage() {
   };
 
   const handleApprove = async (sowId: string, monthId: string) => {
+    setProcessingId(monthId);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com'}/api/sows/month/${monthId}/approve`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-backend-nexus.onrender.com'}/api/sows/month/${monthId}/approve`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: user?.id })
       });
       
       if (response.ok) {
-        // Remove the approved month from local state or refetch
         fetchSows();
       } else {
         alert('Failed to approve SOW month.');
@@ -47,12 +60,37 @@ export default function SowApprovalsPage() {
     } catch (error) {
       console.error('Error:', error);
       alert('Error connecting to backend server.');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleReject = async (sowId: string, monthId: string) => {
+    if (!window.confirm('Are you sure you want to reject this SOW contract month?')) return;
+    setProcessingId(monthId);
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-backend-nexus.onrender.com'}/api/sows/month/${monthId}/reject`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: user?.id })
+      });
+      
+      if (response.ok) {
+        fetchSows();
+      } else {
+        alert('Failed to reject SOW month.');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error connecting to backend server.');
+    } finally {
+      setProcessingId(null);
     }
   };
 
   // Flatten the SOWs and Months to render easily
   const pendingMonths = sows.flatMap(sow => {
-    return sow.months
+    return (sow.months || [])
       .filter((m: any) => m.approval_status === 'Pending Approval')
       .map((m: any) => ({
         ...m,
@@ -63,65 +101,88 @@ export default function SowApprovalsPage() {
   });
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
+    <div className="space-y-6">
+      <div className="flex justify-between items-center pb-2 border-b border-slate-200">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">SOW Approvals</h1>
-          <p className="text-sm text-slate-500 mt-1">Review and approve monthly deliverables submitted by Brand Managers.</p>
+          <h1 className="font-heading text-2xl font-bold text-slate-900 tracking-tight">SOW Approvals</h1>
+          <p className="text-xs text-slate-500 mt-1">Review, approve, or reject monthly deliverable contracts submitted for client accounts.</p>
         </div>
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6">
           {[1, 2].map(i => (
-            <div key={i} className="animate-pulse bg-white p-6 rounded-lg border border-slate-200 h-48"></div>
+            <div key={i} className="animate-pulse bg-white p-6 rounded-xl border border-slate-200 h-40 shadow-xs"></div>
           ))}
         </div>
       ) : pendingMonths.length === 0 ? (
-        <div className="p-12 text-center text-slate-500 bg-white rounded-lg shadow-sm border border-slate-200">
-          <svg className="w-12 h-12 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-          <p className="font-medium text-slate-600">All caught up!</p>
-          <p className="text-sm mt-1">No pending SOWs require your approval.</p>
+        <div className="p-12 text-center text-slate-500 bg-white rounded-xl shadow-xs border border-slate-200">
+          <p className="font-heading font-semibold text-slate-700 text-base">All caught up!</p>
+          <p className="text-xs text-slate-400 mt-1">No pending SOW contracts require approval right now.</p>
         </div>
       ) : (
         <div className="space-y-6">
           {pendingMonths.map(month => (
-            <div key={month.id} className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
-              <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+            <div key={month.id} className="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden transition-all hover:border-slate-300">
+              {/* Card Header */}
+              <div className="p-6 border-b border-slate-200 bg-slate-50/50 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                 <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="bg-amber-100 text-amber-700 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full tracking-wide">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="bg-amber-100 text-amber-800 text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-full tracking-wider border border-amber-200">
                       Pending Approval
                     </span>
-                    <h3 className="text-sm font-semibold text-slate-900">{month.client_name} - {month.sow_name}</h3>
+                    <h3 className="font-heading text-sm font-bold text-slate-900">{month.client_name} - {month.sow_name}</h3>
                   </div>
-                  <p className="text-lg font-bold text-indigo-700">{month.month_year}</p>
+                  <p className="font-heading text-lg font-bold text-indigo-700">{month.month_year}</p>
                 </div>
-                <div className="text-right">
-                  <p className="text-xs text-slate-500 mb-1">Total Value</p>
-                  <p className="text-lg font-semibold text-slate-900">₹{month.value.toLocaleString()}</p>
-                </div>
+                
+                {canViewFinancials(user) && (
+                  <div className="sm:text-right bg-white px-4 py-2 rounded-lg border border-slate-200">
+                    <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Total Monthly Value</p>
+                    <p className="text-xl font-extrabold text-slate-900">₹{(parseFloat(month.value) || 0).toLocaleString()}</p>
+                  </div>
+                )}
               </div>
               
-              <div className="p-5">
-                <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Deliverables</h4>
-                <ul className="space-y-2">
+              {/* Deliverables List */}
+              <div className="p-6 space-y-3">
+                <h4 className="font-heading text-xs font-bold text-slate-500 uppercase tracking-wider">Deliverables Scope</h4>
+                <div className="grid grid-cols-1 gap-2">
                   {month.items && month.items.map((item: any, idx: number) => (
-                    <li key={item.id || idx} className="flex items-start text-sm text-slate-700 bg-slate-50 p-2 rounded border border-slate-100">
-                      <svg className="w-5 h-5 text-indigo-400 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
-                      {item.deliverable_name}
-                    </li>
+                    <div key={item.id || idx} className="flex items-center justify-between text-xs text-slate-800 bg-slate-50 p-3 rounded-lg border border-slate-200/80">
+                      <div className="flex items-center gap-2 font-medium">
+                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-600"></span>
+                        <span>{item.deliverable_name}</span>
+                      </div>
+                      <span className="font-bold text-slate-700 bg-white px-2.5 py-1 rounded border border-slate-200">
+                        Qty: {item.committed_qty || 1}
+                      </span>
+                    </div>
                   ))}
                   {(!month.items || month.items.length === 0) && (
-                    <li className="text-sm text-slate-400 italic">No deliverables defined.</li>
+                    <div className="text-xs text-slate-400 italic bg-slate-50 p-3 rounded-lg border border-slate-200">
+                      No deliverables specified.
+                    </div>
                   )}
-                </ul>
+                </div>
               </div>
               
-              <div className="p-4 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-3">
+              {/* Action Buttons */}
+              <div className="p-4 border-t border-slate-200 bg-slate-50/50 flex justify-end gap-3">
                 <button 
+                  type="button"
+                  disabled={processingId === month.id}
+                  onClick={() => handleReject(month.sow_id, month.id)}
+                  className="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs rounded-lg border border-rose-200 transition-colors disabled:opacity-50"
+                >
+                  Reject Contract
+                </button>
+
+                <button 
+                  type="button"
+                  disabled={processingId === month.id}
                   onClick={() => handleApprove(month.sow_id, month.id)}
-                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-md shadow-sm transition-colors"
+                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg shadow-xs transition-colors disabled:opacity-50"
                 >
                   Approve Deliverables
                 </button>
@@ -133,3 +194,4 @@ export default function SowApprovalsPage() {
     </div>
   );
 }
+

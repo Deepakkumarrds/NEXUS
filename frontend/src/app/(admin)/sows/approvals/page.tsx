@@ -11,13 +11,13 @@ export default function SowApprovalsPage() {
   useEffect(() => {
     const userData = JSON.parse(localStorage.getItem('user') || '{}');
     setUser(userData);
-    fetchSows();
+    fetchSows(userData);
   }, []);
 
-  const canViewFinancials = (user: any) => {
-    if (!user) return false;
-    const role = user.role?.role_name || user.role_name || user.role || '';
-    const email = (user.email || '').toLowerCase();
+  const canViewFinancials = (userObj: any) => {
+    if (!userObj) return false;
+    const role = userObj.role?.role_name || userObj.role_name || userObj.role || '';
+    const email = (userObj.email || '').toLowerCase();
     
     if (role === 'Super Admin' || role === 'Admin') return true;
     if (email.includes('utkarsh') || email.includes('admin') || email.includes('gowtham')) return true;
@@ -25,10 +25,11 @@ export default function SowApprovalsPage() {
     return false;
   };
 
-  const fetchSows = () => {
+  const fetchSows = (u?: any) => {
+    const currentUser = u || user;
     setLoading(true);
-    const role = user?.role?.role_name || user?.role_name || user?.role || '';
-    const email = user?.email || '';
+    const role = currentUser?.role?.role_name || currentUser?.role_name || currentUser?.role || '';
+    const email = currentUser?.email || '';
     fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-backend-nexus.onrender.com'}/api/sows?approval_status=Pending Approval&role=${encodeURIComponent(role)}&email=${encodeURIComponent(email)}`)
       .then(res => res.json())
       .then(data => {

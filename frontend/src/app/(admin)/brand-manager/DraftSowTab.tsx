@@ -190,18 +190,37 @@ export default function DraftSowTab() {
     }
   };
 
-  // Apply a pre-configured Package Template
-  const applyPackageTemplate = (pkg: { name: string; monthlyValue: number; items: { deliverable_name: string; committed_qty: number }[] }) => {
+  // Apply a pre-configured Package Template (supports combining multiple department packages)
+  const applyPackageTemplate = (
+    pkg: { name: string; monthlyValue: number; items: { deliverable_name: string; committed_qty: number }[] },
+    mode: 'add' | 'replace' = 'add'
+  ) => {
     if (sowMonths.length === 0) {
       alert('Please select a Start Date and End Date first to generate monthly blocks.');
       return;
     }
 
-    const updatedMonths = sowMonths.map(m => ({
-      ...m,
-      value: pkg.monthlyValue.toString(),
-      items: pkg.items.map(i => ({ deliverable_name: i.deliverable_name, committed_qty: i.committed_qty }))
-    }));
+    const updatedMonths = sowMonths.map(m => {
+      const newItems = pkg.items.map(i => ({ deliverable_name: i.deliverable_name, committed_qty: i.committed_qty }));
+
+      if (mode === 'add') {
+        const existingItems = m.items.filter(i => i.deliverable_name.trim() !== '');
+        const combinedItems = [...existingItems, ...newItems];
+        const currentVal = parseFloat(m.value) || 0;
+        const combinedValue = currentVal + pkg.monthlyValue;
+        return {
+          ...m,
+          value: combinedValue.toString(),
+          items: combinedItems
+        };
+      } else {
+        return {
+          ...m,
+          value: pkg.monthlyValue.toString(),
+          items: newItems
+        };
+      }
+    });
 
     setSowMonths(updatedMonths);
   };
@@ -550,13 +569,23 @@ export default function DraftSowTab() {
                     ))}
                   </ul>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => applyPackageTemplate(pkg)}
-                  className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-lg transition-colors flex items-center justify-center gap-1 mt-2 shadow-sm"
-                >
-                  <CheckSquare className="w-3.5 h-3.5" /> Apply Package to SOW
-                </button>
+                <div className="flex items-center gap-2 mt-3">
+                  <button
+                    type="button"
+                    onClick={() => applyPackageTemplate(pkg, 'add')}
+                    className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-lg transition-colors flex items-center justify-center gap-1 shadow-sm"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> + Combine / Add to SOW
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyPackageTemplate(pkg, 'replace')}
+                    className="py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-lg transition-colors"
+                    title="Replace current scope with this single package"
+                  >
+                    Replace
+                  </button>
+                </div>
               </div>
             ))}
           </div>

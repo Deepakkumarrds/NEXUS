@@ -674,7 +674,7 @@ const sendIndividualPendingTaskRemindersToCliq = async () => {
       // 1. Pending & Overdue Tasks
       const pendingTasks = await prisma.task.findMany({
         where: {
-          assignee_id: user.id,
+          assigned_to: user.id,
           status: { in: ['Pending', 'In Progress', 'Review'] }
         },
         include: { client: { select: { company_name: true, brand_name: true } } }
@@ -683,7 +683,7 @@ const sendIndividualPendingTaskRemindersToCliq = async () => {
       // 2. Open Escalations / Pending Mistakes assigned to user
       const openEscalations = await prisma.escalation.findMany({
         where: {
-          assigned_to_id: user.id,
+          assigned_to: user.id,
           status: 'Open'
         },
         include: { client: { select: { company_name: true, brand_name: true } } }
@@ -697,7 +697,7 @@ const sendIndividualPendingTaskRemindersToCliq = async () => {
         msg += `🚨 *PENDING MISTAKES / OPEN ESCALATIONS (${openEscalations.length}):*\n`;
         openEscalations.forEach((esc, idx) => {
           const brand = esc.client?.brand_name || esc.client?.company_name || 'General';
-          msg += `  ${idx + 1}. *[${esc.issue_type || 'Escalation'}]* ${esc.description || 'Action required'} (Brand: ${brand})\n`;
+          msg += `  ${idx + 1}. *[${esc.title || 'Escalation'}]* ${esc.issue_description || 'Action required'} (Brand: ${brand})\n`;
         });
         msg += `\n`;
       }

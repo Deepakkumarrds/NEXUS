@@ -32,6 +32,7 @@ exports.createSow = async (req, res) => {
               sow_id: sow.id,
               month_year: month.month_year,
               value: month.value ? parseFloat(month.value) : 0,
+              approval_status: month.approval_status || 'Pending Approval'
             }
           });
 

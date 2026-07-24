@@ -337,6 +337,7 @@ export default function DraftSowTab() {
         total_value: totalValue,
         months: sowMonths.map(m => ({
           ...m,
+          approval_status: 'Pending Approval',
           items: m.items.filter(i => i.deliverable_name.trim() !== '')
         }))
       };

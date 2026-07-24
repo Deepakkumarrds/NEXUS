@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import TasksTab from './TasksTab';
 
 export default function DefinedDetailsTab({ client }: any) {
   return (
@@ -11,7 +12,7 @@ export default function DefinedDetailsTab({ client }: any) {
           <h3 className="font-bold text-slate-900 text-lg">
             SOW Scope & Deliverable Quotas (Current Month)
           </h3>
-          <p className="text-xs text-slate-500 mt-1">Tracks Utkarsh's defined contract deliverables against live completed team tasks.</p>
+
         </div>
 
         {/* 3 KPI Summary Cards */}
@@ -75,6 +76,10 @@ export default function DefinedDetailsTab({ client }: any) {
             <p className="text-sm text-slate-500 italic">No SOW contract deliverables defined for this client yet.</p>
           </div>
         )}
+      </div>
+
+      <div className="grid grid-cols-1 gap-6">
+        <TasksTab client={client} />
       </div>
     </div>
   );

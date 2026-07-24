@@ -11,6 +11,7 @@ import OverviewTab from './tabs/OverviewTab';
 import DefinedDetailsTab from './tabs/DefinedDetailsTab';
 import MarketingTab from './tabs/MarketingTab';
 import DeliveryTab from './tabs/DeliveryTab';
+import MeetingsTab from './tabs/MeetingsTab';
 
 export default function ClientDetailsPage() {
   const params = useParams();
@@ -19,7 +20,7 @@ export default function ClientDetailsPage() {
   const isEditMode = searchParams.get('edit') === 'true';
   const [client, setClient] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'details' | 'defined' | 'passwords' | 'plans' | 'ai_calendar'>('details');
+  const [activeTab, setActiveTab] = useState<'details' | 'defined' | 'passwords' | 'plans' | 'ai_calendar' | 'meetings'>('details');
   const [isBrandManager, setIsBrandManager] = useState(false);
 
 
@@ -356,6 +357,18 @@ export default function ClientDetailsPage() {
           >
             AI Calendar
           </button>
+
+          <button
+            onClick={() => setActiveTab('meetings')}
+            className={`py-2.5 px-1 text-sm transition-all duration-150 whitespace-nowrap ${
+              activeTab === 'meetings'
+                ? 'border-b-2 border-indigo-600 text-indigo-600 font-semibold'
+                : 'border-b-2 border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            Meetings
+          </button>
+
         </nav>
       </div>
 
@@ -367,6 +380,7 @@ export default function ClientDetailsPage() {
         {activeTab === 'passwords' && <MarketingTab client={client} clientId={clientId} fetchClientDetails={fetchClientDetails} />}
         {activeTab === 'plans' && <DeliveryTab client={client} clientId={clientId} fetchClientDetails={fetchClientDetails} />}
         {activeTab === 'ai_calendar' && <TabAICalendar client={client} />}
+        {activeTab === 'meetings' && <MeetingsTab client={client} />}
       </div>
 
 

@@ -691,7 +691,7 @@ const sendIndividualPendingTaskRemindersToCliq = async () => {
 
       if (pendingTasks.length === 0 && openEscalations.length === 0) continue;
 
-      let msg = `👋 *Hi ${user.name}!* Here is your personalized task & action update:\n\n`;
+      let msg = `{@${user.email}} 👋 *Hi ${user.name}!* Here is your personalized task & action update:\n\n`;
 
       if (openEscalations.length > 0) {
         msg += `🚨 *PENDING MISTAKES / OPEN ESCALATIONS (${openEscalations.length}):*\n`;
@@ -714,7 +714,9 @@ const sendIndividualPendingTaskRemindersToCliq = async () => {
 
       msg += `\n🔗 *Open Tasks Dashboard:* ${process.env.FRONTEND_URL || 'https://rds-db.vercel.app'}/tasks`;
 
-      // Dispatch individual direct message to user's Zoho Cliq account
+      // 1. Dispatch with {@user.email} mention tag via Webhook (triggers Cliq notification ping)
+      await sendCliqNotification(msg);
+      // 2. Dispatch individual direct message payload
       await sendCliqDirectMessage(user.email, msg);
     }
   } catch (err) {

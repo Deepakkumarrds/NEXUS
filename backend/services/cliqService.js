@@ -22,7 +22,36 @@ const sendCliqNotification = async (payload) => {
   }
 };
 
+/**
+ * Send an individual direct message to a specific user on Zoho Cliq by email
+ * @param {string} userEmail - The user's email registered in Zoho Cliq
+ * @param {string} message - The message body
+ */
+const sendCliqDirectMessage = async (userEmail, message) => {
+  const webhookUrl = process.env.ZOHO_CLIQ_WEBHOOK_URL;
+  if (!webhookUrl) {
+    console.warn('⚠️ ZOHO_CLIQ_WEBHOOK_URL is not configured in .env');
+    return false;
+  }
+
+  try {
+    // Zoho Cliq Incoming Webhooks support routing messages to a direct user chat via bot/user_email parameter
+    const payload = {
+      text: message,
+      user_email: userEmail
+    };
+    const response = await axios.post(webhookUrl, payload);
+    console.log(`✅ Zoho Cliq direct message sent to ${userEmail}:`, response.data);
+    return true;
+  } catch (error) {
+    console.error(`❌ Error sending Zoho Cliq direct message to ${userEmail}:`, error.response?.data || error.message);
+    return false;
+  }
+};
+
 module.exports = {
   sendCliqNotification,
+  sendCliqDirectMessage,
 };
+
 

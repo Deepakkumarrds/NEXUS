@@ -3,7 +3,7 @@ const { PrismaClient } = require('@prisma/client');
 const emailService = require('./emailService');
 const reportGenerator = require('../utils/reportGenerator');
 const { sendMessage } = require('./whatsappService');
-const { sendCliqNotification } = require('./cliqService');
+const { sendCliqNotification, sendCliqDirectMessage } = require('./cliqService');
 const sowPredictorService = require('./sowPredictorService');
 
 const prisma = new PrismaClient();
@@ -33,6 +33,7 @@ const startCronJobs = () => {
     await sendTaskClosingReminders('6:00 PM IST');
     await evaluateAndSendTrackerReminders('Evening');
     await sendDailyTaskSummaryToCliq();
+    await sendIndividualPendingTaskRemindersToCliq();
   }, IST);
 
   cron.schedule('30 18 * * 1-6', async () => {
@@ -657,6 +658,70 @@ const checkAndRetryFailedMomDispatches = async () => {
   }
 };
 
+const sendIndividualPendingTaskRemindersToCliq = async () => {
+  console.log('🕒 Sending Individual Pending Tasks & Escalation Reminders via Zoho Cliq...');
+  try {
+    const activeUsers = await prisma.user.findMany({
+      where: { status: 'Active' },
+      select: { id: true, name: true, email: true }
+    });
+
+    const now = new Date();
+
+    for (const user of activeUsers) {
+      if (!user.email) continue;
+
+      // 1. Pending & Overdue Tasks
+      const pendingTasks = await prisma.task.findMany({
+        where: {
+          assignee_id: user.id,
+          status: { in: ['Pending', 'In Progress', 'Review'] }
+        },
+        include: { client: { select: { company_name: true, brand_name: true } } }
+      });
+
+      // 2. Open Escalations / Pending Mistakes assigned to user
+      const openEscalations = await prisma.escalation.findMany({
+        where: {
+          assigned_to_id: user.id,
+          status: 'Open'
+        },
+        include: { client: { select: { company_name: true, brand_name: true } } }
+      });
+
+      if (pendingTasks.length === 0 && openEscalations.length === 0) continue;
+
+      let msg = `👋 *Hi ${user.name}!* Here is your personalized task & action update:\n\n`;
+
+      if (openEscalations.length > 0) {
+        msg += `🚨 *PENDING MISTAKES / OPEN ESCALATIONS (${openEscalations.length}):*\n`;
+        openEscalations.forEach((esc, idx) => {
+          const brand = esc.client?.brand_name || esc.client?.company_name || 'General';
+          msg += `  ${idx + 1}. *[${esc.issue_type || 'Escalation'}]* ${esc.description || 'Action required'} (Brand: ${brand})\n`;
+        });
+        msg += `\n`;
+      }
+
+      if (pendingTasks.length > 0) {
+        msg += `📋 *YOUR PENDING TASKS (${pendingTasks.length}):*\n`;
+        pendingTasks.forEach((t, idx) => {
+          const brand = t.client?.brand_name || t.client?.company_name || 'General';
+          const isOverdue = t.due_date && new Date(t.due_date) < now;
+          const statusTag = isOverdue ? '🚨 *OVERDUE*' : `[${t.status}]`;
+          msg += `  ${idx + 1}. *${t.title}* ${statusTag}\n     └ Brand: ${brand} | Due: ${t.due_date ? new Date(t.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'No date'}\n`;
+        });
+      }
+
+      msg += `\n🔗 *Open Tasks Dashboard:* ${process.env.FRONTEND_URL || 'https://rds-db.vercel.app'}/tasks`;
+
+      // Dispatch individual direct message to user's Zoho Cliq account
+      await sendCliqDirectMessage(user.email, msg);
+    }
+  } catch (err) {
+    console.error('Error sending individual pending task reminders to Cliq:', err);
+  }
+};
+
 module.exports = {
   startCronJobs,
   sendWeeklyReportsNow,
@@ -665,8 +730,10 @@ module.exports = {
   sendDetailedDailyReportToCliq,
   send11AmDailySummaryCheck,
   sendTaskClosingReminders,
+  sendIndividualPendingTaskRemindersToCliq,
   processScheduledMomDispatches,
   checkAndRetryFailedMomDispatches
 };
+
 
 

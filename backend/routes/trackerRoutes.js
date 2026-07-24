@@ -10,6 +10,6 @@ router.get('/', protect, trackerController.getTrackerData);
 router.post('/cell', protect, trackerController.updateTrackerCell);
 
 // Get client activity (tasks + summaries)
-router.get('/activity', protect, trackerController.getClientActivity);
+router.get('/activity', trackerController.getClientActivity);
 
 module.exports = router;

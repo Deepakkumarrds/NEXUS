@@ -5,57 +5,68 @@ const { createNotification } = require('../utils/notificationHelper');
 // Create a new SOW with deliverables
 exports.createSow = async (req, res) => {
   try {
-    const { client_id, sow_name, total_value, start_date, end_date, months } = req.body;
+    const { client_id, client_ids, sow_name, total_value, start_date, end_date, months } = req.body;
+    const targetClientIds = client_ids && client_ids.length > 0 ? client_ids : [client_id];
 
-    const sow = await prisma.sow.create({
-      data: {
-        client_id,
-        sow_name,
-        total_value: total_value ? parseFloat(total_value) : null,
-        start_date: start_date ? new Date(start_date) : null,
-        end_date: end_date ? new Date(end_date) : null
-      }
-    });
-
-    if (months && months.length > 0) {
-      for (const month of months) {
-        const createdMonth = await prisma.sowMonth.create({
-          data: {
-            sow_id: sow.id,
-            month_year: month.month_year,
-            value: month.value ? parseFloat(month.value) : 0,
-          }
-        });
-
-        if (month.items && month.items.length > 0) {
-          await prisma.sowItem.createMany({
-            data: month.items.map(item => ({
-              sow_id: sow.id,
-              sow_month_id: createdMonth.id,
-              deliverable_name: item.deliverable_name || 'Deliverable',
-              status: 'Pending',
-              tracking_month: month.month_year
-            }))
-          });
-        }
-      }
+    if (!targetClientIds || targetClientIds.length === 0 || !targetClientIds[0]) {
+      return res.status(400).json({ status: 'error', message: 'Client ID is required' });
     }
 
-    const createdSow = await prisma.sow.findUnique({
-      where: { id: sow.id },
-      include: {
-        months: { include: { items: true } },
-        items: true
+    const createdSows = [];
+
+    for (const cid of targetClientIds) {
+      const sow = await prisma.sow.create({
+        data: {
+          client_id: cid,
+          sow_name,
+          total_value: total_value ? parseFloat(total_value) : null,
+          start_date: start_date ? new Date(start_date) : null,
+          end_date: end_date ? new Date(end_date) : null
+        }
+      });
+
+      if (months && months.length > 0) {
+        for (const month of months) {
+          const createdMonth = await prisma.sowMonth.create({
+            data: {
+              sow_id: sow.id,
+              month_year: month.month_year,
+              value: month.value ? parseFloat(month.value) : 0,
+            }
+          });
+
+          if (month.items && month.items.length > 0) {
+            await prisma.sowItem.createMany({
+              data: month.items.map(item => ({
+                sow_id: sow.id,
+                sow_month_id: createdMonth.id,
+                deliverable_name: item.deliverable_name || 'Deliverable',
+                committed_qty: item.committed_qty ? parseInt(item.committed_qty) : 1,
+                status: 'Pending',
+                tracking_month: month.month_year
+              }))
+            });
+          }
+        }
       }
-    });
+
+      const createdSow = await prisma.sow.findUnique({
+        where: { id: sow.id },
+        include: {
+          months: { include: { items: true } },
+          items: true
+        }
+      });
+      createdSows.push(createdSow);
+    }
 
     let totalItems = 0;
     if (months) {
       months.forEach(m => totalItems += (m.items || []).length);
     }
-    await createNotification('New Contract (SOW) Drafted', `SOW: ${sow_name} (${totalItems} Deliverables)`);
+    await createNotification('New Contract (SOW) Drafted', `SOW: ${sow_name} for ${targetClientIds.length} Brand(s) (${totalItems} Deliverables)`);
 
-    res.status(201).json({ status: 'success', data: createdSow });
+    res.status(201).json({ status: 'success', data: createdSows.length === 1 ? createdSows[0] : createdSows });
   } catch (error) {
     console.error('Error creating SOW:', error);
     res.status(500).json({ status: 'error', message: 'Failed to create SOW' });

@@ -1,8 +1,16 @@
-'use client';
-
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Sparkles, Copy, Plus, Trash2, Layers, CheckSquare, Layers3, Check, X, ShieldAlert, Search } from 'lucide-react';
+import { Plus, Trash2, Check, X, Search } from 'lucide-react';
+
+// Department Badge & Theme Colors (Matching globals.css design system)
+const DEPARTMENT_COLORS: Record<string, { bg: string, border: string, text: string, dot: string }> = {
+  'SEO': { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-800', dot: 'bg-blue-600' },
+  'Social Media': { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-800', dot: 'bg-purple-600' },
+  'Paid Media': { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-800', dot: 'bg-amber-600' },
+  'Website': { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-800', dot: 'bg-emerald-600' },
+  'Full Retainer': { bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-800', dot: 'bg-indigo-600' },
+  'General': { bg: 'bg-slate-100', border: 'border-slate-200', text: 'text-slate-800', dot: 'bg-slate-600' }
+};
 
 // Package Presets by Department / Category
 const PRESET_PACKAGES: Record<string, { name: string; monthlyValue: number; items: { deliverable_name: string; committed_qty: number }[] }[]> = {
@@ -114,10 +122,10 @@ export default function DraftSowTab() {
   });
   
   const [activeCategory, setActiveCategory] = useState<string>('SEO');
-  const [sowMonths, setSowMonths] = useState<{ month_year: string, value: string, items: { deliverable_name: string, committed_qty: number }[] }[]>([]);
+  const [sowMonths, setSowMonths] = useState<{ month_year: string, value: string, items: { department?: string, deliverable_name: string, committed_qty: number }[] }[]>([]);
   
   // Custom templates stored in localStorage
-  const [customPackages, setCustomPackages] = useState<Record<string, { name: string; monthlyValue: number; items: { deliverable_name: string; committed_qty: number }[] }[]>>({});
+  const [customPackages, setCustomPackages] = useState<Record<string, { name: string; monthlyValue: number; items: { department?: string; deliverable_name: string; committed_qty: number }[] }[]>>({});
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [newTemplateName, setNewTemplateName] = useState('');
   const [newTemplateValue, setNewTemplateValue] = useState('');
@@ -162,7 +170,7 @@ export default function DraftSowTab() {
         while (current <= end) {
           const monthStr = current.toLocaleString('en-US', { month: 'long', year: 'numeric' });
           const existing = sowMonths.find(m => m.month_year === monthStr);
-          newMonths.push(existing || { month_year: monthStr, value: '', items: [{ deliverable_name: '', committed_qty: 1 }] });
+          newMonths.push(existing || { month_year: monthStr, value: '', items: [{ department: activeCategory, deliverable_name: '', committed_qty: 1 }] });
           current.setMonth(current.getMonth() + 1);
         }
         setSowMonths(newMonths);
@@ -192,7 +200,7 @@ export default function DraftSowTab() {
 
   // Apply a pre-configured Package Template (supports combining multiple department packages)
   const applyPackageTemplate = (
-    pkg: { name: string; monthlyValue: number; items: { deliverable_name: string; committed_qty: number }[] },
+    pkg: { name: string; monthlyValue: number; items: { department?: string; deliverable_name: string; committed_qty: number }[] },
     mode: 'add' | 'replace' = 'add'
   ) => {
     if (sowMonths.length === 0) {
@@ -201,7 +209,11 @@ export default function DraftSowTab() {
     }
 
     const updatedMonths = sowMonths.map(m => {
-      const newItems = pkg.items.map(i => ({ deliverable_name: i.deliverable_name, committed_qty: i.committed_qty }));
+      const newItems = pkg.items.map(i => ({
+        department: i.department || activeCategory,
+        deliverable_name: i.deliverable_name,
+        committed_qty: i.committed_qty
+      }));
 
       if (mode === 'add') {
         const existingItems = m.items.filter(i => i.deliverable_name.trim() !== '');
@@ -234,7 +246,7 @@ export default function DraftSowTab() {
       return {
         ...m,
         value: month1.value,
-        items: month1.items.map(i => ({ deliverable_name: i.deliverable_name, committed_qty: i.committed_qty }))
+        items: month1.items.map(i => ({ department: i.department || 'General', deliverable_name: i.deliverable_name, committed_qty: i.committed_qty }))
       };
     });
     setSowMonths(updated);
@@ -246,7 +258,7 @@ export default function DraftSowTab() {
     setSowMonths(newMonths);
   };
 
-  const handleItemChange = (monthIndex: number, itemIndex: number, field: 'deliverable_name' | 'committed_qty', value: any) => {
+  const handleItemChange = (monthIndex: number, itemIndex: number, field: 'department' | 'deliverable_name' | 'committed_qty', value: any) => {
     const newMonths = [...sowMonths];
     newMonths[monthIndex].items[itemIndex] = {
       ...newMonths[monthIndex].items[itemIndex],
@@ -255,9 +267,9 @@ export default function DraftSowTab() {
     setSowMonths(newMonths);
   };
 
-  const addItem = (monthIndex: number) => {
+  const addItem = (monthIndex: number, department: string = 'General') => {
     const newMonths = [...sowMonths];
-    newMonths[monthIndex].items.push({ deliverable_name: '', committed_qty: 1 });
+    newMonths[monthIndex].items.push({ department, deliverable_name: '', committed_qty: 1 });
     setSowMonths(newMonths);
   };
 
@@ -337,15 +349,11 @@ export default function DraftSowTab() {
   const currentPresets = [...(PRESET_PACKAGES[activeCategory] || []), ...(customPackages[activeCategory] || [])];
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-8 rounded-xl shadow-sm border border-slate-200 space-y-8">
+    <form onSubmit={handleSubmit} className="bg-white p-8 rounded-xl shadow-xs border border-slate-200 space-y-8">
       {/* Header Info */}
-      <div className="border-b border-slate-100 pb-5 flex justify-between items-start">
-        <div>
-          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-            <Layers className="w-5 h-5 text-indigo-600" /> Draft SOW (Package Templates & Batch Creation)
-          </h2>
-          <p className="text-xs text-slate-500 mt-1">Select retainer packages, apply to multiple brands, and replicate across months instantly.</p>
-        </div>
+      <div className="border-b border-slate-100 pb-5">
+        <h2 className="font-heading text-lg font-bold text-slate-900">Draft SOW Contract</h2>
+        <p className="text-xs text-slate-500 mt-1">Select retainer packages, apply to multiple brands, and configure monthly scope by department.</p>
       </div>
 
       <div className="space-y-6 text-sm">
@@ -511,8 +519,8 @@ export default function DraftSowTab() {
         <div className="pt-6 border-t border-slate-100 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h3 className="font-bold text-slate-900 text-base flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-amber-500" /> Select Retainer Package Template
+              <h3 className="font-heading font-bold text-slate-900 text-base">
+                Retainer Package Templates
               </h3>
               <p className="text-xs text-slate-500">Pick a pre-configured package to auto-fill deliverables and pricing across months.</p>
             </div>
@@ -591,21 +599,21 @@ export default function DraftSowTab() {
           </div>
         </div>
 
-        {/* MONTHLY DELIVERABLES EDITOR */}
-        <div className="pt-6 border-t border-slate-100 space-y-4">
+        {/* MONTHLY DELIVERABLES EDITOR (GROUPED BY DEPARTMENT) */}
+        <div className="pt-6 border-t border-slate-200 space-y-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h3 className="font-bold text-slate-900 text-base">Monthly Scope & Deliverables</h3>
-              <p className="text-xs text-slate-500">Fine-tune deliverable names and quantities for each month.</p>
+              <h3 className="font-heading font-bold text-slate-900 text-base">Monthly Scope & Deliverables by Department</h3>
+              <p className="text-xs text-slate-500">Deliverables are automatically categorized into department lists (SEO, Social Media, Paid Media, Website, etc.).</p>
             </div>
             
             {sowMonths.length > 1 && (
               <button 
                 type="button" 
                 onClick={copyMonth1ToAll}
-                className="text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-2 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm"
+                className="text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-2 rounded-lg transition-colors shadow-xs"
               >
-                <Copy className="w-3.5 h-3.5" /> ⚡ Apply Month 1 Scope to All Months
+                Apply Month 1 Scope to All Months
               </button>
             )}
           </div>
@@ -615,69 +623,146 @@ export default function DraftSowTab() {
               Please select a <b>Start Date</b> and <b>End Date</b> above to generate monthly contract blocks.
             </div>
           ) : (
-            <div className="space-y-6">
-              {sowMonths.map((month, monthIndex) => (
-                <div key={month.month_year} className="bg-slate-50/70 border border-slate-200/80 rounded-xl p-5 space-y-4">
-                  <div className="flex justify-between items-center border-b border-slate-200/60 pb-3">
-                    <h4 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-indigo-600"></span>
-                      {month.month_year}
-                    </h4>
-                    <div className="flex items-center gap-2">
-                      <label className="text-xs font-semibold text-slate-600">Monthly Fee (₹):</label>
-                      <input 
-                        type="number" 
-                        value={month.value}
-                        onChange={(e) => handleMonthValueChange(monthIndex, e.target.value)}
-                        className="w-32 border border-slate-300 rounded-lg p-1.5 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500 bg-white"
-                        placeholder="e.g. 50000"
-                      />
+            <div className="space-y-8">
+              {sowMonths.map((month, monthIndex) => {
+                // Group deliverables by department
+                const deptGroups: Record<string, { item: typeof month.items[0], originalIndex: number }[]> = {};
+                
+                month.items.forEach((item, itemIndex) => {
+                  const dept = item.department || 'General';
+                  if (!deptGroups[dept]) deptGroups[dept] = [];
+                  deptGroups[dept].push({ item, originalIndex: itemIndex });
+                });
+
+                const deptKeys = Object.keys(deptGroups);
+
+                return (
+                  <div key={month.month_year} className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm space-y-6">
+                    {/* Month Header */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 pb-4 gap-3">
+                      <div>
+                        <h4 className="font-heading font-bold text-slate-900 text-base flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>
+                          {month.month_year} Contract Scope
+                        </h4>
+                        <span className="text-xs text-slate-500 font-medium">
+                          {month.items.filter(i => i.deliverable_name.trim() !== '').length} deliverable(s) across {deptKeys.length} department(s)
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2 self-start sm:self-auto bg-slate-50 p-1.5 rounded-lg border border-slate-200">
+                        <label className="text-xs font-bold text-slate-700 pl-1">Monthly Fee (₹):</label>
+                        <input 
+                          type="number" 
+                          value={month.value}
+                          onChange={(e) => handleMonthValueChange(monthIndex, e.target.value)}
+                          className="w-36 border border-slate-300 rounded-md p-1.5 text-xs font-extrabold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+                          placeholder="e.g. 50000"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Department Lists */}
+                    <div className="space-y-6">
+                      {deptKeys.map((deptName) => {
+                        const itemsInDept = deptGroups[deptName];
+                        const deptConfig = DEPARTMENT_COLORS[deptName] || DEPARTMENT_COLORS['General'];
+
+                        return (
+                          <div key={deptName} className={`rounded-xl border ${deptConfig.border} overflow-hidden shadow-xs`}>
+                            {/* Department Header Badge */}
+                            <div className={`${deptConfig.bg} px-4 py-2.5 border-b ${deptConfig.border} flex items-center justify-between`}>
+                              <div className="flex items-center gap-2">
+                                <span className={`w-2 h-2 rounded-full ${deptConfig.dot}`}></span>
+                                <h5 className={`font-heading font-bold text-xs uppercase tracking-wider ${deptConfig.text}`}>
+                                  {deptName} Deliverables ({itemsInDept.length})
+                                </h5>
+                              </div>
+
+                              <button
+                                type="button"
+                                onClick={() => addItem(monthIndex, deptName)}
+                                className={`text-[11px] font-bold ${deptConfig.text} hover:opacity-80 flex items-center gap-1 bg-white px-2 py-1 rounded border ${deptConfig.border} transition-opacity shadow-xs`}
+                              >
+                                <Plus className="w-3 h-3" /> Add {deptName} Item
+                              </button>
+                            </div>
+
+                            {/* Department Deliverable Items */}
+                            <div className="p-3 bg-white space-y-2.5">
+                              {itemsInDept.map(({ item, originalIndex }) => (
+                                <div key={originalIndex} className="flex gap-2.5 items-center bg-slate-50/70 p-2 rounded-lg border border-slate-200/70 hover:border-slate-300 transition-colors">
+                                  {/* Department Selector */}
+                                  <select
+                                    value={item.department || 'General'}
+                                    onChange={(e) => handleItemChange(monthIndex, originalIndex, 'department', e.target.value)}
+                                    className="text-xs font-semibold border border-slate-200 rounded-md py-1.5 px-2 bg-white text-slate-700 outline-none focus:ring-1 focus:ring-indigo-500 shrink-0"
+                                  >
+                                    <option value="SEO">SEO</option>
+                                    <option value="Social Media">Social Media</option>
+                                    <option value="Paid Media">Paid Media</option>
+                                    <option value="Website">Website</option>
+                                    <option value="Full Retainer">Full Retainer</option>
+                                    <option value="General">General</option>
+                                  </select>
+
+                                  {/* Quantity */}
+                                  <div className="w-20 shrink-0">
+                                    <input 
+                                      type="number"
+                                      min="1"
+                                      placeholder="Qty"
+                                      className="w-full border border-slate-300 rounded-md p-1.5 text-xs text-center font-bold outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
+                                      value={item.committed_qty}
+                                      onChange={(e) => handleItemChange(monthIndex, originalIndex, 'committed_qty', e.target.value)}
+                                    />
+                                  </div>
+
+                                  {/* Deliverable Name */}
+                                  <div className="flex-1">
+                                    <input 
+                                      type="text" 
+                                      placeholder={`e.g. Deliverable item for ${deptName}`}
+                                      className="w-full border border-slate-300 rounded-md p-1.5 text-xs focus:ring-1 focus:ring-indigo-500 outline-none bg-white font-medium text-slate-900"
+                                      value={item.deliverable_name}
+                                      onChange={(e) => handleItemChange(monthIndex, originalIndex, 'deliverable_name', e.target.value)}
+                                    />
+                                  </div>
+
+                                  {/* Delete */}
+                                  <button 
+                                    type="button" 
+                                    onClick={() => removeItem(monthIndex, originalIndex)}
+                                    className="text-slate-400 hover:text-red-600 transition-colors p-1"
+                                    title="Remove item"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Quick Add Department Item Bar */}
+                    <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center gap-2">
+                      <span className="text-xs font-semibold text-slate-500 mr-1">+ Add deliverable under department:</span>
+                      {categories.map((cat) => (
+                        <button
+                          key={cat}
+                          type="button"
+                          onClick={() => addItem(monthIndex, cat)}
+                          className="text-xs font-semibold px-2.5 py-1 rounded-md bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 border border-slate-200 transition-colors flex items-center gap-1"
+                        >
+                          <Plus className="w-3 h-3" /> {cat}
+                        </button>
+                      ))}
                     </div>
                   </div>
-                  
-                  <div className="space-y-2.5">
-                    {month.items.map((item, itemIndex) => (
-                      <div key={itemIndex} className="flex gap-3 items-center">
-                        <div className="w-24 shrink-0">
-                          <input 
-                            type="number"
-                            min="1"
-                            placeholder="Qty"
-                            className="w-full border border-slate-300 rounded-lg p-2 text-xs text-center font-bold outline-none focus:border-indigo-500 bg-white"
-                            value={item.committed_qty}
-                            onChange={(e) => handleItemChange(monthIndex, itemIndex, 'committed_qty', e.target.value)}
-                          />
-                        </div>
-                        <div className="flex-1">
-                          <input 
-                            type="text" 
-                            placeholder={`Deliverable item name for ${month.month_year}`}
-                            className="w-full border border-slate-300 rounded-lg p-2 text-xs focus:ring-1 focus:ring-indigo-500 outline-none bg-white font-medium"
-                            value={item.deliverable_name}
-                            onChange={(e) => handleItemChange(monthIndex, itemIndex, 'deliverable_name', e.target.value)}
-                          />
-                        </div>
-                        {month.items.length > 1 && (
-                          <button 
-                            type="button" 
-                            onClick={() => removeItem(monthIndex, itemIndex)}
-                            className="text-slate-400 hover:text-red-600 transition-colors p-1"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                    <button 
-                      type="button" 
-                      onClick={() => addItem(monthIndex)}
-                      className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors mt-2 flex items-center gap-1"
-                    >
-                      <Plus className="w-3.5 h-3.5" /> Add Deliverable Item
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

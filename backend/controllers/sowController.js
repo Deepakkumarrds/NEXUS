@@ -107,12 +107,17 @@ exports.getAllSows = async (req, res) => {
 
     let sows = await prisma.sow.findMany(queryOptions);
 
-    // Role-based Financial Privacy
-    if (req.query.role === 'Team Member') {
+    // Strict Financial Privacy: Only Admin and Utkarsh can view financial values
+    const requesterRole = req.query.role || '';
+    const requesterEmail = (req.query.email || '').toLowerCase();
+    const canViewFinancials = requesterRole === 'Super Admin' || requesterRole === 'Admin' || requesterEmail.includes('utkarsh') || requesterEmail.includes('gowtham');
+
+    if (!canViewFinancials) {
       sows = sows.map(sow => {
         return {
           ...sow,
-          total_value: null // Strip out the financial value
+          total_value: null,
+          months: (sow.months || []).map(m => ({ ...m, value: 0 }))
         };
       });
     }
@@ -140,9 +145,16 @@ exports.getSowById = async (req, res) => {
     });
     if (!sow) return res.status(404).json({ status: 'error', message: 'SOW not found' });
     
-    // Role-based Financial Privacy
-    if (req.query.role === 'Team Member') {
+    // Strict Financial Privacy: Only Admin and Utkarsh can view financial values
+    const requesterRole = req.query.role || '';
+    const requesterEmail = (req.query.email || '').toLowerCase();
+    const canViewFinancials = requesterRole === 'Super Admin' || requesterRole === 'Admin' || requesterEmail.includes('utkarsh') || requesterEmail.includes('gowtham');
+
+    if (!canViewFinancials) {
       sow.total_value = null;
+      if (sow.months) {
+        sow.months = sow.months.map(m => ({ ...m, value: 0 }));
+      }
     }
     
     res.status(200).json({ status: 'success', data: sow });
@@ -309,4 +321,28 @@ exports.approveSowMonth = async (req, res) => {
     res.status(500).json({ status: 'error', message: 'Failed to approve SOW month' });
   }
 };
+
+// Reject SOW Month
+exports.rejectSowMonth = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { user_id } = req.body;
+
+    const month = await prisma.sowMonth.update({
+      where: { id },
+      data: {
+        approval_status: 'Rejected',
+        approved_by: user_id
+      }
+    });
+
+    await createNotification('SOW Rejected', `SOW month (${month.month_year}) was rejected.`);
+
+    res.status(200).json({ status: 'success', data: month });
+  } catch (error) {
+    console.error('Error rejecting SOW month:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to reject SOW month' });
+  }
+};
+
 

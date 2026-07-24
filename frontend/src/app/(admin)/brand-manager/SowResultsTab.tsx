@@ -15,7 +15,7 @@ export default function SowResultsTab() {
 
   const fetchSows = () => {
     setLoading(true);
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com'}/api/sows`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-backend-nexus.onrender.com'}/api/sows`)
       .then(res => res.json())
       .then(data => {
         if (data && data.data) {
@@ -32,7 +32,7 @@ export default function SowResultsTab() {
   const handleDelete = async (id: string) => {
     if (!window.confirm('Are you sure you want to delete this SOW? This will remove all associated monthly data.')) return;
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com'}/api/sows/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-backend-nexus.onrender.com'}/api/sows/${id}`, {
         method: 'DELETE'
       });
       if (res.ok) {

@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Sparkles, Copy, Plus, Trash2, Layers, CheckSquare, Layers3, Check, X, ShieldAlert } from 'lucide-react';
+import { Sparkles, Copy, Plus, Trash2, Layers, CheckSquare, Layers3, Check, X, ShieldAlert, Search } from 'lucide-react';
 
 // Package Presets by Department / Category
 const PRESET_PACKAGES: Record<string, { name: string; monthlyValue: number; items: { deliverable_name: string; committed_qty: number }[] }[]> = {
@@ -101,9 +101,11 @@ const PRESET_PACKAGES: Record<string, { name: string; monthlyValue: number; item
 
 export default function DraftSowTab() {
   const router = useRouter();
-  const [clients, setClients] = useState<{id: string, company_name: string}[]>([]);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [clients, setClients] = useState<{id: string, company_name: string, brand_name?: string}[]>([]);
   const [selectedClientIds, setSelectedClientIds] = useState<string[]>([]);
   const [isClientDropdownOpen, setIsClientDropdownOpen] = useState(false);
+  const [brandSearch, setBrandSearch] = useState('');
   
   const [formData, setFormData] = useState({
     sow_name: '',
@@ -123,10 +125,21 @@ export default function DraftSowTab() {
   const totalValue = sowMonths.reduce((acc, month) => acc + (parseFloat(month.value) || 0), 0);
   const [user, setUser] = useState<any>(null);
 
+  // Close dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsClientDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   useEffect(() => {
     const userData = JSON.parse(localStorage.getItem('user') || '{}');
     setUser(userData);
-    fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com') + '/api/clients?activeOnly=true')
+    fetch((process.env.NEXT_PUBLIC_API_URL || 'https://rds-backend-nexus.onrender.com') + '/api/clients?activeOnly=true')
       .then(res => res.json())
       .then(data => { if(data && data.data) setClients(data.data); });
 
@@ -281,7 +294,7 @@ export default function DraftSowTab() {
         }))
       };
 
-      const response = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com') + '/api/sows', {
+      const response = await fetch((process.env.NEXT_PUBLIC_API_URL || 'https://rds-backend-nexus.onrender.com') + '/api/sows', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -333,48 +346,108 @@ export default function DraftSowTab() {
           </div>
 
           {/* Multi-Brand Select Dropdown */}
-          <div className="relative">
+          <div className="relative" ref={dropdownRef}>
             <label className="block font-semibold text-slate-700 mb-1.5">
               Select Brands ({selectedClientIds.length} selected)
             </label>
             <div 
               onClick={() => setIsClientDropdownOpen(!isClientDropdownOpen)}
-              className="w-full border border-slate-300 rounded-lg p-2.5 bg-white cursor-pointer flex justify-between items-center hover:border-indigo-400 transition-colors"
+              className="w-full border border-slate-300 rounded-lg p-2.5 bg-white cursor-pointer flex justify-between items-center hover:border-indigo-400 transition-colors shadow-sm"
             >
-              <span className="text-slate-800 truncate">
+              <span className="text-slate-800 truncate text-sm">
                 {selectedClientIds.length === 0 
                   ? 'Choose Brand(s)...' 
-                  : clients.filter(c => selectedClientIds.includes(c.id)).map(c => c.company_name).join(', ')}
+                  : clients.filter(c => selectedClientIds.includes(c.id)).map(c => c.brand_name || c.company_name).join(', ')}
               </span>
-              <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">
+              <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md border border-indigo-100 flex-shrink-0 ml-2">
                 {selectedClientIds.length}/{clients.length}
               </span>
             </div>
 
-            {isClientDropdownOpen && (
-              <div className="absolute z-20 top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-xl max-h-60 overflow-y-auto p-2 space-y-1">
-                <div 
-                  onClick={handleSelectAllClients} 
-                  className="p-2 text-xs font-bold text-indigo-600 hover:bg-indigo-50 rounded cursor-pointer flex items-center justify-between border-b border-slate-100"
-                >
-                  <span>Select All Brands</span>
-                  {selectedClientIds.length === clients.length && <Check className="w-4 h-4" />}
-                </div>
-                {clients.map(c => {
-                  const isSelected = selectedClientIds.includes(c.id);
-                  return (
-                    <div 
-                      key={c.id}
-                      onClick={() => handleSelectClient(c.id)}
-                      className={`p-2 text-xs rounded cursor-pointer flex items-center justify-between transition-colors ${
-                        isSelected ? 'bg-indigo-50 text-indigo-900 font-semibold' : 'hover:bg-slate-50 text-slate-700'
-                      }`}
+            {/* Selected Brand Badges */}
+            {selectedClientIds.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {clients.filter(c => selectedClientIds.includes(c.id)).map(c => (
+                  <span 
+                    key={c.id}
+                    className="inline-flex items-center gap-1 bg-indigo-50 text-indigo-700 text-xs px-2.5 py-1 rounded-full border border-indigo-200 font-medium"
+                  >
+                    {c.brand_name || c.company_name}
+                    <button 
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleSelectClient(c.id);
+                      }}
+                      className="hover:text-indigo-900 focus:outline-none"
                     >
-                      <span>{c.company_name}</span>
-                      {isSelected && <Check className="w-3.5 h-3.5 text-indigo-600" />}
-                    </div>
-                  );
-                })}
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {isClientDropdownOpen && (
+              <div className="absolute z-30 top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl p-2 space-y-1">
+                {/* Search Bar inside dropdown */}
+                <div className="p-1 border-b border-slate-100 mb-1 flex items-center gap-2">
+                  <Search className="w-4 h-4 text-slate-400 ml-1" />
+                  <input 
+                    type="text"
+                    placeholder="Search brand name..."
+                    value={brandSearch}
+                    onChange={(e) => setBrandSearch(e.target.value)}
+                    className="w-full text-xs p-1.5 focus:outline-none text-slate-800"
+                  />
+                  {brandSearch && (
+                    <button type="button" onClick={() => setBrandSearch('')} className="text-slate-400 hover:text-slate-600">
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="max-h-52 overflow-y-auto space-y-1">
+                  <div 
+                    onClick={handleSelectAllClients} 
+                    className="p-2 text-xs font-bold text-indigo-600 hover:bg-indigo-50 rounded-lg cursor-pointer flex items-center justify-between border-b border-slate-100"
+                  >
+                    <span>Select All Brands</span>
+                    {selectedClientIds.length === clients.length && <Check className="w-4 h-4" />}
+                  </div>
+
+                  {clients
+                    .filter(c => {
+                      const name = (c.brand_name || c.company_name).toLowerCase();
+                      return name.includes(brandSearch.toLowerCase());
+                    })
+                    .map(c => {
+                      const isSelected = selectedClientIds.includes(c.id);
+                      return (
+                        <div 
+                          key={c.id}
+                          onClick={() => handleSelectClient(c.id)}
+                          className={`p-2 text-xs rounded-lg cursor-pointer flex items-center justify-between transition-colors ${
+                            isSelected ? 'bg-indigo-50 text-indigo-900 font-semibold' : 'hover:bg-slate-50 text-slate-700'
+                          }`}
+                        >
+                          <span>{c.brand_name || c.company_name}</span>
+                          {isSelected && <Check className="w-3.5 h-3.5 text-indigo-600" />}
+                        </div>
+                      );
+                    })}
+                </div>
+
+                {/* Done / Apply Button to close dropdown */}
+                <div className="pt-2 border-t border-slate-100 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setIsClientDropdownOpen(false)}
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-1.5 rounded-lg transition-colors"
+                  >
+                    Done Selecting ({selectedClientIds.length})
+                  </button>
+                </div>
               </div>
             )}
           </div>

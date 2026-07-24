@@ -23,7 +23,7 @@ export default function BrandStatusTab() {
 
   const fetchBrands = () => {
     setLoading(true);
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com'}/api/clients`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-backend-nexus.onrender.com'}/api/clients`)
       .then(res => res.json())
       .then(data => {
         if (data && data.data) {
@@ -40,7 +40,7 @@ export default function BrandStatusTab() {
   const handleStatusChange = async (clientId: string, newStatus: string) => {
     setUpdatingId(clientId);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com'}/api/clients/${clientId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-backend-nexus.onrender.com'}/api/clients/${clientId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ client_status: newStatus })
@@ -61,7 +61,7 @@ export default function BrandStatusTab() {
   const handleHealthChange = async (clientId: string, newHealth: string) => {
     setUpdatingId(clientId);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com'}/api/clients/${clientId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-backend-nexus.onrender.com'}/api/clients/${clientId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ health_status: newHealth })
@@ -82,7 +82,7 @@ export default function BrandStatusTab() {
   const handleFeedbackChange = async (clientId: string, newFeedback: string) => {
     setUpdatingId(clientId);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://nexus-p3l0.onrender.com'}/api/clients/${clientId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://rds-backend-nexus.onrender.com'}/api/clients/${clientId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ health_feedback: newFeedback })
